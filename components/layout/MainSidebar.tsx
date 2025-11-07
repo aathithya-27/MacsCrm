@@ -1,12 +1,13 @@
-import React, { useState, useEffect } from 'react';
+
+import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { MasterDataIcon, LogoutIcon, DashboardIcon, ReportsIcon, ProfitLossIcon } from '../icons/Icons';
+import type { Company } from '../../types';
 import { 
     X, User, BarChart3, Users, Filter, UserCheck, ClipboardList, 
     FileText, Landmark, ArrowUpRight, Calendar, StickyNote, 
     Zap, Wrench, MapPin, Bot 
 } from 'lucide-react';
-import * as api from '../../services/api';
 
 const mainNavItems = [
     { to: "/dashboard", icon: DashboardIcon, label: "Dashboard" },
@@ -32,30 +33,12 @@ const mainNavItems = [
 interface MainSidebarProps {
     isOpen: boolean;
     setIsOpen: (isOpen: boolean) => void;
+    company: Company | null;
+    isLoading: boolean;
 }
 
-const MainSidebar: React.FC<MainSidebarProps> = ({ isOpen, setIsOpen }) => {
-    const [companyName, setCompanyName] = useState('Finroots');
-    const [isLoading, setIsLoading] = useState(true);
-
-    useEffect(() => {
-        const loadCompany = async () => {
-            setIsLoading(true);
-            try {
-                const user = await api.fetchCurrentUser();
-                const companies = await api.fetchCompanies();
-                const currentCompany = companies.find(c => c.COMP_ID === user.comp_id);
-                if (currentCompany) {
-                    setCompanyName(currentCompany.COMP_NAME);
-                }
-            } catch (error) {
-                console.error("Failed to load company name for sidebar", error);
-            } finally {
-                setIsLoading(false);
-            }
-        };
-        loadCompany();
-    }, []);
+const MainSidebar: React.FC<MainSidebarProps> = ({ isOpen, setIsOpen, company, isLoading }) => {
+    const companyName = company ? company.COMP_NAME : 'Finroots';
 
     return (
         <>
@@ -65,7 +48,7 @@ const MainSidebar: React.FC<MainSidebarProps> = ({ isOpen, setIsOpen }) => {
                 onClick={() => setIsOpen(false)}
                 aria-hidden="true"
             />
-            <aside className={`fixed xl:relative inset-y-0 left-0 w-64 bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 flex flex-col flex-shrink-0 z-40 transform transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : '-translate-x-full'} xl:translate-x-0`}>
+            <aside className={`fixed xl:relative inset-y-0 left-0 w-70 bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 flex flex-col flex-shrink-0 z-40 transform transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : '-translate-x-full'} xl:translate-x-0`}>
                 <div className="h-16 flex items-center justify-between px-4">
                     <h1 className="text-2xl font-bold text-blue-600 dark:text-blue-400">{isLoading ? 'Loading...' : companyName}</h1>
                      <button onClick={() => setIsOpen(false)} className="xl:hidden p-1 rounded-md text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-700">
@@ -80,7 +63,7 @@ const MainSidebar: React.FC<MainSidebarProps> = ({ isOpen, setIsOpen }) => {
                                     to={item.to}
                                     onClick={() => setIsOpen(false)}
                                     className={({ isActive }) =>
-                                        `flex items-center px-3 py-2.5 text-sm font-medium rounded-md transition-colors ${
+                                        `flex items-center px-3 py-2.5 text-base font-medium rounded-md transition-colors ${
                                             isActive
                                                 ? 'bg-blue-50 text-blue-600 dark:bg-blue-900/50 dark:text-blue-400'
                                                 : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'
@@ -99,7 +82,7 @@ const MainSidebar: React.FC<MainSidebarProps> = ({ isOpen, setIsOpen }) => {
                         to="/my-profile"
                         onClick={() => setIsOpen(false)}
                         className={({ isActive }) =>
-                            `w-full flex items-center px-3 py-2.5 text-sm font-medium rounded-md transition-colors ${
+                            `w-full flex items-center px-3 py-2.5 text-base font-medium rounded-md transition-colors ${
                             isActive
                                 ? 'bg-blue-50 text-blue-600 dark:bg-blue-900/50 dark:text-blue-400'
                                 : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'
@@ -113,7 +96,7 @@ const MainSidebar: React.FC<MainSidebarProps> = ({ isOpen, setIsOpen }) => {
                             console.log('Logout clicked');
                             setIsOpen(false);
                         }}
-                        className="w-full flex items-center px-3 py-2.5 text-sm font-medium rounded-md text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
+                        className="w-full flex items-center px-3 py-2.5 text-base font-medium rounded-md text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
                         <LogoutIcon className="h-5 w-5 mr-3" />
                         Logout
                     </button>

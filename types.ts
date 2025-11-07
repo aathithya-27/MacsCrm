@@ -525,3 +525,49 @@ export interface FestivalDate {
   MODIFIED_ON: string;
   MODIFIED_BY: number;
 }
+
+export interface FinancialYear {
+  ID: number;
+  COMP_ID: number;
+  FROM_DATE: string;
+  TO_DATE: string;
+  FIN_YEAR: string;
+  STATUS: number;
+  CREATED_ON: string;
+  CREATED_BY: number;
+  MODIFIED_ON: string;
+  MODIFIED_BY: number;
+}
+
+export interface DocumentNumberingRule {
+  ID: number;
+  COMP_ID: number;
+  FIN_YEAR_ID: number;
+  TYPE: 'Voucher' | 'Receipt';
+  PREFIX: string;
+  STARTING_NO: number;
+  SUFFIX: string | null;
+  STATUS: number;
+}
+
+export interface Bank {
+  ID: number;
+  BANK_NAME: string;
+  COMP_ID: number;
+  CREATED_ON: string;
+  MODIFIED_ON: string;
+  CREATED_BY: number;
+  MODIFIED_BY: number;
+  STATUS: number;
+}
+
+export interface AccountType {
+  ID: number;
+  ACCOUNT_TYPE_NAME: string;
+  COMP_ID: number;
+  CREATED_ON: string;
+  MODIFIED_ON: string;
+  CREATED_BY: number;
+  MODIFIED_BY: number;
+  STATUS: number;
+}

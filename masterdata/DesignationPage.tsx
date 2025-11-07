@@ -18,8 +18,8 @@ const DesignationPage: React.FC = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingItem, setEditingItem] = useState<Partial<Designation> | null>(null);
 
-    const canCreate = true;
-    const canModify = true;
+    const canCreate = companyData?.STATUS === 1;
+    const canModify = companyData?.STATUS === 1;
 
     useEffect(() => {
         const loadData = async () => {
@@ -117,12 +117,12 @@ const DesignationPage: React.FC = () => {
                         className="block w-full pl-10 pr-3 py-2 bg-white border border-slate-300 rounded-md shadow-sm placeholder-slate-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm dark:bg-slate-700 dark:border-slate-600 dark:text-white dark:placeholder-slate-400"
                     />
                 </div>
-                 {canCreate && (
-                    <Button onClick={() => openModal(null)}>
+                 {
+                    <Button onClick={() => openModal(null)} disabled={!canCreate}>
                         <Plus size={16} />
                         Add Designation
                     </Button>
-                )}
+                }
             </div>
 
             <div className="flex-grow overflow-auto bg-white dark:bg-slate-800 shadow-md rounded-lg">

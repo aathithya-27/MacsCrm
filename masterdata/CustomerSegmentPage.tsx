@@ -8,7 +8,7 @@ import Modal from '../components/ui/Modal';
 import ToggleSwitch from '../components/ui/ToggleSwitch';
 import SearchBar from '../components/ui/SearchBar';
 import Select from '../components/ui/Select';
-import { Plus, Edit2, Trash2 } from 'lucide-react';
+import { Plus, Edit2 } from 'lucide-react';
 
 const CustomerSegmentPage: React.FC = () => {
     const { addToast } = useToast();
@@ -20,13 +20,16 @@ const CustomerSegmentPage: React.FC = () => {
     const [groups, setGroups] = useState<CustomerGroup[]>([]);
     const [types, setTypes] = useState<CustomerType[]>([]);
 
-    const [searchQueries, setSearchQueries] = useState({ cat: '', subcat: '', group: '', type: '' });
+    const [searchQuery, setSearchQuery] = useState('');
     const [modalState, setModalState] = useState<{
         isOpen: boolean;
         type: 'cat' | 'subcat' | 'group' | 'type' | null;
         item: any | null;
     }>({ isOpen: false, type: null, item: null });
     const nameInputRef = useRef<HTMLInputElement>(null);
+
+    const canCreate = company?.STATUS === 1;
+    const canModify = company?.STATUS === 1;
 
     const loadData = useCallback(async () => {
         setIsLoading(true);
@@ -58,11 +61,12 @@ const CustomerSegmentPage: React.FC = () => {
     }, [addToast]);
 
     useEffect(() => { loadData() }, [loadData]);
-
-    const handleSearch = (type: keyof typeof searchQueries, query: string) => {
-        setSearchQueries(prev => ({ ...prev, [type]: query }));
-    };
     
+    const filteredCategories = useMemo(() => categories.filter(item => item.CUSTOMER_CATEGORY.toLowerCase().includes(searchQuery.toLowerCase())), [categories, searchQuery]);
+    const filteredSubCategories = useMemo(() => subCategories.filter(item => item.CUST_SUB_CATE.toLowerCase().includes(searchQuery.toLowerCase())), [subCategories, searchQuery]);
+    const filteredGroups = useMemo(() => groups.filter(item => item.CUSTOMER_GROUP.toLowerCase().includes(searchQuery.toLowerCase())), [groups, searchQuery]);
+    const filteredTypes = useMemo(() => types.filter(item => item.CUST_TYPE.toLowerCase().includes(searchQuery.toLowerCase())), [types, searchQuery]);
+
     const openModal = (type: 'cat' | 'subcat' | 'group' | 'type', item: any | null) => {
         setModalState({ isOpen: true, type, item });
     };
@@ -73,21 +77,21 @@ const CustomerSegmentPage: React.FC = () => {
         if (!modalState.type || !modalState.item || !company) return;
 
         const { type, item } = modalState;
-        let nameField: string, saveFn: (data: any) => Promise<any>, stateSetter: Function, currentList: any[];
+        let nameField: string, saveFn: (data: any) => Promise<any>, stateSetter: Function;
         
         switch (type) {
             case 'cat': 
-                nameField = 'CUSTOMER_CATEGORY'; saveFn = api.saveCustomerCategory; stateSetter = setCategories; currentList = categories;
+                nameField = 'CUSTOMER_CATEGORY'; saveFn = api.saveCustomerCategory; stateSetter = setCategories;
                 break;
             case 'subcat':
-                nameField = 'CUST_SUB_CATE'; saveFn = api.saveCustomerSubCategory; stateSetter = setSubCategories; currentList = subCategories;
+                nameField = 'CUST_SUB_CATE'; saveFn = api.saveCustomerSubCategory; stateSetter = setSubCategories;
                 if (!item.CUST_CATE_ID) { addToast("Parent Category is required.", "error"); return; }
                 break;
             case 'group':
-                nameField = 'CUSTOMER_GROUP'; saveFn = api.saveCustomerGroup; stateSetter = setGroups; currentList = groups;
+                nameField = 'CUSTOMER_GROUP'; saveFn = api.saveCustomerGroup; stateSetter = setGroups;
                 break;
             case 'type':
-                nameField = 'CUST_TYPE'; saveFn = api.saveCustomerType; stateSetter = setTypes; currentList = types;
+                nameField = 'CUST_TYPE'; saveFn = api.saveCustomerType; stateSetter = setTypes;
                 break;
         }
 
@@ -105,20 +109,40 @@ const CustomerSegmentPage: React.FC = () => {
     };
     
     const handleToggleStatus = async (type: 'cat' | 'subcat' | 'group' | 'type', item: any) => {
-        const updatedItem = { ...item, STATUS: item.STATUS === 1 ? 0 : 1 };
-        
-        let saveFn: (data: any) => Promise<any>, stateSetter: Function;
-        switch (type) {
-            case 'cat': saveFn = api.saveCustomerCategory; stateSetter = setCategories; break;
-            case 'subcat': saveFn = api.saveCustomerSubCategory; stateSetter = setSubCategories; break;
-            case 'group': saveFn = api.saveCustomerGroup; stateSetter = setGroups; break;
-            case 'type': saveFn = api.saveCustomerType; stateSetter = setTypes; break;
-        }
-
+        const newStatus = item.STATUS === 1 ? 0 : 1;
+        const updatedItem = { ...item, STATUS: newStatus };
+    
         try {
-            const savedItem = await saveFn(updatedItem);
-            stateSetter((prev: any[]) => prev.map(i => i.ID === savedItem.ID ? savedItem : i));
-            addToast("Status updated.", "success");
+            if (type === 'cat') {
+                const category = item as CustomerCategory;
+                const updatedSubCategories = subCategories
+                    .filter(sc => sc.CUST_CATE_ID === category.ID)
+                    .map(sc => ({ ...sc, STATUS: newStatus }));
+    
+                await Promise.all([
+                    api.saveCustomerCategory(updatedItem),
+                    ...updatedSubCategories.map(sc => api.saveCustomerSubCategory(sc))
+                ]);
+    
+                setCategories(prev => prev.map(c => c.ID === category.ID ? updatedItem : c));
+                setSubCategories(prev => {
+                    const updatedSubCatIds = new Set(updatedSubCategories.map(usc => usc.ID));
+                    return prev.map(sc => updatedSubCatIds.has(sc.ID) ? { ...sc, STATUS: newStatus } : sc);
+                });
+                
+                addToast(newStatus === 0 ? 'Category and associated sub-categories deactivated.' : 'Status updated.');
+            } else {
+                let saveFn: (data: any) => Promise<any>, stateSetter: Function;
+                switch (type) {
+                    case 'subcat': saveFn = api.saveCustomerSubCategory; stateSetter = setSubCategories; break;
+                    case 'group': saveFn = api.saveCustomerGroup; stateSetter = setGroups; break;
+                    case 'type': saveFn = api.saveCustomerType; stateSetter = setTypes; break;
+                    default: return;
+                }
+                const savedItem = await saveFn(updatedItem);
+                stateSetter((prev: any[]) => prev.map(i => i.ID === savedItem.ID ? savedItem : i));
+                addToast("Status updated.", "success");
+            }
         } catch (error) {
             addToast("Failed to update status.", "error");
         }
@@ -130,25 +154,15 @@ const CustomerSegmentPage: React.FC = () => {
         items: any[],
         nameField: string,
     ) => {
-        const filteredItems = items.filter(item => item[nameField].toLowerCase().includes(searchQueries[typeKey].toLowerCase()));
-
         return (
             <div className="bg-white dark:bg-slate-800 shadow-lg rounded-lg p-4 flex flex-col gap-4">
                 <div className="flex justify-between items-center">
                     <h3 className="text-xl font-bold text-slate-800 dark:text-slate-200">{title}</h3>
-                </div>
-                <div className="flex justify-between items-center gap-4">
-                    <SearchBar
-                        searchQuery={searchQueries[typeKey]}
-                        onSearchChange={(q) => handleSearch(typeKey, q)}
-                        placeholder={`Search ${title.replace('Manage ', '')}...`}
-                        className="flex-grow"
-                    />
-                    <Button onClick={() => openModal(typeKey, { STATUS: 1 })} className="flex-shrink-0">
+                     <Button onClick={() => openModal(typeKey, { STATUS: 1 })} className="flex-shrink-0" disabled={!canCreate}>
                         <Plus size={16} /> Add New
                     </Button>
                 </div>
-                <div className="overflow-auto" style={{maxHeight: '400px'}}>
+                <div className="overflow-auto" style={{ maxHeight: '300px' }}>
                     <table className="min-w-full">
                         <thead className="sticky top-0 bg-slate-50 dark:bg-slate-700">
                             <tr>
@@ -159,18 +173,15 @@ const CustomerSegmentPage: React.FC = () => {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
-                            {filteredItems.map((item, index) => (
+                            {items.map((item, index) => (
                                 <tr key={item.ID} className="hover:bg-slate-50 dark:hover:bg-slate-700/50">
                                     <td className="px-4 py-2 text-sm">{index + 1}</td>
                                     <td className="px-4 py-2 text-sm font-medium">{item[nameField]}</td>
                                     <td className="px-4 py-2">
-                                        <ToggleSwitch enabled={item.STATUS === 1} onChange={() => handleToggleStatus(typeKey, item)} />
+                                        <ToggleSwitch enabled={item.STATUS === 1} onChange={() => handleToggleStatus(typeKey, item)} disabled={!canModify} />
                                     </td>
                                     <td className="px-4 py-2">
-                                        <div className="flex gap-2">
-                                            <Button size="small" variant="light" className="!p-1.5" onClick={() => openModal(typeKey, item)}><Edit2 size={14}/></Button>
-                                            <Button size="small" variant="danger" className="!p-1.5"><Trash2 size={14}/></Button>
-                                        </div>
+                                        <Button size="small" variant="light" className="!p-1.5" onClick={() => openModal(typeKey, item)} disabled={!canModify}><Edit2 size={14}/></Button>
                                     </td>
                                 </tr>
                             ))}
@@ -199,10 +210,16 @@ const CustomerSegmentPage: React.FC = () => {
     return (
         <div className="space-y-6">
             <h2 className="text-3xl font-bold text-slate-800 dark:text-slate-200">Customer Segment Management</h2>
-            {renderSegmentManager('Manage Customer Category', 'cat', categories, 'CUSTOMER_CATEGORY')}
-            {renderSegmentManager('Manage Customer Sub-Category', 'subcat', subCategories, 'CUST_SUB_CATE')}
-            {renderSegmentManager('Manage Customer Group', 'group', groups, 'CUSTOMER_GROUP')}
-            {renderSegmentManager('Manage Customer Type', 'type', types, 'CUST_TYPE')}
+            <SearchBar
+                searchQuery={searchQuery}
+                onSearchChange={setSearchQuery}
+                placeholder="Search across all segments..."
+                className="max-w-md"
+            />
+            {renderSegmentManager('Manage Customer Category', 'cat', filteredCategories, 'CUSTOMER_CATEGORY')}
+            {renderSegmentManager('Manage Customer Sub-Category', 'subcat', filteredSubCategories, 'CUST_SUB_CATE')}
+            {renderSegmentManager('Manage Customer Group', 'group', filteredGroups, 'CUSTOMER_GROUP')}
+            {renderSegmentManager('Manage Customer Type', 'type', filteredTypes, 'CUST_TYPE')}
             
             <Modal
                 isOpen={modalState.isOpen}
@@ -220,6 +237,7 @@ const CustomerSegmentPage: React.FC = () => {
                                 value={item?.[nameField] || ''}
                                 onChange={e => setModalState(s => ({...s, item: {...s.item, [nameField]: e.target.value}}))}
                                 required
+                                disabled={!canModify}
                             />
                             {type === 'subcat' && (
                                 <Select
@@ -227,6 +245,7 @@ const CustomerSegmentPage: React.FC = () => {
                                     value={item?.CUST_CATE_ID || ''}
                                     onChange={e => setModalState(s => ({...s, item: {...s.item, CUST_CATE_ID: Number(e.target.value)}}))}
                                     required
+                                    disabled={!canModify}
                                 >
                                     <option value="">Select...</option>
                                     {categories.filter(c => c.STATUS === 1).map(c => (
@@ -238,7 +257,7 @@ const CustomerSegmentPage: React.FC = () => {
                     </div>
                     <footer className="flex justify-end gap-4 px-6 py-4 bg-slate-50 dark:bg-slate-900/50 rounded-b-lg">
                         <Button type="button" variant="secondary" onClick={closeModal}>Cancel</Button>
-                        <Button type="submit" variant="success">Save</Button>
+                        <Button type="submit" variant="success" disabled={!canModify}>Save</Button>
                     </footer>
                 </form>
             </Modal>

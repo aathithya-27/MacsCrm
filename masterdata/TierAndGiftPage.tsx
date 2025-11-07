@@ -6,7 +6,7 @@ import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
 import Modal from '../components/ui/Modal';
 import ToggleSwitch from '../components/ui/ToggleSwitch';
-import { Plus, Edit2, GripVertical } from 'lucide-react';
+import { Plus, Edit2, GripVertical, Search } from 'lucide-react';
 import SearchBar from '../components/ui/SearchBar';
 import Select from '../components/ui/Select';
 
@@ -66,7 +66,7 @@ const TierRuleModal: React.FC<{
                             {customerTypes.filter(ct => ct.STATUS === 1).map(type => {
                                 const isUsed = tiers.some(t => t.CUST_TYPE_ID === type.ID && t.ID !== initialData?.ID);
                                 return (
-                                    <option key={type.ID} value={type.ID} disabled={isUsed} className={isUsed ? 'text-slate-400' : ''}>
+                                    <option key={type.ID} value={type.ID} disabled={isUsed} className={isUsed ? 'text-slate-400 dark:text-slate-500' : ''}>
                                         {type.CUST_TYPE} {isUsed ? '(In Use)' : ''}
                                     </option>
                                 );
@@ -89,7 +89,7 @@ const TierRuleModal: React.FC<{
                 </div>
                 <footer className="flex justify-end gap-4 px-6 py-4 bg-slate-50 dark:bg-slate-800/50 rounded-b-lg">
                     <Button type="button" variant="secondary" onClick={onClose}>Cancel</Button>
-                    <Button type="submit" variant="success" disabled={!canModify}>Save Tier</Button>
+                    <Button type="submit" variant="primary" disabled={!canModify}>Save Tier</Button>
                 </footer>
             </form>
         </Modal>
@@ -103,7 +103,6 @@ const TierAndGiftPage: React.FC = () => {
     const [gifts, setGifts] = useState<Gift[]>([]);
     const [customerTypes, setCustomerTypes] = useState<CustomerType[]>([]);
     const [isLoading, setIsLoading] = useState(true);
-    const [calculationMethod, setCalculationMethod] = useState<'sumAssured' | 'premium'>('sumAssured');
     
     const [isTierModalOpen, setIsTierModalOpen] = useState(false);
     const [editingTier, setEditingTier] = useState<Partial<CustomerTier> | null>(null);
@@ -112,13 +111,12 @@ const TierAndGiftPage: React.FC = () => {
     
     const [draggedTierId, setDraggedTierId] = useState<number | null>(null);
     const [tierModalMode, setTierModalMode] = useState<'sumAssured' | 'premium' | 'edit'>('edit');
-    const triggerButtonRef = useRef<HTMLButtonElement>(null);
     
     const [searchQuery, setSearchQuery] = useState('');
     const [giftSearchQuery, setGiftSearchQuery] = useState('');
 
-    const canCreate = true;
-    const canModify = true;
+    const canCreate = companyData?.STATUS === 1;
+    const canModify = companyData?.STATUS === 1;
 
     useEffect(() => {
         const loadData = async () => {
@@ -250,30 +248,30 @@ const TierAndGiftPage: React.FC = () => {
         const valueHeader = mode === 'sumAssured' ? 'Min. Sum Assured (₹)' : 'Min. Premium (₹)';
         
         return (
-            <div className="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-sm border dark:border-slate-700">
+            <div className="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-md border border-slate-200 dark:border-slate-700">
                 <div className="flex justify-between items-center mb-4">
-                    <h3 className="text-lg font-semibold text-slate-800 dark:text-white">{title}</h3>
-                    {canCreate && <Button variant="primary" onClick={() => openTierModal(null, mode)}><Plus size={16}/> Add Tier</Button>}
+                    <h3 className="text-lg font-semibold text-slate-900 dark:text-white">{title}</h3>
+                    {<Button variant="primary" onClick={() => openTierModal(null, mode)} disabled={!canCreate}><Plus size={16}/> Add Tier</Button>}
                 </div>
                 <div className="overflow-x-auto">
                     <table className="w-full text-left text-sm">
-                        <thead className="border-b dark:border-slate-600"><tr>
-                            <th className="py-2 w-8"></th>
-                            <th className="py-2 text-xs font-bold uppercase">Type Name</th>
-                            <th className="py-2 text-xs font-bold uppercase whitespace-nowrap">{valueHeader}</th>
-                            <th className="py-2 text-xs font-bold uppercase">Assigned Gift</th>
-                            <th className="py-2 text-center text-xs font-bold uppercase">Status</th>
-                            <th className="py-2 text-center text-xs font-bold uppercase">Actions</th>
+                        <thead className="border-b-2 border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400"><tr>
+                            <th className="py-3 px-2 w-8"></th>
+                            <th className="py-3 px-2 text-xs font-bold uppercase">Type Name</th>
+                            <th className="py-3 px-2 text-xs font-bold uppercase whitespace-nowrap text-right">{valueHeader}</th>
+                            <th className="py-3 px-2 text-xs font-bold uppercase">Assigned Gift</th>
+                            <th className="py-3 px-2 text-center text-xs font-bold uppercase">Status</th>
+                            <th className="py-3 px-2 text-center text-xs font-bold uppercase">Actions</th>
                         </tr></thead>
                         <tbody onDragEnd={() => setDraggedTierId(null)}>
                             {sortedTiers.map(tier => (
-                                <tr key={tier.ID} draggable={canModify} onDragStart={e => setDraggedTierId(tier.ID)} onDragOver={e => e.preventDefault()} onDrop={e => handleTierDrop(e, tier.ID)} className={`border-b dark:border-slate-700/50 ${canModify ? 'cursor-grab' : ''} ${draggedTierId === tier.ID ? 'opacity-50' : ''} ${tier.STATUS === 0 ? 'opacity-50' : ''}`}>
-                                    <td className="py-2"><GripVertical size={16} className="text-slate-400"/></td>
-                                    <td className="py-2 font-medium">{customerTypeMap.get(tier.CUST_TYPE_ID)}</td>
-                                    <td className="py-2">{tier[valueField]?.toLocaleString('en-IN') || '-'}</td>
-                                    <td className="py-2">{gifts.find(g => g.ID === tier.ASSIGNED_GIFT_ID)?.GIFT_NAME || <span className="text-slate-400 italic">None</span>}</td>
-                                    <td className="py-2 text-center"><ToggleSwitch enabled={tier.STATUS === 1} onChange={() => handleToggleTier(tier)} disabled={!canModify}/></td>
-                                    <td className="py-2 text-center"><Button size="small" variant="light" className="!p-1.5" onClick={() => openTierModal(tier, 'edit')} disabled={!canModify}><Edit2 size={14}/></Button></td>
+                                <tr key={tier.ID} draggable={canModify} onDragStart={e => setDraggedTierId(tier.ID)} onDragOver={e => e.preventDefault()} onDrop={e => handleTierDrop(e, tier.ID)} className={`border-b border-slate-200 dark:border-slate-700 ${canModify ? 'cursor-grab' : ''} ${draggedTierId === tier.ID ? 'opacity-50' : ''}`}>
+                                    <td className="py-3 px-2"><GripVertical size={16} className="text-slate-400"/></td>
+                                    <td className="py-3 px-2 font-medium">{customerTypeMap.get(tier.CUST_TYPE_ID)}</td>
+                                    <td className="py-3 px-2 text-right">{tier[valueField]?.toLocaleString('en-IN') || '-'}</td>
+                                    <td className="py-3 px-2">{gifts.find(g => g.ID === tier.ASSIGNED_GIFT_ID)?.GIFT_NAME || <span className="text-slate-500 italic">None</span>}</td>
+                                    <td className="py-3 px-2 text-center"><ToggleSwitch enabled={tier.STATUS === 1} onChange={() => handleToggleTier(tier)} disabled={!canModify}/></td>
+                                    <td className="py-3 px-2 text-center"><Button size="small" variant="light" className="!p-1.5" onClick={() => openTierModal(tier, 'edit')} disabled={!canModify}><Edit2 size={14}/></Button></td>
                                 </tr>
                             ))}
                         </tbody>
@@ -285,8 +283,10 @@ const TierAndGiftPage: React.FC = () => {
 
     return (
         <div className="space-y-8">
-            <h3 className="text-2xl font-bold text-slate-800 dark:text-white">Tier & Gift Management</h3>
-            <p className="text-sm text-slate-500 dark:text-slate-400 -mt-7">Define Customer Types based on sum assured or premium, and manage the gifts associated with them.</p>
+            <div>
+                <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Tier & Gift Management</h2>
+                <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Define Customer Types based on sum assured or premium, and manage the gifts associated with them.</p>
+            </div>
 
             <SearchBar searchQuery={searchQuery} onSearchChange={setSearchQuery} placeholder="Search tier types..." className="w-full md:w-1/2" />
             
@@ -294,30 +294,26 @@ const TierAndGiftPage: React.FC = () => {
                 {renderTierTable('sumAssured')}
                 {renderTierTable('premium')}
 
-                <div className="lg:col-span-2 bg-white dark:bg-slate-800 p-6 rounded-lg shadow-sm border dark:border-slate-700">
+                <div className="lg:col-span-2 bg-white dark:bg-slate-800 p-6 rounded-lg shadow-md border border-slate-200 dark:border-slate-700">
                     <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-4">
-                        <h3 className="text-lg font-semibold text-slate-800 dark:text-white">Master Gift List</h3>
+                        <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Master Gift List</h3>
                         <div className="flex items-center gap-4 w-full md:w-auto">
                             <SearchBar searchQuery={giftSearchQuery} onSearchChange={setGiftSearchQuery} placeholder="Search gifts..." className="w-full md:w-64" />
-                            {canCreate && <Button variant="primary" onClick={() => openGiftModal(null)}><Plus size={16}/> Add Gift</Button>}
+                            {<Button variant="primary" onClick={() => openGiftModal(null)} disabled={!canCreate}><Plus size={16}/> Add Gift</Button>}
                         </div>
                     </div>
                     <div className="overflow-y-auto max-h-80 pr-2">
-                        <table className="w-full text-left text-sm">
-                           <tbody>
-                                {sortedGifts.map(gift => (
-                                    <tr key={gift.ID} className={`border-b dark:border-slate-700/50 ${gift.STATUS === 0 ? 'opacity-50' : ''}`}>
-                                        <td className={`py-2 ${gift.STATUS === 0 ? 'line-through' : ''}`}>{gift.GIFT_NAME}</td>
-                                        <td className="py-2 text-right">
-                                            <div className="flex items-center justify-end gap-2">
-                                                <ToggleSwitch enabled={gift.STATUS === 1} onChange={() => handleToggleGift(gift)} disabled={!canModify}/>
-                                                <Button size="small" variant="light" className="!p-1.5" onClick={() => openGiftModal(gift)} disabled={!canModify}><Edit2 size={14}/></Button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
+                        <div className="space-y-2">
+                            {sortedGifts.map(gift => (
+                                <div key={gift.ID} className="flex justify-between items-center p-2 rounded-md hover:bg-slate-50 dark:hover:bg-slate-700/50">
+                                    <span className={`text-sm ${gift.STATUS === 0 ? 'line-through text-slate-500' : ''}`}>{gift.GIFT_NAME}</span>
+                                    <div className="flex items-center justify-end gap-3">
+                                        <ToggleSwitch enabled={gift.STATUS === 1} onChange={() => handleToggleGift(gift)} disabled={!canModify}/>
+                                        <Button size="small" variant="light" className="!p-1.5" onClick={() => openGiftModal(gift)} disabled={!canModify}><Edit2 size={14}/></Button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
                     </div>
                 </div>
             </div>
@@ -328,12 +324,12 @@ const TierAndGiftPage: React.FC = () => {
                 <Modal isOpen={isGiftModalOpen} onClose={closeGiftModal} contentClassName="bg-white dark:bg-slate-800 rounded-lg shadow-xl w-full max-w-md">
                     <form onSubmit={(e) => { e.preventDefault(); handleSaveGift()}}>
                         <div className="p-6 space-y-4">
-                            <h2 className="text-xl font-bold text-slate-800 dark:text-white">{editingGift?.ID ? 'Edit' : 'Add'} Gift</h2>
-                            <Input label="Gift Name" value={editingGift?.GIFT_NAME || ''} onChange={e => setEditingGift(p => p ? {...p, GIFT_NAME: e.target.value} : null)} disabled={!canModify}/>
+                            <h2 className="text-xl font-bold text-slate-900 dark:text-white">{editingGift?.ID ? 'Edit' : 'Add'} Gift</h2>
+                            <Input label="Gift Name" value={editingGift?.GIFT_NAME || ''} onChange={e => setEditingGift(p => p ? {...p, GIFT_NAME: e.target.value} : null)} disabled={!canModify} autoFocus/>
                         </div>
                         <footer className="flex justify-end gap-4 px-6 py-4 bg-slate-50 dark:bg-slate-800/50 rounded-b-lg">
                             <Button type="button" variant="secondary" onClick={closeGiftModal}>Cancel</Button>
-                            <Button type="submit" variant="success" disabled={!canModify}>Save Gift</Button>
+                            <Button type="submit" variant="primary" disabled={!canModify}>Save Gift</Button>
                         </footer>
                     </form>
                 </Modal>

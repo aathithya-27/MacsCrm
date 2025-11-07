@@ -1,4 +1,5 @@
 
+
 import React, { Suspense, lazy } from 'react';
 import { Routes, Route } from 'react-router-dom';
 
@@ -21,6 +22,8 @@ const RoutesManager = lazy(() => import('./RoutesManager'));
 const CustomerSegmentPage = lazy(() => import('./CustomerSegmentPage'));
 const TierAndGiftPage = lazy(() => import('./TierAndGiftPage'));
 const ReligionAndFestivalPage = lazy(() => import('./ReligionAndFestivalPage'));
+const FinancialYearPage = lazy(() => import('./FinancialYearPage'));
+const BankMasterPage = lazy(() => import('./BankMasterPage'));
 
 const LoadingFallback: React.FC = () => (
     <div className="flex justify-center items-center h-full">
@@ -36,6 +39,8 @@ const MasterDataRouter: React.FC = () => {
                 <Route path="branch" element={<BranchPage />} />
                 <Route path="businessVertical" element={<BusinessVerticalPage />} />
                 <Route path="geography" element={<GeographyManagementPage />} />
+                <Route path="financialYear" element={<FinancialYearPage />} />
+                <Route path="bankMaster" element={<BankMasterPage />} />
                 <Route path="customerSegment" element={<CustomerSegmentPage />} />
                 <Route path="tierAndGift" element={<TierAndGiftPage />} />
                 <Route path="designation" element={<DesignationPage />} />

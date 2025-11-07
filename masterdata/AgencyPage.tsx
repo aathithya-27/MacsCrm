@@ -32,8 +32,8 @@ const AgencyPage: React.FC = () => {
     const [agencyToAction, setAgencyToAction] = useState<Agency | null>(null);
     const [dependentItems, setDependentItems] = useState<{ name: string; type: string }[]>([]);
 
-    const canCreate = true;
-    const canModify = true;
+    const canCreate = companyData?.STATUS === 1;
+    const canModify = companyData?.STATUS === 1;
 
     useEffect(() => {
         const loadData = async () => {
@@ -219,7 +219,7 @@ const AgencyPage: React.FC = () => {
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
                     <input type="text" placeholder="Search Agency..." value={agencySearch} onChange={e => setAgencySearch(e.target.value)} className="w-full pl-10 pr-4 py-2 border rounded-md bg-white border-slate-300 dark:bg-slate-700 dark:border-slate-600"/>
                 </div>
-                {canCreate && <Button onClick={() => openAgencyModal(null)} className="w-full mb-4"><Plus size={16}/>Add New Agency</Button>}
+                {<Button onClick={() => openAgencyModal(null)} className="w-full mb-4" disabled={!canCreate}><Plus size={16}/>Add New Agency</Button>}
                 <div className="flex-grow overflow-auto">
                     <table className="min-w-full">
                         <thead className="sticky top-0 bg-slate-50 dark:bg-slate-700">
@@ -252,7 +252,7 @@ const AgencyPage: React.FC = () => {
                              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
                              <input type="text" placeholder="Search Schemes..." value={schemeSearch} onChange={e => setSchemeSearch(e.target.value)} className="w-full pl-10 pr-4 py-2 border rounded-md bg-white border-slate-300 dark:bg-slate-700 dark:border-slate-600"/>
                         </div>
-                        {canCreate && <Button onClick={() => openSchemeModal(null)} className="w-full mb-4"><Plus size={16}/>Add New Scheme</Button>}
+                        {<Button onClick={() => openSchemeModal(null)} className="w-full mb-4" disabled={!canCreate}><Plus size={16}/>Add New Scheme</Button>}
                         <div className="flex-grow overflow-auto">
                            <table className="min-w-full">
                                 <thead className="sticky top-0 bg-slate-50 dark:bg-slate-700">
@@ -267,7 +267,7 @@ const AgencyPage: React.FC = () => {
                                 </thead>
                                 <tbody onDragEnd={() => setDraggedSchemeId(null)}>
                                     {schemesForSelectedAgency.map((scheme, index) => (
-                                        <tr key={scheme.ID} draggable onDragStart={e => setDraggedSchemeId(scheme.ID)} onDragOver={e => e.preventDefault()} onDrop={e => handleSchemeDrop(e, scheme.ID)}
+                                        <tr key={scheme.ID} draggable={canModify} onDragStart={e => setDraggedSchemeId(scheme.ID)} onDragOver={e => e.preventDefault()} onDrop={e => handleSchemeDrop(e, scheme.ID)}
                                             className={`cursor-grab ${scheme.STATUS === 0 ? 'opacity-60' : ''} ${draggedSchemeId === scheme.ID ? 'opacity-30' : ''}`}>
                                             <td className="px-2 py-3 text-slate-400"><GripVertical size={16}/></td>
                                             <td className="px-4 py-2 text-sm">{index + 1}</td>

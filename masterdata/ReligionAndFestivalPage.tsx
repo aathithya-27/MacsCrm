@@ -29,6 +29,9 @@ const ReligionAndFestivalPage: React.FC = () => {
         item: Partial<Religion | Festival | FestivalDate> | null;
     }>({ isOpen: false, type: null, item: null });
 
+    const canCreate = companyData?.STATUS === 1;
+    const canModify = companyData?.STATUS === 1;
+
     const loadData = useCallback(async () => {
         setIsLoading(true);
         try {
@@ -58,13 +61,12 @@ const ReligionAndFestivalPage: React.FC = () => {
 
     useEffect(() => { loadData(); }, [loadData]);
 
-    // Filtering and Memoization
     const religionMap = useMemo(() => new Map(religions.map(r => [r.ID, r.RELIGION])), [religions]);
     
     const yearOptions = useMemo(() => {
         const yearsFromDates = festivalDates.map(d => new Date(d.FESTVEL_DATE).getFullYear());
         const currentYear = new Date().getFullYear();
-        const surroundingYears = Array.from({ length: 11 }, (_, i) => currentYear - 5 + i); // -5 to +5
+        const surroundingYears = Array.from({ length: 11 }, (_, i) => currentYear - 5 + i); 
         const allYears = new Set([...yearsFromDates, ...surroundingYears]);
         return Array.from(allYears).sort((a, b) => a - b);
     }, [festivalDates]);
@@ -103,13 +105,11 @@ const ReligionAndFestivalPage: React.FC = () => {
         });
     }, [filteredFestivals, festivalDates, yearFilter, monthFilter]);
 
-    // Modal Handling
     const openModal = (type: 'religion' | 'festival' | 'date', item: any | null) => {
         setModalState({ isOpen: true, type, item: item ? { ...item } : { STATUS: 1 } });
     };
     const closeModal = () => setModalState({ isOpen: false, type: null, item: null });
 
-    // Save and Update Logic
     const handleSave = async () => {
         if (!modalState.type || !modalState.item || !companyData) return;
         const { type, item } = modalState;
@@ -138,28 +138,26 @@ const ReligionAndFestivalPage: React.FC = () => {
                 let updated = [...festivalDates];
                 let message = '';
                 
-                if (typedItem.ID) { // Editing an existing date
+                if (typedItem.ID) { 
                     const originalDate = festivalDates.find(d => d.ID === typedItem.ID);
                     const originalYear = originalDate ? new Date(originalDate.FESTVEL_DATE).getFullYear() : null;
                     const newYear = new Date(typedItem.FESTVEL_DATE).getFullYear();
 
                     if (originalYear === newYear) {
-                        // Same year: It's an UPDATE
                         updated = festivalDates.map(d => d.ID === typedItem.ID ? { ...d, ...typedItem, ...commonFields } as FestivalDate : d);
                         message = 'Festival date updated successfully.';
                     } else {
-                        // Different year: It's a CREATE, leaving original untouched
                         const newDatePayload: FestivalDate = {
                             ...(typedItem as FestivalDate),
                             ...commonFields,
-                            ID: Date.now(), // New ID is crucial
+                            ID: Date.now(),
                             CREATED_ON: now,
                             CREATED_BY: 1,
                         };
                         updated.push(newDatePayload);
                         message = `New festival date for ${newYear} created successfully.`;
                     }
-                } else { // Creating a brand new date
+                } else { 
                     const newDatePayload: FestivalDate = {
                         ...(typedItem as FestivalDate),
                         ...commonFields,
@@ -197,7 +195,6 @@ const ReligionAndFestivalPage: React.FC = () => {
         }
     }
     
-    // Toggle Status
     const handleToggle = async (type: 'religion' | 'festival', item: Religion | Festival) => {
         const newStatus = item.STATUS === 1 ? 0 : 1;
         try {
@@ -243,7 +240,7 @@ const ReligionAndFestivalPage: React.FC = () => {
         <div className="bg-white dark:bg-slate-800 shadow-md rounded-lg p-4">
             <div className="flex items-center justify-between mb-4">
                 <h3 className="text-xl font-bold text-slate-800 dark:text-slate-200">{title}</h3>
-                <Button onClick={() => openModal(type, null)}><Plus size={16} /> Add New {type.charAt(0).toUpperCase() + type.slice(1)}</Button>
+                <Button onClick={() => openModal(type, null)} disabled={!canCreate}><Plus size={16} /> Add New {type.charAt(0).toUpperCase() + type.slice(1)}</Button>
             </div>
             <div className="overflow-auto" style={{ maxHeight: '300px' }}>
                 <table className="min-w-full">
@@ -260,8 +257,8 @@ const ReligionAndFestivalPage: React.FC = () => {
                             <tr key={item.ID} className="hover:bg-slate-50 dark:hover:bg-slate-700/50">
                                 <td className="px-4 py-2 text-sm">{index + 1}</td>
                                 {columns.map(c => <td key={c.header} className="px-4 py-2 text-sm font-medium">{c.accessor(item)}</td>)}
-                                <td className="px-4 py-2"><ToggleSwitch enabled={item.STATUS === 1} onChange={() => handleToggle(type, item)} /></td>
-                                <td className="px-4 py-2"><Button size="small" variant="light" className="!p-1.5" onClick={() => openModal(type, item)}><Edit2 size={14}/></Button></td>
+                                <td className="px-4 py-2"><ToggleSwitch enabled={item.STATUS === 1} onChange={() => handleToggle(type, item)} disabled={!canModify}/></td>
+                                <td className="px-4 py-2"><Button size="small" variant="light" className="!p-1.5" onClick={() => openModal(type, item)} disabled={!canModify}><Edit2 size={14}/></Button></td>
                             </tr>
                         ))}
                     </tbody>
@@ -328,6 +325,7 @@ const ReligionAndFestivalPage: React.FC = () => {
                                         <ToggleSwitch 
                                             enabled={isParentActive}
                                             onChange={() => handleToggleFestivalStatus(item)}
+                                            disabled={!canModify}
                                         />
                                     </td>
                                     <td className="px-4 py-2">
@@ -336,6 +334,7 @@ const ReligionAndFestivalPage: React.FC = () => {
                                             variant="light" 
                                             className="!p-1.5" 
                                             onClick={() => openModal('date', item.dateObject || { FEST_ID: item.ID, FESTVEL_DATE: `${yearFilter}-01-01`, STATUS: 1 })}
+                                            disabled={!canCreate && !item.dateObject}
                                         >
                                             {item.dateObject ? <Edit2 size={14}/> : <CalendarIcon size={14}/>}
                                         </Button>
@@ -359,26 +358,26 @@ const ReligionAndFestivalPage: React.FC = () => {
                     <div className="p-6">
                         <h2 className="text-xl font-bold mb-4">{modalState.item?.ID ? 'Edit' : 'Add'} {modalState.type?.charAt(0).toUpperCase() + modalState.type?.slice(1)}</h2>
                         <div className="space-y-4">
-                            {modalState.type === 'religion' && <Input label="Religion Name" value={(modalState.item as Religion)?.RELIGION || ''} onChange={e => setModalState(s => ({...s, item: {...s.item, RELIGION: e.target.value}}))} autoFocus required />}
+                            {modalState.type === 'religion' && <Input label="Religion Name" value={(modalState.item as Religion)?.RELIGION || ''} onChange={e => setModalState(s => ({...s, item: {...s.item, RELIGION: e.target.value}}))} autoFocus required disabled={!canModify}/>}
                             {modalState.type === 'festival' && <>
-                                <Input label="Festival Name" value={(modalState.item as Festival)?.FEST_DESC || ''} onChange={e => setModalState(s => ({...s, item: {...s.item, FEST_DESC: e.target.value}}))} autoFocus required />
-                                <Select label="Religion" value={(modalState.item as Festival)?.RELIGION_ID || ''} onChange={e => setModalState(s => ({...s, item: {...s.item, RELIGION_ID: e.target.value ? Number(e.target.value) : null}}))}>
+                                <Input label="Festival Name" value={(modalState.item as Festival)?.FEST_DESC || ''} onChange={e => setModalState(s => ({...s, item: {...s.item, FEST_DESC: e.target.value}}))} autoFocus required disabled={!canModify} />
+                                <Select label="Religion" value={(modalState.item as Festival)?.RELIGION_ID || ''} onChange={e => setModalState(s => ({...s, item: {...s.item, RELIGION_ID: e.target.value ? Number(e.target.value) : null}}))} disabled={!canModify}>
                                     <option value="">-- General --</option>
                                     {religions.filter(r => r.STATUS === 1).map(r => <option key={r.ID} value={r.ID}>{r.RELIGION}</option>)}
                                 </Select>
                             </>}
                             {modalState.type === 'date' && <>
-                                <Select label="Festival" value={(modalState.item as FestivalDate)?.FEST_ID || ''} onChange={e => setModalState(s => ({...s, item: {...s.item, FEST_ID: Number(e.target.value)}}))} disabled={!!modalState.item?.ID} required>
+                                <Select label="Festival" value={(modalState.item as FestivalDate)?.FEST_ID || ''} onChange={e => setModalState(s => ({...s, item: {...s.item, FEST_ID: Number(e.target.value)}}))} disabled={!!modalState.item?.ID || !canModify} required>
                                     <option value="">-- Select Festival --</option>
                                     {festivals.filter(f => f.STATUS === 1).map(f => <option key={f.ID} value={f.ID}>{f.FEST_DESC}</option>)}
                                 </Select>
-                                <Input label="Date" type="date" value={(modalState.item as FestivalDate)?.FESTVEL_DATE || ''} onChange={e => setModalState(s => ({...s, item: {...s.item, FESTVEL_DATE: e.target.value}}))} required />
+                                <Input label="Date" type="date" value={(modalState.item as FestivalDate)?.FESTVEL_DATE || ''} onChange={e => setModalState(s => ({...s, item: {...s.item, FESTVEL_DATE: e.target.value}}))} required disabled={!canModify} />
                             </>}
                         </div>
                     </div>
                     <footer className="flex justify-end gap-4 px-6 py-4 bg-slate-50 dark:bg-slate-800/50 rounded-b-lg">
                         <Button type="button" variant="secondary" onClick={closeModal}>Cancel</Button>
-                        <Button type="submit" variant="success">Save</Button>
+                        <Button type="submit" variant="success" disabled={!canModify}>Save</Button>
                     </footer>
                 </form>
             </Modal>

@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
-import type { BusinessVertical, InsuranceType, InsuranceSubType } from '../types';
+import type { BusinessVertical, InsuranceType, InsuranceSubType, Company } from '../types';
 import * as api from '../services/api';
 import { useToast } from '../context/ToastContext';
 
@@ -13,6 +13,7 @@ const BusinessVerticalPage: React.FC = () => {
     const [verticals, setVerticals] = useState<BusinessVertical[]>([]);
     const [insuranceTypes, setInsuranceTypes] = useState<InsuranceType[]>([]);
     const [insuranceSubTypes, setInsuranceSubTypes] = useState<InsuranceSubType[]>([]);
+    const [companyData, setCompanyData] = useState<Company | null>(null);
 
     const [isLoading, setIsLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
@@ -23,8 +24,8 @@ const BusinessVerticalPage: React.FC = () => {
     const [itemToAction, setItemToAction] = useState<BusinessVertical | null>(null);
     const [dependentItems, setDependentItems] = useState<{ name: string; type: string }[]>([]);
 
-    const canModify = true;
-    const canDrag = searchQuery === '';
+    const canModify = companyData?.STATUS === 1;
+    const canDrag = searchQuery === '' && canModify;
 
     useEffect(() => {
         const loadData = async () => {
@@ -32,9 +33,10 @@ const BusinessVerticalPage: React.FC = () => {
             try {
                 const user = await api.fetchCurrentUser();
                 const companies = await api.fetchCompanies();
-                const companyData = companies.find(c => c.COMP_ID === user.comp_id) || null;
+                const currentCompany = companies.find(c => c.COMP_ID === user.comp_id) || null;
+                setCompanyData(currentCompany);
 
-                if (companyData) {
+                if (currentCompany) {
                     const [verticalData, typesData, subTypesData] = await Promise.all([
                         api.fetchBusinessVerticals(),
                         api.fetchInsuranceTypes(),
@@ -42,7 +44,7 @@ const BusinessVerticalPage: React.FC = () => {
                     ]);
 
                     const companyVerticals = verticalData
-                        .filter(v => v.COMP_ID === companyData.COMP_ID)
+                        .filter(v => v.COMP_ID === currentCompany.COMP_ID)
                         .sort((a, b) => a.ID - b.ID); 
                     
                     setVerticals(companyVerticals);
@@ -170,17 +172,15 @@ const BusinessVerticalPage: React.FC = () => {
                 </div>
             </div>
 
-            <div className="flex-grow overflow-hidden bg-white dark:bg-slate-800 shadow-md rounded-lg">
-                <div className="h-full flex flex-col">
-                    {/* Header */}
+            <div className="bg-white dark:bg-slate-800 shadow-md rounded-lg">
+                <div className="flex flex-col">
                     <div className={`grid ${gridCols} gap-x-6 px-6 py-3 bg-slate-50 dark:bg-slate-700/50 border-b border-slate-200 dark:border-slate-700`}>
                         <div />
                         <div className="text-left text-xs font-bold text-slate-500 dark:text-slate-300 uppercase tracking-wider">ID</div>
                         <div className="text-left text-xs font-bold text-slate-500 dark:text-slate-300 uppercase tracking-wider">Name</div>
                         <div className="text-left text-xs font-bold text-slate-500 dark:text-slate-300 uppercase tracking-wider">Status</div>
                     </div>
-                    {/* Body */}
-                    <div className="flex-1 overflow-y-auto">
+                    <div>
                         {filteredVerticals.length > 0 ? filteredVerticals.map((vertical, index) => {
                             const isDragging = draggedIndex === index;
                             

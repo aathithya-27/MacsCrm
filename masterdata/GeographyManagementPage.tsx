@@ -20,7 +20,6 @@ const GeographyManagementPage: React.FC = () => {
     const [districts, setDistricts] = useState<District[]>([]);
     const [cities, setCities] = useState<City[]>([]);
     const [areas, setAreas] = useState<Area[]>([]);
-    const [allMembers, setAllMembers] = useState<Member[]>([]);
     
     const [isLoading, setIsLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
@@ -30,7 +29,6 @@ const GeographyManagementPage: React.FC = () => {
 
     const [isWarningModalOpen, setIsWarningModalOpen] = useState(false);
     const [itemToToggle, setItemToToggle] = useState<GeoItem | null>(null);
-    const [dependentMembers, setDependentMembers] = useState<Member[]>([]);
 
     const [modalCountry, setModalCountry] = useState<string | null>(null);
     const [modalStateVal, setModalStateVal] = useState<string | null>(null);
@@ -40,15 +38,14 @@ const GeographyManagementPage: React.FC = () => {
     const loadData = useCallback(async () => {
         setIsLoading(true);
         try {
-            const [countriesData, statesData, districtsData, citiesData, areasData, membersData] = await Promise.all([
-                api.fetchCountries(), api.fetchStates(), api.fetchDistricts(), api.fetchCities(), api.fetchAreas(), api.fetchAllMembers()
+            const [countriesData, statesData, districtsData, citiesData, areasData] = await Promise.all([
+                api.fetchCountries(), api.fetchStates(), api.fetchDistricts(), api.fetchCities(), api.fetchAreas()
             ]);
             setCountries(countriesData);
             setStates(statesData);
             setDistricts(districtsData);
             setCities(citiesData);
             setAreas(areasData);
-            setAllMembers(membersData);
         } catch (error) {
             addToast("Failed to load geographies.", "error");
         } finally {
@@ -81,17 +78,15 @@ const GeographyManagementPage: React.FC = () => {
             return;
         }
 
-
         try {
             if (item.ID) {
                 const message = `${type} updated successfully.`;
-                if (type === 'Country') await api.onUpdateCountries(countries.map(c => c.ID === item.ID ? item as Country : c));
-                else if (type === 'State') await api.onUpdateStates(states.map(s => s.ID === item.ID ? item as State : s));
-                else if (type === 'District') await api.onUpdateDistricts(districts.map(d => d.ID === item.ID ? item as District : d));
-                else if (type === 'City') await api.onUpdateCities(cities.map(c => c.ID === item.ID ? item as City : c));
-                else if (type === 'Area') await api.onUpdateAreas(areas.map(a => a.ID === item.ID ? item as Area : a));
+                if (type === 'Country') setCountries(await api.onUpdateCountries(countries.map(c => c.ID === item.ID ? item as Country : c)));
+                else if (type === 'State') setStates(await api.onUpdateStates(states.map(s => s.ID === item.ID ? item as State : s)));
+                else if (type === 'District') setDistricts(await api.onUpdateDistricts(districts.map(d => d.ID === item.ID ? item as District : d)));
+                else if (type === 'City') setCities(await api.onUpdateCities(cities.map(c => c.ID === item.ID ? item as City : c)));
+                else if (type === 'Area') setAreas(await api.onUpdateAreas(areas.map(a => a.ID === item.ID ? item as Area : a)));
                 addToast(message, 'success');
-
             } else { 
                 const newItem = {
                     ...item,
@@ -101,14 +96,13 @@ const GeographyManagementPage: React.FC = () => {
                 };
 
                 const message = `${type} added successfully.`;
-                if (type === 'Country') await api.onUpdateCountries([...countries, newItem as Country]);
-                else if (type === 'State') await api.onUpdateStates([...states, { ...newItem, COUNTRY_ID: Number(modalCountry) } as State]);
-                else if (type === 'District') await api.onUpdateDistricts([...districts, { ...newItem, STATE_ID: Number(modalStateVal), COUNTRY_ID: Number(modalCountry) } as District]);
-                else if (type === 'City') await api.onUpdateCities([...cities, { ...newItem, DISTRICT_ID: Number(modalDistrict), STATE_ID: Number(modalStateVal), COUNTRY_ID: Number(modalCountry) } as City]);
-                else if (type === 'Area') await api.onUpdateAreas([...areas, { ...newItem, CITY_ID: Number(modalCity), DISTRICT_ID: Number(modalDistrict), STATE_ID: Number(modalStateVal), COUNTRY_ID: Number(modalCountry) } as Area]);
+                if (type === 'Country') setCountries(await api.onUpdateCountries([...countries, newItem as Country]));
+                else if (type === 'State') setStates(await api.onUpdateStates([...states, { ...newItem, COUNTRY_ID: Number(modalCountry) } as State]));
+                else if (type === 'District') setDistricts(await api.onUpdateDistricts([...districts, { ...newItem, STATE_ID: Number(modalStateVal), COUNTRY_ID: Number(modalCountry) } as District]));
+                else if (type === 'City') setCities(await api.onUpdateCities([...cities, { ...newItem, DISTRICT_ID: Number(modalDistrict), STATE_ID: Number(modalStateVal), COUNTRY_ID: Number(modalCountry) } as City]));
+                else if (type === 'Area') setAreas(await api.onUpdateAreas([...areas, { ...newItem, CITY_ID: Number(modalCity), DISTRICT_ID: Number(modalDistrict), STATE_ID: Number(modalStateVal), COUNTRY_ID: Number(modalCountry) } as Area]));
                 addToast(message, 'success');
             }
-            await loadData();
             handleCloseModal();
         } catch (error) {
             addToast("Failed to save.", "error");
@@ -117,29 +111,138 @@ const GeographyManagementPage: React.FC = () => {
     
     const performToggle = async (itemToToggle: GeoItem) => {
         const newStatus = itemToToggle.STATUS === 1 ? 0 : 1;
-        const updatedItem = { ...itemToToggle, STATUS: newStatus };
 
-        let itemType: GeoTypeString = 'Country';
-        if ('COUNTRY_NAME' in itemToToggle) itemType = 'Country';
-        else if ('STATE' in itemToToggle) itemType = 'State';
-        else if ('DISTRICT' in itemToToggle) itemType = 'District';
-        else if ('CITY' in itemToToggle) itemType = 'City';
-        else if ('AREA' in itemToToggle) itemType = 'Area';
+        let updatedCountries = [...countries];
+        let updatedStates = [...states];
+        let updatedDistricts = [...districts];
+        let updatedCities = [...cities];
+        let updatedAreas = [...areas];
 
-        const message = `${itemType} status updated.`;
+        let itemType: GeoTypeString | null = null;
+        let itemName = '';
+
+        if ('COUNTRY_NAME' in itemToToggle) {
+            itemType = 'Country';
+            itemName = itemToToggle.COUNTRY_NAME;
+            const countryId = itemToToggle.ID;
+            updatedCountries = updatedCountries.map(c => c.ID === countryId ? { ...c, STATUS: newStatus } : c);
+            
+            const stateIdsToUpdate = states.filter(s => s.COUNTRY_ID === countryId).map(s => s.ID);
+            updatedStates = updatedStates.map(s => s.COUNTRY_ID === countryId ? { ...s, STATUS: newStatus } : s);
+
+            const districtIdsToUpdate = districts.filter(d => stateIdsToUpdate.includes(d.STATE_ID)).map(d => d.ID);
+            updatedDistricts = updatedDistricts.map(d => stateIdsToUpdate.includes(d.STATE_ID) ? { ...d, STATUS: newStatus } : d);
+
+            const cityIdsToUpdate = cities.filter(c => districtIdsToUpdate.includes(c.DISTRICT_ID)).map(c => c.ID);
+            updatedCities = updatedCities.map(c => districtIdsToUpdate.includes(c.DISTRICT_ID) ? { ...c, STATUS: newStatus } : c);
+            
+            updatedAreas = updatedAreas.map(a => cityIdsToUpdate.includes(a.CITY_ID) ? { ...a, STATUS: newStatus } : a);
+        } else if ('STATE' in itemToToggle) {
+            itemType = 'State';
+            itemName = itemToToggle.STATE;
+            const stateId = itemToToggle.ID;
+            updatedStates = updatedStates.map(s => s.ID === stateId ? { ...s, STATUS: newStatus } : s);
+
+            const districtIdsToUpdate = districts.filter(d => d.STATE_ID === stateId).map(d => d.ID);
+            updatedDistricts = updatedDistricts.map(d => d.STATE_ID === stateId ? { ...d, STATUS: newStatus } : d);
+            
+            const cityIdsToUpdate = cities.filter(c => districtIdsToUpdate.includes(c.DISTRICT_ID)).map(c => c.ID);
+            updatedCities = updatedCities.map(c => districtIdsToUpdate.includes(c.DISTRICT_ID) ? { ...c, STATUS: newStatus } : c);
+            
+            updatedAreas = updatedAreas.map(a => cityIdsToUpdate.includes(a.CITY_ID) ? { ...a, STATUS: newStatus } : a);
+        } else if ('DISTRICT' in itemToToggle) {
+            itemType = 'District';
+            itemName = itemToToggle.DISTRICT;
+            const districtId = itemToToggle.ID;
+            updatedDistricts = updatedDistricts.map(d => d.ID === districtId ? { ...d, STATUS: newStatus } : d);
+            
+            const cityIdsToUpdate = cities.filter(c => c.DISTRICT_ID === districtId).map(c => c.ID);
+            updatedCities = updatedCities.map(c => c.DISTRICT_ID === districtId ? { ...c, STATUS: newStatus } : c);
+            
+            updatedAreas = updatedAreas.map(a => cityIdsToUpdate.includes(a.CITY_ID) ? { ...a, STATUS: newStatus } : a);
+        } else if ('CITY' in itemToToggle) {
+            itemType = 'City';
+            itemName = itemToToggle.CITY;
+            const cityId = itemToToggle.ID;
+            updatedCities = updatedCities.map(c => c.ID === cityId ? { ...c, STATUS: newStatus } : c);
+            updatedAreas = updatedAreas.map(a => a.CITY_ID === cityId ? { ...a, STATUS: newStatus } : a);
+        } else if ('AREA' in itemToToggle) {
+            itemType = 'Area';
+            itemName = itemToToggle.AREA;
+            const areaId = itemToToggle.ID;
+            updatedAreas = updatedAreas.map(a => a.ID === areaId ? { ...a, STATUS: newStatus } : a);
+        }
         
-        if ('COUNTRY_NAME' in itemToToggle) await api.onUpdateCountries(countries.map(c => c.ID === itemToToggle.ID ? updatedItem as Country : c));
-        else if ('STATE' in itemToToggle) await api.onUpdateStates(states.map(s => s.ID === itemToToggle.ID ? updatedItem as State : s));
-        else if ('DISTRICT' in itemToToggle) await api.onUpdateDistricts(districts.map(d => d.ID === itemToToggle.ID ? updatedItem as District : d));
-        else if ('CITY' in itemToToggle) await api.onUpdateCities(cities.map(c => c.ID === itemToToggle.ID ? updatedItem as City : c));
-        else if ('AREA' in itemToToggle) await api.onUpdateAreas(areas.map(a => a.ID === itemToToggle.ID ? updatedItem as Area : a));
-        
-        addToast(message, 'success');
-        await loadData();
-        setIsWarningModalOpen(false);
+        try {
+            await Promise.all([
+                api.onUpdateCountries(updatedCountries),
+                api.onUpdateStates(updatedStates),
+                api.onUpdateDistricts(updatedDistricts),
+                api.onUpdateCities(updatedCities),
+                api.onUpdateAreas(updatedAreas),
+            ]);
+            
+            setCountries(updatedCountries);
+            setStates(updatedStates);
+            setDistricts(updatedDistricts);
+            setCities(updatedCities);
+            setAreas(updatedAreas);
+            
+            addToast(`${itemType} "${itemName}" and all its children have been ${newStatus ? 'activated' : 'deactivated'}.`, 'success');
+        } catch(e) {
+            addToast("Failed to update status.", "error");
+        } finally {
+            setIsWarningModalOpen(false);
+            setItemToToggle(null);
+        }
+    };
+    
+    const getDependentChildrenCount = (item: GeoItem): number => {
+        if ('COUNTRY_NAME' in item) { 
+            const countryStates = states.filter(s => s.COUNTRY_ID === item.ID);
+            if (countryStates.length === 0) return 0;
+            const stateIds = countryStates.map(s => s.ID);
+            const countryDistricts = districts.filter(d => stateIds.includes(d.STATE_ID));
+            if (countryDistricts.length === 0) return countryStates.length;
+            const districtIds = countryDistricts.map(d => d.ID);
+            const countryCities = cities.filter(c => districtIds.includes(c.DISTRICT_ID));
+            if (countryCities.length === 0) return countryStates.length + countryDistricts.length;
+            const cityIds = countryCities.map(c => c.ID);
+            const countryAreas = areas.filter(a => cityIds.includes(a.CITY_ID));
+            return countryStates.length + countryDistricts.length + countryCities.length + countryAreas.length;
+        }
+        if ('STATE' in item) { 
+            const stateDistricts = districts.filter(d => d.STATE_ID === item.ID);
+            if (stateDistricts.length === 0) return 0;
+            const districtIds = stateDistricts.map(d => d.ID);
+            const stateCities = cities.filter(c => districtIds.includes(c.DISTRICT_ID));
+            if (stateCities.length === 0) return stateDistricts.length;
+            const cityIds = stateCities.map(c => c.ID);
+            const stateAreas = areas.filter(a => cityIds.includes(a.CITY_ID));
+            return stateDistricts.length + stateCities.length + stateAreas.length;
+        }
+        if ('DISTRICT' in item) {
+            const districtCities = cities.filter(c => c.DISTRICT_ID === item.ID);
+            if (districtCities.length === 0) return 0;
+            const cityIds = districtCities.map(c => c.ID);
+            const districtAreas = areas.filter(a => cityIds.includes(a.CITY_ID));
+            return districtCities.length + districtAreas.length;
+        }
+        if ('CITY' in item) {
+            return areas.filter(a => a.CITY_ID === item.ID).length;
+        }
+        return 0;
     };
 
     const handleToggleStatus = (item: GeoItem) => {
+        if (item.STATUS === 1) { 
+            const childCount = getDependentChildrenCount(item);
+            if (childCount > 0) {
+                setItemToToggle(item);
+                setIsWarningModalOpen(true);
+                return;
+            }
+        }
         performToggle(item);
     };
 
@@ -166,6 +269,16 @@ const GeographyManagementPage: React.FC = () => {
     const nameFieldForModal = modalState.type ? {
         Country: 'COUNTRY_NAME', State: 'STATE', District: 'DISTRICT', City: 'CITY', Area: 'AREA'
     }[modalState.type] : null;
+    
+    let warningModalItemName = '';
+    if(itemToToggle) {
+        if ('COUNTRY_NAME' in itemToToggle) warningModalItemName = itemToToggle.COUNTRY_NAME;
+        else if ('STATE' in itemToToggle) warningModalItemName = itemToToggle.STATE;
+        else if ('DISTRICT' in itemToToggle) warningModalItemName = itemToToggle.DISTRICT;
+        else if ('CITY' in itemToToggle) warningModalItemName = itemToToggle.CITY;
+        else if ('AREA' in itemToToggle) warningModalItemName = itemToToggle.AREA;
+    }
+
 
     return (
         <div className="space-y-6">
@@ -370,6 +483,22 @@ const GeographyManagementPage: React.FC = () => {
                         <Button type="submit">Save</Button>
                     </footer>
                 </form>
+            </Modal>
+            
+            <Modal isOpen={isWarningModalOpen} onClose={() => setIsWarningModalOpen(false)} contentClassName="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-xl w-full max-w-lg">
+                 <div className="sm:flex sm:items-start">
+                    <div className="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
+                        <AlertTriangle className="h-6 w-6 text-red-600" />
+                    </div>
+                    <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                        <h3 className="text-lg font-medium">Deactivate "{warningModalItemName}"?</h3>
+                        <p className="text-sm text-slate-500 mt-2">This will also deactivate all child items (e.g., states, districts, etc.). Are you sure you want to continue?</p>
+                    </div>
+                </div>
+                <div className="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse gap-3">
+                    <Button variant="danger" onClick={() => { if(itemToToggle) performToggle(itemToToggle); }}>Deactivate Anyway</Button>
+                    <Button variant="secondary" onClick={() => setIsWarningModalOpen(false)}>Cancel</Button>
+                </div>
             </Modal>
         </div>
     );

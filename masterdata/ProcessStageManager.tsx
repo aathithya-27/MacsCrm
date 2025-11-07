@@ -41,7 +41,12 @@ const ProcessStageManager: React.FC<ProcessStageManagerProps> = ({
     };
 
     const handleSave = () => {
-        if (!canModify) return;
+        const isEditing = !!editingItem?.ID;
+        if ((isEditing && !canModify) || (!isEditing && !canCreate)) {
+            addToast("Permission denied: Company is inactive.", "error");
+            return;
+        }
+
         if (!editingItem || !editingItem.PROCESS_DESC?.trim()) {
             addToast('Stage name is required.', 'error');
             return;

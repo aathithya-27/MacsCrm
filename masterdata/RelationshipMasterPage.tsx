@@ -18,8 +18,8 @@ const RelationshipMasterPage: React.FC = () => {
     const [editingItem, setEditingItem] = useState<Partial<RelationshipType> | null>(null);
     const [draggedItemId, setDraggedItemId] = useState<number | null>(null);
 
-    const canCreate = true;
-    const canModify = true;
+    const canCreate = companyData?.STATUS === 1;
+    const canModify = companyData?.STATUS === 1;
     const noun = "Relationship Type";
 
     const loadData = useCallback(async () => {
@@ -152,7 +152,7 @@ const RelationshipMasterPage: React.FC = () => {
                             className="block w-full pl-10 pr-3 py-2 bg-white border border-slate-300 rounded-md shadow-sm placeholder-slate-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm dark:bg-slate-700 dark:border-slate-600 dark:text-white dark:placeholder-slate-400"
                         />
                     </div>
-                    {canCreate && <Button onClick={() => openModal(null)}><Plus size={16}/> Add New {noun}</Button>}
+                    {<Button onClick={() => openModal(null)} disabled={!canCreate}><Plus size={16}/> Add New {noun}</Button>}
                 </div>
                 <div className="flex-grow overflow-auto">
                     <table className="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
@@ -187,7 +187,7 @@ const RelationshipMasterPage: React.FC = () => {
                 <form onSubmit={(e) => { e.preventDefault(); handleSave(); }}>
                     <div className="p-6">
                         <h2 className="text-xl font-bold mb-4">{editingItem?.ID ? 'Edit' : 'Add'} {noun}</h2>
-                        <Input label={`${noun} Name`} value={editingItem?.RELATIONSHIP_NAME || ''} onChange={e => setEditingItem(p => p ? {...p, RELATIONSHIP_NAME: e.target.value} : null)} required autoFocus />
+                        <Input label={`${noun} Name`} value={editingItem?.RELATIONSHIP_NAME || ''} onChange={e => setEditingItem(p => p ? {...p, RELATIONSHIP_NAME: e.target.value} : null)} required autoFocus disabled={!canModify} />
                     </div>
                     <footer className="flex justify-end gap-4 px-6 py-4">
                         <Button type="button" variant="secondary" onClick={closeModal}>Cancel</Button>

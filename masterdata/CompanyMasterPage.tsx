@@ -1,4 +1,6 @@
+
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import { useOutletContext } from 'react-router-dom';
 import type { Company, SelectOption, Country, State, District, City, Area } from '../types';
 import Input from '../components/ui/Input';
 import ToggleSwitch from '../components/ui/ToggleSwitch';
@@ -12,8 +14,14 @@ import { AlertTriangle } from 'lucide-react';
 
 const CompanyMasterPage: React.FC = () => {
     const { addToast } = useToast();
-    const [companyData, setCompanyData] = useState<Company | null>(null);
-    const [initialCompanyData, setInitialCompanyData] = useState<Company | null>(null);
+    const { company: contextCompany, isLoading: isContextLoading, updateCompany: updateContextCompany } = useOutletContext<{
+        company: Company | null;
+        isLoading: boolean;
+        updateCompany: (company: Company) => void;
+    }>();
+
+    const [formData, setFormData] = useState<Company | null>(null);
+    const [initialFormData, setInitialFormData] = useState<Company | null>(null);
     
     const [countries, setCountries] = useState<Country[]>([]);
     const [states, setStates] = useState<State[]>([]);
@@ -21,7 +29,6 @@ const CompanyMasterPage: React.FC = () => {
     const [cities, setCities] = useState<City[]>([]);
     const [areas, setAreas] = useState<Area[]>([]);
 
-    const [isCompanyLoading, setIsCompanyLoading] = useState(true);
     const [isGeoLoading, setIsGeoLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
     const [isDirty, setIsDirty] = useState(false);
@@ -77,63 +84,44 @@ const CompanyMasterPage: React.FC = () => {
     }, []);
 
     useEffect(() => {
-        const loadCompany = async () => {
-            if (isGeoLoading) return;
-            setIsCompanyLoading(true);
-            try {
-                const user = await api.fetchCurrentUser();
-                const companies = await api.fetchCompanies();
-                const currentCompany = companies.find(c => c.COMP_ID === user.comp_id) || null;
+        if (contextCompany && !isGeoLoading) {
+            const companyCopy = JSON.parse(JSON.stringify(contextCompany));
+            setFormData(companyCopy);
+            setInitialFormData(companyCopy);
 
-                if (currentCompany) {
-                    setCompanyData(JSON.parse(JSON.stringify(currentCompany)));
-                    setInitialCompanyData(JSON.parse(JSON.stringify(currentCompany)));
+            const { AREA_ID, CITY_ID, STATE_ID } = companyCopy;
+            const geoPath = getGeographyPath(AREA_ID, CITY_ID, STATE_ID);
 
-                    const { AREA_ID, CITY_ID, STATE_ID } = currentCompany;
-                    const geoPath = getGeographyPath(AREA_ID, CITY_ID, STATE_ID);
-
-                    setSelectedCountry(geoPath.countryId);
-                    setSelectedState(geoPath.stateId);
-                    setSelectedDistrict(geoPath.districtId);
-                    setSelectedCity(geoPath.cityId);
-                    setSelectedArea(geoPath.areaId);
-                } else {
-                    setCompanyData(null);
-                    setInitialCompanyData(null);
-                }
-            } catch (error) {
-                console.error("Failed to load company data", error);
-                addToast("Failed to load company data.", "error");
-            } finally {
-                setIsCompanyLoading(false);
-            }
-        };
-        loadCompany();
-    }, [isGeoLoading, getGeographyPath, addToast]);
+            setSelectedCountry(geoPath.countryId);
+            setSelectedState(geoPath.stateId);
+            setSelectedDistrict(geoPath.districtId);
+            setSelectedCity(geoPath.cityId);
+            setSelectedArea(geoPath.areaId);
+        }
+    }, [contextCompany, isGeoLoading, getGeographyPath]);
 
     useEffect(() => {
-        if (!companyData || !initialCompanyData) {
+        if (!formData || !initialFormData) {
             setIsDirty(false);
             return;
         }
-        const hasChanged = JSON.stringify(companyData) !== JSON.stringify(initialCompanyData);
+        const hasChanged = JSON.stringify(formData) !== JSON.stringify(initialFormData);
         setIsDirty(hasChanged);
-    }, [companyData, initialCompanyData]);
+    }, [formData, initialFormData]);
 
     const handleDataChange = (field: keyof Company, value: any) => {
-        setCompanyData(prev => prev ? { ...prev, [field]: value } : null);
+        setFormData(prev => prev ? { ...prev, [field]: value } : null);
     };
 
     const handleSave = async () => {
-        if (!companyData || !isDirty) return;
+        if (!formData || !isDirty) return;
         setIsSaving(true);
         try {
-            const oldStatus = initialCompanyData?.STATUS;
-            const newStatus = companyData.STATUS;
+            const oldStatus = initialFormData?.STATUS;
+            const newStatus = formData.STATUS;
     
-            const updatedCompany = await api.updateCompany(companyData);
-            setCompanyData(JSON.parse(JSON.stringify(updatedCompany)));
-            setInitialCompanyData(JSON.parse(JSON.stringify(updatedCompany))); 
+            const updatedCompanyFromApi = await api.updateCompany(formData);
+            updateContextCompany(updatedCompanyFromApi);
             
             if (oldStatus !== newStatus) {
                 if (newStatus === 1) {
@@ -147,8 +135,8 @@ const CompanyMasterPage: React.FC = () => {
         } catch (error) {
             console.error("Failed to save company details", error);
             addToast("Failed to save company details.", "error");
-            if (initialCompanyData) {
-                setCompanyData(JSON.parse(JSON.stringify(initialCompanyData)));
+            if (initialFormData) {
+                setFormData(JSON.parse(JSON.stringify(initialFormData)));
             }
         } finally {
             setIsSaving(false);
@@ -158,7 +146,7 @@ const CompanyMasterPage: React.FC = () => {
     const handleStatusToggle = (checked: boolean) => {
         const newStatus = checked ? 1 : 0;
         handleDataChange('STATUS', newStatus);
-        if (newStatus === 0 && initialCompanyData?.STATUS === 1) {
+        if (newStatus === 0 && initialFormData?.STATUS === 1) {
             setIsWarningModalOpen(true);
         }
     };
@@ -179,13 +167,13 @@ const CompanyMasterPage: React.FC = () => {
     const cityOptions = useMemo<SelectOption[]>(() => !selectedDistrict ? [] : cities.filter(c => c.DISTRICT_ID === Number(selectedDistrict) && c.STATUS === 1).map(c => ({ value: String(c.ID), label: c.CITY })), [cities, selectedDistrict]);
     const areaOptions = useMemo<SelectOption[]>(() => !selectedCity ? [] : areas.filter(a => a.CITY_ID === Number(selectedCity) && a.STATUS === 1).map(a => ({ value: String(a.ID), label: a.AREA })), [areas, selectedCity]);
     
-    const isLoading = isCompanyLoading || isGeoLoading;
+    const isLoading = isContextLoading || isGeoLoading;
 
     if (isLoading) {
         return <div className="p-8 text-center text-slate-500 dark:text-slate-400">Loading company data...</div>;
     }
 
-    if (!companyData) {
+    if (!formData) {
         return (
             <div>
                 <h3 className="text-xl font-semibold text-slate-800 dark:text-slate-200">Company Master</h3>
@@ -195,10 +183,10 @@ const CompanyMasterPage: React.FC = () => {
             </div>
         );
     }
-    const isActive = companyData.STATUS === 1;
+    const isActive = formData.STATUS === 1;
 
     return (
-        <div className="max-w-7xl mx-auto">
+        <div className="w-full">
              <div className="flex items-center justify-between mb-6">
                 <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-200">Company Master</h2>
                 <Button onClick={handleSave} disabled={!canModify || isSaving || !isDirty}>
@@ -211,10 +199,10 @@ const CompanyMasterPage: React.FC = () => {
                     <div className="bg-white dark:bg-slate-700/50 p-6 rounded-lg shadow-md">
                         <h4 className="text-lg font-semibold mb-4 text-slate-700 dark:text-slate-300">Company Info</h4>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <Input label="Company Code" name="COMP_CODE" value={companyData.COMP_CODE || ''} onChange={e => handleDataChange('COMP_CODE', e.target.value)} disabled/>
-                            <Input label="Company Name" name="COMP_NAME" value={companyData.COMP_NAME} onChange={e => handleDataChange('COMP_NAME', e.target.value)} />
-                            <Input label="Registered Name" name="MAILING_NAME" value={companyData.MAILING_NAME || ''} onChange={e => handleDataChange('MAILING_NAME', e.target.value)} />
-                            <Input label="Date of Creation" name="DATE_OF_CREATION" type="date" value={companyData.DATE_OF_CREATION || ''} onChange={e => handleDataChange('DATE_OF_CREATION', e.target.value)} />
+                            <Input label="Company Code" name="COMP_CODE" value={formData.COMP_CODE || ''} onChange={e => handleDataChange('COMP_CODE', e.target.value)} disabled/>
+                            <Input label="Company Name" name="COMP_NAME" value={formData.COMP_NAME} onChange={e => handleDataChange('COMP_NAME', e.target.value)} />
+                            <Input label="Registered Name" name="MAILING_NAME" value={formData.MAILING_NAME || ''} onChange={e => handleDataChange('MAILING_NAME', e.target.value)} />
+                            <Input label="Date of Creation" name="DATE_OF_CREATION" type="date" value={formData.DATE_OF_CREATION || ''} onChange={e => handleDataChange('DATE_OF_CREATION', e.target.value)} />
                              <div className="flex items-center gap-4">
                                 <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Status</label>
                                 <ToggleSwitch enabled={isActive} onChange={handleStatusToggle} />
@@ -225,8 +213,8 @@ const CompanyMasterPage: React.FC = () => {
                     <div className="bg-white dark:bg-slate-700/50 p-6 rounded-lg shadow-md">
                         <h4 className="text-lg font-semibold mb-4 text-slate-700 dark:text-slate-300">Address & Contact</h4>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <Input label="Line 1" value={companyData.ADDRESS_1 || ''} onChange={e => handleDataChange('ADDRESS_1', e.target.value)} />
-                            <Input label="Line 2" value={companyData.ADDRESS_2 || ''} onChange={e => handleDataChange('ADDRESS_2', e.target.value)} />
+                            <Input label="Line 1" value={formData.ADDRESS_1 || ''} onChange={e => handleDataChange('ADDRESS_1', e.target.value)} />
+                            <Input label="Line 2" value={formData.ADDRESS_2 || ''} onChange={e => handleDataChange('ADDRESS_2', e.target.value)} />
                             
                             <div className="md:col-span-2">
                                 <SearchableSelect label="Country" options={countryOptions} value={selectedCountry} onChange={val => { setSelectedCountry(val); setSelectedState(null); setSelectedDistrict(null); setSelectedCity(null); setSelectedArea(null); handleDataChange('STATE_ID', null); }} />
@@ -238,18 +226,18 @@ const CompanyMasterPage: React.FC = () => {
                             <SearchableSelect label="City" options={cityOptions} value={selectedCity} onChange={val => { setSelectedCity(val); setSelectedArea(null); handleDataChange('CITY_ID', val ? Number(val) : null); handleDataChange('AREA_ID', null); }} disabled={!selectedDistrict} />
                             <SearchableSelect label="Area" options={areaOptions} value={selectedArea} onChange={val => { setSelectedArea(val); handleDataChange('AREA_ID', val ? Number(val) : null); }} disabled={!selectedCity} />
 
-                            <Input label="Pin Code" value={companyData.PIN_CODE || ''} onChange={e => handleDataChange('PIN_CODE', e.target.value)} />
-                            <Input label="Phone No." name="PHONE_NO" value={companyData.PHONE_NO || ''} onChange={e => handleDataChange('PHONE_NO', e.target.value)} />
-                            <Input label="Email ID" name="EMAIL" type="email" value={companyData.EMAIL || ''} onChange={e => handleDataChange('EMAIL', e.target.value)} />
-                            <Input label="FAX No." name="FAX_NO" value={companyData.FAX_NO || ''} onChange={e => handleDataChange('FAX_NO', e.target.value)} />
+                            <Input label="Pin Code" value={formData.PIN_CODE || ''} onChange={e => handleDataChange('PIN_CODE', e.target.value)} />
+                            <Input label="Phone No." name="PHONE_NO" value={formData.PHONE_NO || ''} onChange={e => handleDataChange('PHONE_NO', e.target.value)} />
+                            <Input label="Email ID" name="EMAIL" type="email" value={formData.EMAIL || ''} onChange={e => handleDataChange('EMAIL', e.target.value)} />
+                            <Input label="FAX No." name="FAX_NO" value={formData.FAX_NO || ''} onChange={e => handleDataChange('FAX_NO', e.target.value)} />
                         </div>
                     </div>
                     <div className="bg-white dark:bg-slate-700/50 p-6 rounded-lg shadow-md">
                         <h4 className="text-lg font-semibold mb-4 text-slate-700 dark:text-slate-300">Tax Info</h4>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            <Input label="GSTIN" name="GST_NO" value={companyData.GST_NO || ''} onChange={e => handleDataChange('GST_NO', e.target.value)} />
-                            <Input label="PAN" name="PAN_NO" value={companyData.PAN_NO || ''} onChange={e => handleDataChange('PAN_NO', e.target.value)} />
-                            <Input label="TAN" name="TAN_NO" value={companyData.TAN_NO || ''} onChange={e => handleDataChange('TAN_NO', e.target.value)} />
+                            <Input label="GSTIN" name="GST_NO" value={formData.GST_NO || ''} onChange={e => handleDataChange('GST_NO', e.target.value)} />
+                            <Input label="PAN" name="PAN_NO" value={formData.PAN_NO || ''} onChange={e => handleDataChange('PAN_NO', e.target.value)} />
+                            <Input label="TAN" name="TAN_NO" value={formData.TAN_NO || ''} onChange={e => handleDataChange('TAN_NO', e.target.value)} />
                         </div>
                     </div>
                 </div>

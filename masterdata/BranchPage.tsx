@@ -32,8 +32,8 @@ const BranchPage: React.FC = () => {
     const [selectedCity, setSelectedCity] = useState<string | null>(null);
     const [selectedArea, setSelectedArea] = useState<string | null>(null);
 
-    const canCreate = true;
-    const canModify = true;
+    const canCreate = companyData?.STATUS === 1;
+    const canModify = companyData?.STATUS === 1;
 
     useEffect(() => {
         const loadData = async () => {
@@ -203,12 +203,12 @@ const BranchPage: React.FC = () => {
                         className="block w-full pl-10 pr-3 py-2 bg-white border border-slate-300 rounded-md shadow-sm placeholder-slate-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm dark:bg-slate-700 dark:border-slate-600 dark:text-white dark:placeholder-slate-400"
                     />
                 </div>
-                 {canCreate && (
-                    <Button onClick={() => openModal(null)}>
+                 {
+                    <Button onClick={() => openModal(null)} disabled={!canCreate}>
                         <Plus size={16} />
                         Add New Branch
                     </Button>
-                )}
+                }
             </div>
 
             <div className="flex-grow overflow-auto bg-white dark:bg-slate-800 shadow-md rounded-lg">
@@ -247,12 +247,10 @@ const BranchPage: React.FC = () => {
             </div>
 
             <Modal isOpen={isModalOpen} onClose={closeModal} contentClassName="bg-white dark:bg-[#2f3b50] rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col">
-                {/* Fixed Header */}
                 <header className="flex-shrink-0 px-8 py-6">
                     <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100">{editingBranch?.BRANCH_ID ? 'Edit' : 'Add'} Branch</h2>
                 </header>
                 
-                {/* Scrollable Body */}
                 <div className="flex-grow overflow-y-auto px-8 py-6">
                     <form id="branch-form" className="space-y-8" onSubmit={(e) => { e.preventDefault(); handleSave(); }}>
                         <fieldset className="border border-slate-300 dark:border-slate-600 rounded-md p-6 pt-0">
@@ -320,7 +318,6 @@ const BranchPage: React.FC = () => {
                     </form>
                 </div>
 
-                {/* Fixed Footer */}
                 <footer className="flex-shrink-0 flex justify-end gap-4 px-8 py-4">
                     <Button type="button" variant="secondary" onClick={closeModal}>Cancel</Button>
                     <Button type="submit" form="branch-form" variant="success" disabled={!canModify}>Save</Button>

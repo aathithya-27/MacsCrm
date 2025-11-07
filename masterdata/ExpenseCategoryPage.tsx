@@ -170,8 +170,8 @@ const ExpenseCategoryPage: React.FC = () => {
         item: Partial<ExpenseCategory | ExpenseHead | ExpenseIndividual> | null;
     }>({ isOpen: false, type: null, item: null });
 
-    const canCreate = true;
-    const canModify = true;
+    const canCreate = companyData?.STATUS === 1;
+    const canModify = companyData?.STATUS === 1;
 
     const loadData = useCallback(async () => {
         setIsLoading(true);
@@ -244,23 +244,57 @@ const ExpenseCategoryPage: React.FC = () => {
     
     const handleToggle = async (type: ModalType, item: any) => {
         if (!canModify) return;
-        const updatedItem = { ...item, STATUS: item.STATUS === 1 ? 0 : 1 };
+        const newStatus = item.STATUS === 1 ? 0 : 1;
+        const updatedItem = { ...item, STATUS: newStatus };
+    
         try {
-            switch (type) {
-                case 'category':
-                    const savedCat = await api.saveExpenseCategory(updatedItem);
-                    setExpenseCategories(prev => prev.map(i => i.ID === savedCat.ID ? savedCat : i));
-                    break;
-                case 'head':
-                    const savedHead = await api.saveExpenseHead(updatedItem);
-                    setExpenseHeads(prev => prev.map(i => i.ID === savedHead.ID ? savedHead : i));
-                    break;
-                case 'individual':
-                    const savedInd = await api.saveExpenseIndividual(updatedItem);
-                    setExpenseIndividuals(prev => prev.map(i => i.ID === savedInd.ID ? savedInd : i));
-                    break;
+            if (type === 'category') {
+                const category = item as ExpenseCategory;
+                const updatedHeads = expenseHeads
+                    .filter(h => h.EXPENSE_CATE_ID === category.ID)
+                    .map(h => ({ ...h, STATUS: newStatus }));
+                const updatedIndividuals = expenseIndividuals
+                    .filter(i => i.EXPENSE_CATEGORY_ID === category.ID)
+                    .map(i => ({ ...i, STATUS: newStatus }));
+    
+                await Promise.all([
+                    api.saveExpenseCategory(updatedItem),
+                    ...updatedHeads.map(h => api.saveExpenseHead(h)),
+                    ...updatedIndividuals.map(i => api.saveExpenseIndividual(i)),
+                ]);
+    
+                setExpenseCategories(prev => prev.map(c => c.ID === category.ID ? updatedItem : c));
+                setExpenseHeads(prev => {
+                    const updatedHeadIds = new Set(updatedHeads.map(uh => uh.ID));
+                    return prev.map(h => updatedHeadIds.has(h.ID) ? { ...h, STATUS: newStatus } : h);
+                });
+                setExpenseIndividuals(prev => {
+                    const updatedIndIds = new Set(updatedIndividuals.map(ui => ui.ID));
+                    return prev.map(i => updatedIndIds.has(i.ID) ? { ...i, STATUS: newStatus } : i);
+                });
+    
+            } else if (type === 'head') {
+                const head = item as ExpenseHead;
+                const updatedIndividuals = expenseIndividuals
+                    .filter(i => i.EXPENSE_HEAD_ID === head.ID)
+                    .map(i => ({ ...i, STATUS: newStatus }));
+    
+                await Promise.all([
+                    api.saveExpenseHead(updatedItem),
+                    ...updatedIndividuals.map(i => api.saveExpenseIndividual(i)),
+                ]);
+    
+                setExpenseHeads(prev => prev.map(h => h.ID === head.ID ? updatedItem : h));
+                 setExpenseIndividuals(prev => {
+                    const updatedIndIds = new Set(updatedIndividuals.map(ui => ui.ID));
+                    return prev.map(i => updatedIndIds.has(i.ID) ? { ...i, STATUS: newStatus } : i);
+                });
+            } else if (type === 'individual') {
+                const savedInd = await api.saveExpenseIndividual(updatedItem);
+                setExpenseIndividuals(prev => prev.map(i => i.ID === savedInd.ID ? savedInd : i));
             }
-            addToast("Status updated successfully.", "success");
+    
+            addToast(newStatus === 0 ? 'Item and associated children deactivated.' : 'Status updated.');
         } catch (error) {
             console.error("Failed to update status:", error);
             addToast("Failed to update status.", "error");
@@ -268,12 +302,12 @@ const ExpenseCategoryPage: React.FC = () => {
     };
 
     const renderTable = (type: ModalType, title: string, data: any[], nameField: string) => (
-        <div className="bg-white dark:bg-slate-800 shadow-md rounded-lg p-4 sm:p-6 flex-grow flex flex-col">
+        <div className="bg-white dark:bg-slate-800 shadow-md rounded-lg p-4 sm:p-6 flex flex-col">
             <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200">{title}</h3>
-                {canCreate && <Button onClick={() => openModal(type)}><Plus size={16} className="mr-2"/>Add New</Button>}
+                {<Button onClick={() => openModal(type)} disabled={!canCreate}><Plus size={16} className="mr-2"/>Add New</Button>}
             </div>
-            <div className="flex-grow overflow-auto">
+            <div className="overflow-auto" style={{ maxHeight: '300px' }}>
                 <table className="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
                     <thead className="bg-slate-50 dark:bg-slate-700/50 sticky top-0">
                         <tr>

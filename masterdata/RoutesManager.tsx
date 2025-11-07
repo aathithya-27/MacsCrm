@@ -25,8 +25,8 @@ const RoutesManager: React.FC = () => {
     const [itemToAction, setItemToAction] = useState<RouteType | null>(null);
     const [dependentItems, setDependentItems] = useState<{ name: string; type: string }[]>([]);
 
-    const canCreate = true;
-    const canModify = true;
+    const canCreate = companyData?.STATUS === 1;
+    const canModify = companyData?.STATUS === 1;
     const noun = "Route";
 
     const loadData = useCallback(async () => {
@@ -139,14 +139,14 @@ const RoutesManager: React.FC = () => {
     };
 
     const handleDragStart = (e: React.DragEvent, id: number) => {
-        if (searchQuery) return;
+        if (searchQuery || !canModify) return;
         e.dataTransfer.setData('text/plain', id.toString());
         setDraggedItemId(id);
     };
 
     const handleDrop = (e: React.DragEvent, dropTargetId: number) => {
         e.preventDefault();
-        if (searchQuery || !draggedItemId) return;
+        if (searchQuery || !draggedItemId || !canModify) return;
         setDraggedItemId(null);
         if (draggedItemId === dropTargetId) return;
 
@@ -171,7 +171,7 @@ const RoutesManager: React.FC = () => {
             <div className="flex items-center justify-between mb-4">
                 <SearchBar searchQuery={searchQuery} onSearchChange={setSearchQuery} placeholder={`Search ${noun}s...`} className="max-w-md" />
                 <div className="flex-grow" />
-                {canCreate && <Button onClick={() => openModal(null)}><Plus size={16}/> Add New {noun}</Button>}
+                {<Button onClick={() => openModal(null)} disabled={!canCreate}><Plus size={16}/> Add New {noun}</Button>}
             </div>
             <div className="flex-grow overflow-auto bg-white dark:bg-slate-800 shadow-md rounded-lg">
                 <table className="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
@@ -186,8 +186,8 @@ const RoutesManager: React.FC = () => {
                     </thead>
                     <tbody className="divide-y divide-slate-200 dark:divide-slate-700" onDragEnd={() => setDraggedItemId(null)}>
                         {filteredItems.map((item, index) => (
-                            <tr key={item.ID} draggable={!searchQuery} onDragStart={e => handleDragStart(e, item.ID)} onDragOver={e => e.preventDefault()} onDrop={e => handleDrop(e, item.ID)}
-                                className={`${!searchQuery ? 'cursor-grab' : ''} ${draggedItemId === item.ID ? 'opacity-30' : ''} hover:bg-slate-50 dark:hover:bg-slate-700/40`}>
+                            <tr key={item.ID} draggable={!searchQuery && canModify} onDragStart={e => handleDragStart(e, item.ID)} onDragOver={e => e.preventDefault()} onDrop={e => handleDrop(e, item.ID)}
+                                className={`${!searchQuery && canModify ? 'cursor-grab' : ''} ${draggedItemId === item.ID ? 'opacity-30' : ''} hover:bg-slate-50 dark:hover:bg-slate-700/40`}>
                                 <td className="px-3 py-4 text-center text-slate-400"><GripVertical size={16}/></td>
                                 <td className="px-6 py-4 text-sm">{index + 1}</td>
                                 <td className="px-6 py-4 font-medium">{item.ROUTE_NAME}</td>
@@ -205,7 +205,7 @@ const RoutesManager: React.FC = () => {
                 <form onSubmit={(e) => { e.preventDefault(); handleSave(); }}>
                     <div className="p-6">
                         <h2 className="text-xl font-bold mb-4">{editingItem?.ID ? 'Edit' : 'Add'} {noun}</h2>
-                        <Input label={`${noun} Name`} value={editingItem?.ROUTE_NAME || ''} onChange={e => setEditingItem(p => p ? {...p, ROUTE_NAME: e.target.value} : null)} required autoFocus />
+                        <Input label={`${noun} Name`} value={editingItem?.ROUTE_NAME || ''} onChange={e => setEditingItem(p => p ? {...p, ROUTE_NAME: e.target.value} : null)} required autoFocus disabled={!canModify} />
                     </div>
                     <footer className="flex justify-end gap-4 px-6 py-4 bg-slate-50 dark:bg-slate-800/50 rounded-b-lg">
                         <Button type="button" variant="secondary" onClick={closeModal}>Cancel</Button>

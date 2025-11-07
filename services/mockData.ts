@@ -5,7 +5,8 @@ import type {
     RelationshipType, LeadStage, ExpenseCategory, ExpenseHead, ExpenseIndividual, IncomeCategory, IncomeHead,
     Country, State, District, City, Area,
     CustomerCategory, CustomerSubCategory, CustomerGroup, CustomerType,
-    CustomerTier, Gift, Religion, Festival, FestivalDate
+    CustomerTier, Gift, Religion, Festival, FestivalDate,
+    FinancialYear, DocumentNumberingRule, Bank, AccountType
 } from '../types';
 
 const now = new Date().toISOString();
@@ -353,6 +354,27 @@ let festivalDates: FestivalDate[] = [
     { ID: 8, COMP_ID: 1, FEST_ID: 2, FESTVEL_DATE: '2026-03-20', STATUS: 1, CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
 ];
 
+let financialYears: FinancialYear[] = [
+    { ID: 1, COMP_ID: 1, FROM_DATE: '2023-04-01', TO_DATE: '2024-03-31', FIN_YEAR: '2023-2024', STATUS: 1, CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
+    { ID: 2, COMP_ID: 1, FROM_DATE: '2024-04-01', TO_DATE: '2025-03-31', FIN_YEAR: '2024-2025', STATUS: 1, CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
+];
+
+let documentNumberingRules: DocumentNumberingRule[] = [
+    { ID: 1, COMP_ID: 1, FIN_YEAR_ID: 2, TYPE: 'Voucher', PREFIX: 'VCH/24-25/', STARTING_NO: 1, SUFFIX: null, STATUS: 1 },
+    { ID: 2, COMP_ID: 1, FIN_YEAR_ID: 2, TYPE: 'Receipt', PREFIX: 'RCT/24-25/', STARTING_NO: 1, SUFFIX: null, STATUS: 1 },
+];
+
+let banks: Bank[] = [
+    { ID: 1, BANK_NAME: 'State Bank of India', COMP_ID: 1, STATUS: 1, CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
+    { ID: 2, BANK_NAME: 'HDFC Bank', COMP_ID: 1, STATUS: 1, CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
+];
+
+let accountTypes: AccountType[] = [
+    { ID: 1, ACCOUNT_TYPE_NAME: 'Current Account', COMP_ID: 1, STATUS: 1, CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
+    { ID: 2, ACCOUNT_TYPE_NAME: 'Overdraft Account', COMP_ID: 1, STATUS: 1, CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
+    { ID: 3, ACCOUNT_TYPE_NAME: 'Cash Credit Account', COMP_ID: 1, STATUS: 1, CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
+];
+
 const currentUser: User = {
     id: 101,
     name: 'Admin User',
@@ -399,5 +421,9 @@ export const db = {
     religions,
     festivals,
     festivalDates,
+    financialYears,
+    documentNumberingRules,
+    banks,
+    accountTypes,
     currentUser
 };

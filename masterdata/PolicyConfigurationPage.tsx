@@ -1,12 +1,13 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import {
     InsuranceType, InsuranceSubType, InsuranceFieldMaster, BusinessVertical, Scheme, ProcessFlow,
-    DocumentMaster, DocumentRequirement, Member, FieldType
+    DocumentMaster, DocumentRequirement, Member, FieldType, Company
 } from '../types';
 import * as api from '../services/api';
 import { useToast } from '../context/ToastContext';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
+import CreatableSearchableSelect from '../components/ui/CreatableSearchableSelect';
 import Modal from '../components/ui/Modal';
 import ToggleSwitch from '../components/ui/ToggleSwitch';
 import { Plus, Edit2, AlertTriangle, Trash2 } from 'lucide-react';
@@ -89,6 +90,7 @@ const InsuranceTypeModal: React.FC<{
 
 
 const PolicyConfigurationPage: React.FC = () => {
+    const [companyData, setCompanyData] = useState<Company | null>(null);
     const [insuranceTypes, setInsuranceTypes] = useState<InsuranceType[]>([]);
     const [insuranceSubTypes, setInsuranceSubTypes] = useState<InsuranceSubType[]>([]);
     const [insuranceFields, setInsuranceFields] = useState<InsuranceFieldMaster[]>([]);
@@ -110,13 +112,18 @@ const PolicyConfigurationPage: React.FC = () => {
     const [itemToAction, setItemToAction] = useState<{ id: number; name: string; isSubType: boolean } | null>(null);
     const [dependentItems, setDependentItems] = useState<{ name: string; type: 'field' | 'policy' }[]>([]);
 
-    const canCreate = true;
-    const canModify = true;
+    const canCreate = companyData?.STATUS === 1;
+    const canModify = companyData?.STATUS === 1;
 
     useEffect(() => {
         const loadAllData = async () => {
             setIsLoading(true);
             try {
+                const user = await api.fetchCurrentUser();
+                const companies = await api.fetchCompanies();
+                const currentCompany = companies.find(c => c.COMP_ID === user.comp_id) || null;
+                setCompanyData(currentCompany);
+
                 const [types, subTypes, fields, verticals, sch, stages, docs, rules, members] = await Promise.all([
                     api.fetchInsuranceTypes(),
                     api.fetchInsuranceSubTypes(),
@@ -316,7 +323,7 @@ const PolicyConfigurationPage: React.FC = () => {
         setDependentItems([]);
     };
 
-    const FieldManager: React.FC<{typeId: number}> = ({typeId}) => {
+    const FieldManager: React.FC<{typeId: number, canCreate: boolean, canModify: boolean}> = ({typeId, canCreate, canModify}) => {
         const [isFieldModalOpen, setIsFieldModalOpen] = useState(false);
         const [editingField, setEditingField] = useState<Partial<InsuranceFieldMaster> | null>(null);
 
@@ -368,6 +375,11 @@ const PolicyConfigurationPage: React.FC = () => {
         const FieldModal: React.FC<{
             isOpen: boolean; onClose: () => void; onSave: (data: Partial<InsuranceFieldMaster>) => void; initialData: Partial<InsuranceFieldMaster> | null;
         }> = ({isOpen, onClose, onSave, initialData}) => {
+            const groupNameOptions = useMemo(() => {
+                const allGroups = [...new Set(insuranceFields.map(f => f.FIELD_GROUP).filter(Boolean) as string[])];
+                return allGroups.sort().map(group => ({ value: group, label: group }));
+            }, [insuranceFields]);
+
             const [fieldData, setFieldData] = useState<Partial<InsuranceFieldMaster>>({});
             useEffect(() => { if (isOpen) setFieldData(initialData || {}); }, [isOpen, initialData]);
             const handleChange = (key: keyof InsuranceFieldMaster, value: any) => setFieldData(p => ({...p, [key]: value}));
@@ -379,21 +391,28 @@ const PolicyConfigurationPage: React.FC = () => {
                         <div className="p-6">
                             <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-6">{initialData?.ID ? 'Edit' : 'Add'} Field</h2>
                             <div className="space-y-4">
-                                <Input label="Field Label" value={fieldData.FIELD_LABEL || ''} onChange={(e) => handleChange('FIELD_LABEL', e.target.value)} required />
-                                <div className="grid grid-cols-2 gap-4">
-                                    <Input label="Group Name (Optional)" value={fieldData.FIELD_GROUP || ''} onChange={(e) => handleChange('FIELD_GROUP', e.target.value)} />
+                                <Input label="Field Label" value={fieldData.FIELD_LABEL || ''} onChange={(e) => handleChange('FIELD_LABEL', e.target.value)} required disabled={!canModify}/>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <CreatableSearchableSelect
+                                        label="Group Name"
+                                        options={groupNameOptions}
+                                        value={fieldData.FIELD_GROUP || null}
+                                        onChange={(value) => handleChange('FIELD_GROUP', value)}
+                                        placeholder="Select or create a group..."
+                                        disabled={!canModify}
+                                    />
                                     <div>
                                         <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Column Span</label>
-                                        <select value={fieldData.COLUMN_SPAN || 1} onChange={e => handleChange('COLUMN_SPAN', Number(e.target.value) as 1 | 2 | 3)} className={selectClasses}>
-                                            <option value={1}>1 Column (Default)</option>
-                                            <option value={2}>2 Columns</option>
-                                            <option value={3}>3 Columns</option>
+                                        <select value={fieldData.COLUMN_SPAN || 1} onChange={e => handleChange('COLUMN_SPAN', Number(e.target.value) as 1 | 2 | 3)} className={selectClasses} disabled={!canModify}>
+                                            <option value={1}>1 (Normal)</option>
+                                            <option value={2}>2 (Half)</option>
+                                            <option value={3}>3 (Full)</option>
                                         </select>
                                     </div>
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Field Type</label>
-                                    <select value={fieldData.CDATA_TYPE || ''} onChange={e => handleChange('CDATA_TYPE', e.target.value as FieldType)} className={selectClasses}>
+                                    <select value={fieldData.CDATA_TYPE || ''} onChange={e => handleChange('CDATA_TYPE', e.target.value as FieldType)} className={selectClasses} disabled={!canModify}>
                                         {fieldTypes.map(ft => <option key={ft} value={ft}>{ft}</option>)}
                                     </select>
                                 </div>
@@ -401,7 +420,7 @@ const PolicyConfigurationPage: React.FC = () => {
                         </div>
                         <footer className="flex justify-end gap-4 px-6 py-4 bg-slate-50 dark:bg-slate-800 rounded-b-lg">
                             <Button type="button" variant="secondary" onClick={onClose}>Cancel</Button>
-                            <Button type="submit" variant="success">Save</Button>
+                            <Button type="submit" variant="success" disabled={!canModify}>Save</Button>
                         </footer>
                     </form>
                 </Modal>
@@ -412,7 +431,7 @@ const PolicyConfigurationPage: React.FC = () => {
             <div className="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-sm border dark:border-slate-700">
                 <div className="flex justify-between items-center mb-4">
                     <h3 className="text-lg font-semibold text-slate-800 dark:text-white">Fields</h3>
-                    <Button onClick={() => openFieldModal(null)}><Plus size={16}/> Add New Field</Button>
+                    <Button onClick={() => openFieldModal(null)} disabled={!canCreate}><Plus size={16}/> Add New Field</Button>
                 </div>
                 <div className="overflow-auto max-h-96">
                     <table className="min-w-full">
@@ -431,9 +450,9 @@ const PolicyConfigurationPage: React.FC = () => {
                                     <td className="px-3 py-2 text-sm">{idx+1}</td>
                                     <td className="px-3 py-2 text-sm">{field.FIELD_GROUP}</td>
                                     <td className="px-3 py-2 font-medium">{field.FIELD_LABEL}</td>
-                                    <td className="px-3 py-2"><ToggleSwitch enabled={field.STATUS === 1} onChange={() => handleToggleField(field.ID)}/></td>
+                                    <td className="px-3 py-2"><ToggleSwitch enabled={field.STATUS === 1} onChange={() => handleToggleField(field.ID)} disabled={!canModify}/></td>
                                     <td className="px-3 py-2">
-                                        <Button size="small" variant="light" className="!p-1.5" onClick={() => openFieldModal(field)}><Edit2 size={14}/></Button>
+                                        <Button size="small" variant="light" className="!p-1.5" onClick={() => openFieldModal(field)} disabled={!canModify}><Edit2 size={14}/></Button>
                                     </td>
                                 </tr>
                             ))}
@@ -445,7 +464,7 @@ const PolicyConfigurationPage: React.FC = () => {
         );
     }
     
-    const DocumentRuleManager: React.FC<{configTypeId: number}> = ({ configTypeId }) => {
+    const DocumentRuleManager: React.FC<{configTypeId: number, canCreate: boolean, canModify: boolean}> = ({ configTypeId, canCreate, canModify }) => {
         const [docToAdd, setDocToAdd] = useState<string>('');
         const selectedType = insuranceTypes.find(t => t.ID === configTypeId) || insuranceSubTypes.find(st => st.ID === configTypeId);
         const parentTypeId = selectedType && 'INSURANCE_TYPE_ID' in selectedType ? selectedType.INSURANCE_TYPE_ID : configTypeId;
@@ -492,15 +511,13 @@ const PolicyConfigurationPage: React.FC = () => {
         return (
             <div className="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-sm border dark:border-slate-700">
                 <h3 className="text-lg font-semibold text-slate-800 dark:text-white mb-4">Document Requirements</h3>
-                {canCreate && (
-                    <div className="flex items-center gap-2 mb-4">
-                        <select value={docToAdd} onChange={e => setDocToAdd(e.target.value)} className={selectClasses + " flex-grow"}>
-                            <option value="">-- Select a document to add --</option>
-                            {availableDocs.map(doc => (<option key={doc.ID} value={doc.ID}>{doc.DOC_NAME}</option>))}
-                        </select>
-                        <Button onClick={handleAddRule} disabled={!docToAdd}><Plus size={16}/> Add</Button>
-                    </div>
-                )}
+                <div className="flex items-center gap-2 mb-4">
+                    <select value={docToAdd} onChange={e => setDocToAdd(e.target.value)} className={selectClasses + " flex-grow"} disabled={!canCreate}>
+                        <option value="">-- Select a document to add --</option>
+                        {availableDocs.map(doc => (<option key={doc.ID} value={doc.ID}>{doc.DOC_NAME}</option>))}
+                    </select>
+                    <Button onClick={handleAddRule} disabled={!docToAdd || !canCreate}><Plus size={16}/> Add</Button>
+                </div>
                 <div className="space-y-3 max-h-60 overflow-y-auto">
                     {rulesForType.length > 0 ? rulesForType.map(rule => (
                         <div key={rule.ID} className="flex items-center justify-between p-2 bg-slate-50 dark:bg-slate-700/50 rounded-md">
@@ -510,9 +527,7 @@ const PolicyConfigurationPage: React.FC = () => {
                                     <ToggleSwitch enabled={rule.IS_MANDATORY === 1} onChange={() => handleToggleMandatory(rule.ID)} disabled={!canModify} />
                                     Mandatory
                                 </label>
-                                {canModify && (
-                                    <Button size="small" variant="danger" className="!p-1.5" onClick={() => handleRemoveRule(rule.ID)}><Trash2 size={14}/></Button>
-                                )}
+                                {<Button size="small" variant="danger" className="!p-1.5" onClick={() => handleRemoveRule(rule.ID)} disabled={!canModify}><Trash2 size={14}/></Button>}
                             </div>
                         </div>
                     )) : (<p className="text-center text-slate-500 py-4">No documents required for this type.</p>)}
@@ -526,7 +541,7 @@ const PolicyConfigurationPage: React.FC = () => {
     const isParentTypeSelected = selectedConfigTypeId && parentTypes.some(p => p.ID === selectedConfigTypeId);
     
     return (
-        <div className="space-y-4">
+        <div className="space-y-6">
             <h3 className="text-2xl font-bold text-slate-800 dark:text-white">Policy Configuration</h3>
             <p className="text-sm text-slate-500 dark:text-slate-400 -mt-3">Define Insurance types, their Sub-Type, and the specific fields & checklists for each.</p>
             <SearchBar searchQuery={searchQuery} onSearchChange={setSearchQuery} placeholder="Search all types, fields, and checklist items..." className="max-w-md" />
@@ -535,7 +550,7 @@ const PolicyConfigurationPage: React.FC = () => {
                 <div className="bg-white dark:bg-slate-800 p-4 rounded-lg shadow-sm border dark:border-slate-700">
                     <div className="flex justify-between items-center mb-4">
                         <h4 className="text-lg font-semibold text-slate-800 dark:text-white">Manage Insurance Type</h4>
-                        {canCreate && <Button onClick={() => openTypeModal(null)} variant="primary"><Plus size={16}/> Add</Button>}
+                        {<Button onClick={() => openTypeModal(null)} variant="primary" disabled={!canCreate}><Plus size={16}/> Add</Button>}
                     </div>
                     <div className="overflow-auto max-h-60">
                         <table className="min-w-full">
@@ -567,7 +582,7 @@ const PolicyConfigurationPage: React.FC = () => {
                 <div className="bg-white dark:bg-slate-800 p-4 rounded-lg shadow-sm border dark:border-slate-700">
                     <div className="flex justify-between items-center mb-4">
                         <h4 className="text-lg font-semibold text-slate-800 dark:text-white">Manage Insurance Sub-Type</h4>
-                        {canCreate && <Button onClick={() => { if (!selectedParent) { addToast('Please select a Insurance type first.', 'error'); return; } openTypeModal(null, selectedParent); }} variant="primary"><Plus size={16}/> Add</Button>}
+                        {<Button onClick={() => { if (!selectedParent) { addToast('Please select a Insurance type first.', 'error'); return; } openTypeModal(null, selectedParent); }} variant="primary" disabled={!canCreate}><Plus size={16}/> Add</Button>}
                     </div>
                     <div className="overflow-auto max-h-60">
                         <table className="min-w-full">
@@ -599,7 +614,7 @@ const PolicyConfigurationPage: React.FC = () => {
             </div>
             
             {selectedConfigTypeId && (
-                <div className="bg-slate-50 dark:bg-slate-800/50 p-6 rounded-lg animate-fade-in space-y-8">
+                <div className="animate-fade-in space-y-6">
                     <h4 className="text-lg font-semibold text-slate-700 dark:text-slate-300"> Configure for: <span className="text-blue-600 dark:text-blue-400">
                         {insuranceTypes.find(it => it.ID === selectedConfigTypeId)?.INSURANCE_TYPE || insuranceSubTypes.find(it => it.ID === selectedConfigTypeId)?.INSURANCE_SUB_TYPE}
                     </span> </h4>
@@ -621,8 +636,8 @@ const PolicyConfigurationPage: React.FC = () => {
                         />
                     )}
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        <FieldManager typeId={selectedConfigTypeId} />
-                        <DocumentRuleManager key={selectedConfigTypeId} configTypeId={selectedConfigTypeId} />
+                        <FieldManager typeId={selectedConfigTypeId} canCreate={canCreate} canModify={canModify} />
+                        <DocumentRuleManager key={selectedConfigTypeId} configTypeId={selectedConfigTypeId} canCreate={canCreate} canModify={canModify} />
                     </div>
                 </div>
             )}

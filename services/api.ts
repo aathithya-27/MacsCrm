@@ -5,7 +5,8 @@ import type {
     RelationshipType, LeadStage, ExpenseCategory, ExpenseHead, ExpenseIndividual, IncomeCategory, IncomeHead,
     Country, State, District, City, Area,
     CustomerCategory, CustomerSubCategory, CustomerGroup, CustomerType,
-    CustomerTier, Gift, Religion, Festival, FestivalDate
+    CustomerTier, Gift, Religion, Festival, FestivalDate,
+    FinancialYear, DocumentNumberingRule, Bank, AccountType
 } from '../types';
 import { db } from './mockData';
 
@@ -80,6 +81,10 @@ export const updateCompany = async (data: Company): Promise<Company> => {
             updateStatusByCompId(db.religions, newStatus);
             updateStatusByCompId(db.festivals, newStatus);
             updateStatusByCompId(db.festivalDates, newStatus);
+            updateStatusByCompId(db.financialYears, newStatus);
+            updateStatusByCompId(db.documentNumberingRules, newStatus);
+            updateStatusByCompId(db.banks, newStatus);
+            updateStatusByCompId(db.accountTypes, newStatus);
 
             const companyInsuranceTypeIds = new Set(
                 db.insuranceTypes
@@ -563,3 +568,20 @@ export const onUpdateFestivals = async (data: Festival[]): Promise<Festival[]> =
 
 export const fetchFestivalDates = async (): Promise<FestivalDate[]> => { await delay(150); return JSON.parse(JSON.stringify(db.festivalDates)); };
 export const onUpdateFestivalDates = async (data: FestivalDate[]): Promise<FestivalDate[]> => { await delay(300); db.festivalDates = data; return db.festivalDates; };
+
+export const fetchFinancialYears = async (): Promise<FinancialYear[]> => { await delay(150); return JSON.parse(JSON.stringify(db.financialYears)); };
+export const onUpdateFinancialYears = async (data: FinancialYear[]): Promise<FinancialYear[]> => { await delay(300); db.financialYears = data; return db.financialYears; };
+export const fetchDocumentNumberingRules = async (): Promise<DocumentNumberingRule[]> => { await delay(150); return JSON.parse(JSON.stringify(db.documentNumberingRules)); };
+export const onUpdateDocumentNumberingRules = async (data: DocumentNumberingRule[]): Promise<DocumentNumberingRule[]> => { await delay(300); db.documentNumberingRules = data; return db.documentNumberingRules; };
+
+export const fetchBanks = async (): Promise<Bank[]> => { await delay(150); return JSON.parse(JSON.stringify(db.banks)); };
+export const saveBank = async (item: Partial<Bank>): Promise<Bank> => {
+    await delay(300);
+    return saveData(db.banks, item);
+};
+
+export const fetchAccountTypes = async (): Promise<AccountType[]> => { await delay(150); return JSON.parse(JSON.stringify(db.accountTypes)); };
+export const saveAccountType = async (item: Partial<AccountType>): Promise<AccountType> => {
+    await delay(300);
+    return saveData(db.accountTypes, item);
+};
