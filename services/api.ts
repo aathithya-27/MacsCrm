@@ -71,7 +71,16 @@ export const updateCompany = async (data: Company): Promise<Company> => {
             updateStatusByCompId(db.expenseIndividuals, newStatus);
             updateStatusByCompId(db.incomeCategories, newStatus);
             updateStatusByCompId(db.incomeHeads, newStatus);
-            
+            updateStatusByCompId(db.customerCategories, newStatus);
+            updateStatusByCompId(db.customerSubCategories, newStatus);
+            updateStatusByCompId(db.customerGroups, newStatus);
+            updateStatusByCompId(db.customerTypes, newStatus);
+            updateStatusByCompId(db.customerTiers, newStatus);
+            updateStatusByCompId(db.gifts, newStatus);
+            updateStatusByCompId(db.religions, newStatus);
+            updateStatusByCompId(db.festivals, newStatus);
+            updateStatusByCompId(db.festivalDates, newStatus);
+
             const companyInsuranceTypeIds = new Set(
                 db.insuranceTypes
                     .filter(it => it.COMP_ID === compId)
