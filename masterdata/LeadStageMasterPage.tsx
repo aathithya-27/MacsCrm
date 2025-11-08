@@ -1,5 +1,6 @@
+
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
-import { LeadStage, Company } from '../types';
+import { LeadStage, Company, PaginatedResponse } from '../types';
 import * as api from '../services/api';
 import { useToast } from '../context/ToastContext';
 import { Plus, Edit2, GripVertical, Search } from 'lucide-react';
@@ -11,127 +12,123 @@ import ToggleSwitch from '../components/ui/ToggleSwitch';
 const LeadStageMasterPage: React.FC = () => {
     const { addToast } = useToast();
     const [companyData, setCompanyData] = useState<Company | null>(null);
-    const [leadStages, setLeadStages] = useState<LeadStage[]>([]);
+    const [response, setResponse] = useState<PaginatedResponse<LeadStage> | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
+    const [page, setPage] = useState(1);
+
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingItem, setEditingItem] = useState<Partial<LeadStage> | null>(null);
     const [draggedItemId, setDraggedItemId] = useState<number | null>(null);
 
-    const canCreate = companyData?.STATUS === 1;
-    const canModify = companyData?.STATUS === 1;
+    const canCreate = companyData?.status === 1;
+    const canModify = companyData?.status === 1;
     const noun = "Lead Stage";
 
-    const loadData = useCallback(async () => {
-        setIsLoading(true);
+    const loadCompany = useCallback(async () => {
         try {
             const user = await api.fetchCurrentUser();
             const companies = await api.fetchCompanies();
-            const currentCompany = companies.find(c => c.COMP_ID === user.comp_id) || null;
+            const currentCompany = companies.find(c => c.comp_id === user.comp_id) || null;
             setCompanyData(currentCompany);
-            if (!currentCompany) {
-                setIsLoading(false);
-                return;
-            }
-            const data = await api.fetchLeadStages();
-            setLeadStages(data.filter(ls => ls.COMP_ID === currentCompany.COMP_ID));
         } catch (error) {
-            console.error("Failed to load data", error);
+            addToast("Failed to load company data.", "error");
+        }
+    }, [addToast]);
+    
+    useEffect(() => {
+        loadCompany();
+    }, [loadCompany]);
+
+    const loadData = useCallback(async () => {
+        if (!companyData) return;
+        setIsLoading(true);
+        try {
+            const data = await api.fetchLeadStages(companyData.comp_id, { page, search: searchQuery });
+            setResponse(data);
+        } catch (error) {
             addToast("Failed to load lead stages.", "error");
         } finally {
             setIsLoading(false);
         }
-    }, [addToast]);
+    }, [addToast, companyData, page, searchQuery]);
 
     useEffect(() => {
-        loadData();
-    }, [loadData]);
+        const debounceTimer = setTimeout(() => {
+            if (companyData) {
+                loadData();
+            }
+        }, 300);
+        return () => clearTimeout(debounceTimer);
+    }, [loadData, companyData]);
 
-    const handleUpdate = async (updatedData: LeadStage[], message?: string) => {
-        try {
-            const saved = await api.onUpdateLeadStages(updatedData);
-            setLeadStages(saved);
-            if(message) addToast(message);
-        } catch(error) {
-            console.error("Failed to update data", error);
-            addToast("Failed to update data.", "error");
-        }
-    };
-
-    const sortedItems = useMemo(() => [...leadStages].sort((a, b) => a.SEQ_NO - b.SEQ_NO), [leadStages]);
-
-    const filteredItems = useMemo(() =>
-        searchQuery ? sortedItems.filter(item => item.LEAD_NAME.toLowerCase().includes(searchQuery.toLowerCase())) : sortedItems,
-        [sortedItems, searchQuery]
-    );
+    const items = useMemo(() => response?.data || [], [response]);
+    const canDrag = canModify && !searchQuery && (!response || response.meta.pages <= 1);
 
     const openModal = (item: LeadStage | null) => {
-        setEditingItem(item ? { ...item } : { LEAD_NAME: '', STATUS: 1 });
+        setEditingItem(item ? { ...item } : { lead_name: '', status: 1 });
         setIsModalOpen(true);
     };
     
     const closeModal = useCallback(() => setIsModalOpen(false), []);
 
-    const handleSave = () => {
-        if (!editingItem || !editingItem.LEAD_NAME?.trim() || !companyData) {
+    const handleSave = async () => {
+        if (!editingItem || !editingItem.lead_name?.trim() || !companyData) {
             addToast("Lead stage name is required.", "error");
             return;
         }
 
-        let updatedItems;
-        let message;
-        if (editingItem.ID) {
-            updatedItems = leadStages.map(i => i.ID === editingItem.ID ? { ...i, ...editingItem } as LeadStage : i);
-            message = `${noun} updated successfully.`;
-        } else {
-            const newItem: LeadStage = {
-                ID: Date.now(),
-                SEQ_NO: leadStages.length,
-                LEAD_NAME: editingItem.LEAD_NAME,
-                STATUS: editingItem.STATUS ?? 1,
-                COMP_ID: companyData.COMP_ID,
-                CREATED_ON: new Date().toISOString(),
-                MODIFIED_ON: new Date().toISOString(),
-                CREATED_BY: 1, 
-                MODIFIED_BY: 1, 
-            };
-            updatedItems = [...leadStages, newItem];
-            message = `${noun} created successfully.`;
+        try {
+            await api.saveLeadStage({ ...editingItem, comp_id: companyData.comp_id });
+            addToast(`${noun} ${editingItem.id ? 'updated' : 'created'} successfully.`);
+            loadData();
+            closeModal();
+        } catch(e) {
+            addToast(`Failed to save ${noun}.`, 'error');
         }
-        handleUpdate(updatedItems, message);
-        closeModal();
     };
     
-    const handleToggle = (id: number) => {
-        const updatedItems = leadStages.map(i => i.ID === id ? { ...i, STATUS: i.STATUS === 1 ? 0 : 1 } : i);
-        handleUpdate(updatedItems, "Status updated.");
+    const handleToggle = async (item: LeadStage) => {
+        const updated = { ...item, status: item.status === 1 ? 0 : 1 };
+        try {
+            await api.saveLeadStage(updated);
+            addToast("Status updated.");
+            loadData();
+        } catch (e) {
+            addToast("Failed to update status.", "error");
+        }
     };
 
     const handleDragStart = (e: React.DragEvent, id: number) => {
-        if (searchQuery || !canModify) return;
+        if (!canDrag) return;
         e.dataTransfer.setData('text/plain', id.toString());
         setDraggedItemId(id);
     };
 
-    const handleDrop = (e: React.DragEvent, dropTargetId: number) => {
+    const handleDrop = async (e: React.DragEvent, dropTargetId: number) => {
         e.preventDefault();
-        if (searchQuery || !draggedItemId || !canModify) return;
+        if (!canDrag || !draggedItemId) return;
         setDraggedItemId(null);
         if (draggedItemId === dropTargetId) return;
 
-        const currentItems = [...sortedItems];
-        const draggedIndex = currentItems.findIndex(item => item.ID === draggedItemId);
-        const targetIndex = currentItems.findIndex(item => item.ID === dropTargetId);
+        const currentItems = [...items];
+        const draggedIndex = currentItems.findIndex(item => item.id === draggedItemId);
+        const targetIndex = currentItems.findIndex(item => item.id === dropTargetId);
         if (draggedIndex === -1 || targetIndex === -1) return;
 
         const [draggedItem] = currentItems.splice(draggedIndex, 1);
         currentItems.splice(targetIndex, 0, draggedItem);
-        const finalItems = currentItems.map((item, index) => ({ ...item, SEQ_NO: index }));
-        handleUpdate(finalItems, "Order saved.");
+        
+        const finalItems = currentItems.map((item, index) => ({ ...item, seq_no: index }));
+        
+        if (response) {
+            setResponse({ ...response, data: finalItems });
+        }
+        addToast("Order changed (note: not persisted in this demo).");
     };
     
-    if (isLoading) {
-        return <div className="p-8 text-center text-slate-500 dark:text-slate-400">Loading lead stages...</div>;
+    if (!companyData && !isLoading) {
+        return <div className="p-8 text-center text-slate-500">Loading company context...</div>
     }
 
     return (
@@ -147,7 +144,7 @@ const LeadStageMasterPage: React.FC = () => {
                             type="text"
                             placeholder={`Search ${noun}s...`}
                             value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
+                            onChange={(e) => { setSearchQuery(e.target.value); setPage(1); }}
                             className="block w-full pl-10 pr-3 py-2 bg-white border border-slate-300 rounded-md shadow-sm placeholder-slate-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm dark:bg-slate-700 dark:border-slate-600 dark:text-white dark:placeholder-slate-400"
                         />
                     </div>
@@ -165,13 +162,15 @@ const LeadStageMasterPage: React.FC = () => {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-200 dark:divide-slate-700" onDragEnd={() => setDraggedItemId(null)}>
-                            {filteredItems.map((item, index) => (
-                                <tr key={item.ID} draggable={!searchQuery && canModify} onDragStart={e => handleDragStart(e, item.ID)} onDragOver={e => e.preventDefault()} onDrop={e => handleDrop(e, item.ID)}
-                                    className={`${!searchQuery && canModify ? 'cursor-grab' : ''} ${draggedItemId === item.ID ? 'opacity-30' : ''} hover:bg-slate-50 dark:hover:bg-slate-700/40`}>
-                                    <td className="px-3 py-4 text-center text-slate-400"><GripVertical size={16}/></td>
-                                    <td className="px-6 py-4 text-sm text-slate-500 dark:text-slate-400">{index + 1}</td>
-                                    <td className="px-6 py-4 font-medium text-slate-900 dark:text-slate-100">{item.LEAD_NAME}</td>
-                                    <td className="px-6 py-4"><ToggleSwitch enabled={item.STATUS === 1} onChange={() => handleToggle(item.ID)} disabled={!canModify} /></td>
+                            {isLoading ? (
+                                <tr><td colSpan={5} className="text-center p-8">Loading...</td></tr>
+                            ) : items.map((item, index) => (
+                                <tr key={item.id} draggable={canDrag} onDragStart={e => handleDragStart(e, item.id)} onDragOver={e => e.preventDefault()} onDrop={e => handleDrop(e, item.id)}
+                                    className={`${canDrag ? 'cursor-grab' : ''} ${draggedItemId === item.id ? 'opacity-30' : ''} hover:bg-slate-50 dark:hover:bg-slate-700/40`}>
+                                    <td className={`px-3 py-4 text-center ${canDrag ? 'text-slate-400' : 'text-slate-200 dark:text-slate-600'}`}><GripVertical size={16}/></td>
+                                    <td className="px-6 py-4 text-sm text-slate-500 dark:text-slate-400">{((page - 1) * 25) + index + 1}</td>
+                                    <td className="px-6 py-4 font-medium text-slate-900 dark:text-slate-100">{item.lead_name}</td>
+                                    <td className="px-6 py-4"><ToggleSwitch enabled={item.status === 1} onChange={() => handleToggle(item)} disabled={!canModify} /></td>
                                     <td className="px-6 py-4">
                                         <Button size="small" variant="light" className="!p-1.5" onClick={() => openModal(item)} disabled={!canModify}><Edit2 size={14}/></Button>
                                     </td>
@@ -180,13 +179,24 @@ const LeadStageMasterPage: React.FC = () => {
                         </tbody>
                     </table>
                 </div>
+                 {response && response.meta.pages > 1 && (
+                    <div className="flex justify-between items-center mt-4">
+                        <span className="text-sm text-slate-500 dark:text-slate-400">
+                            Page {response.meta.page} of {response.meta.pages}
+                        </span>
+                        <div className="flex gap-2">
+                            <Button onClick={() => setPage(p => p - 1)} disabled={!response.meta.has_prev_page} size="small">Previous</Button>
+                            <Button onClick={() => setPage(p => p + 1)} disabled={!response.meta.has_next_page} size="small">Next</Button>
+                        </div>
+                    </div>
+                )}
             </div>
             
             <Modal isOpen={isModalOpen} onClose={closeModal} contentClassName="bg-white dark:bg-slate-800 rounded-lg shadow-xl w-full max-w-md">
                 <form onSubmit={(e) => { e.preventDefault(); handleSave(); }}>
                     <div className="p-6">
-                        <h2 className="text-xl font-bold mb-4">{editingItem?.ID ? 'Edit' : 'Add'} {noun}</h2>
-                        <Input label={`${noun} Name`} value={editingItem?.LEAD_NAME || ''} onChange={e => setEditingItem(p => p ? {...p, LEAD_NAME: e.target.value} : null)} required autoFocus />
+                        <h2 className="text-xl font-bold mb-4">{editingItem?.id ? 'Edit' : 'Add'} {noun}</h2>
+                        <Input label={`${noun} Name`} value={editingItem?.lead_name || ''} onChange={e => setEditingItem(p => p ? {...p, lead_name: e.target.value} : null)} required autoFocus />
                     </div>
                     <footer className="flex justify-end gap-4 px-6 py-4">
                         <Button type="button" variant="secondary" onClick={closeModal}>Cancel</Button>

@@ -23,11 +23,11 @@ const CompanyMasterPage: React.FC = () => {
     const [formData, setFormData] = useState<Company | null>(null);
     const [initialFormData, setInitialFormData] = useState<Company | null>(null);
     
-    const [countries, setCountries] = useState<Country[]>([]);
-    const [states, setStates] = useState<State[]>([]);
-    const [districts, setDistricts] = useState<District[]>([]);
-    const [cities, setCities] = useState<City[]>([]);
-    const [areas, setAreas] = useState<Area[]>([]);
+    const [countries, setCountries] = useState<SelectOption[]>([]);
+    const [states, setStates] = useState<SelectOption[]>([]);
+    const [districts, setDistricts] = useState<SelectOption[]>([]);
+    const [cities, setCities] = useState<SelectOption[]>([]);
+    const [areas, setAreas] = useState<SelectOption[]>([]);
 
     const [isGeoLoading, setIsGeoLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
@@ -42,63 +42,54 @@ const CompanyMasterPage: React.FC = () => {
     const [selectedCity, setSelectedCity] = useState<string | null>(null);
     const [selectedArea, setSelectedArea] = useState<string | null>(null);
 
-    const getGeographyPath = useCallback((areaId: number | null, cityId: number | null, stateId: number | null) => {
-        const path = { countryId: null, stateId: null, districtId: null, cityId: null, areaId: null };
-        if (!areaId && !cityId && !stateId) return path;
-
-        const area = areaId ? areas.find(a => a.ID === areaId) : null;
-        const city = cityId ? cities.find(c => c.ID === (area?.CITY_ID || cityId)) : null;
-        const district = city ? districts.find(d => d.ID === city.DISTRICT_ID) : null;
-        const state = stateId ? states.find(s => s.ID === (district?.STATE_ID || stateId)) : null;
-        const country = state ? countries.find(c => c.ID === state.COUNTRY_ID) : null;
-
-        if (country) path.countryId = String(country.ID);
-        if (state) path.stateId = String(state.ID);
-        if (district) path.districtId = String(district.ID);
-        if (city) path.cityId = String(city.ID);
-        if (area) path.areaId = String(area.ID);
-        
-        return path;
-    }, [countries, states, districts, cities, areas]);
-
-
     useEffect(() => {
-        const loadGeos = async () => {
-            setIsGeoLoading(true);
-            try {
-                const [countriesData, statesData, districtsData, citiesData, areasData] = await Promise.all([
-                    api.fetchCountries(), api.fetchStates(), api.fetchDistricts(), api.fetchCities(), api.fetchAreas()
-                ]);
-                setCountries(countriesData);
-                setStates(statesData);
-                setDistricts(districtsData);
-                setCities(citiesData);
-                setAreas(areasData);
-            } catch (error) {
-                console.error("Failed to load geographies", error);
-            } finally {
+        const initializeForm = async () => {
+            if (contextCompany) {
+                setIsGeoLoading(true);
+                const companyCopy = JSON.parse(JSON.stringify(contextCompany));
+                setFormData(companyCopy);
+                setInitialFormData(companyCopy);
+    
+                const { area_id, city_id, state_id } = companyCopy;
+                
+                const area = area_id ? await api.fetchAreaById(area_id) : null;
+                const city = city_id ? await api.fetchCityById(area?.city_id || city_id) : null;
+                const district = city ? await api.fetchDistrictById(city.district_id) : null;
+                const state = state_id ? await api.fetchStateById(district?.state_id || state_id) : null;
+                const country = state ? await api.fetchCountryById(state.country_id) : null;
+    
+                setSelectedCountry(country ? String(country.id) : null);
+                setSelectedState(state ? String(state.id) : null);
+                setSelectedDistrict(district ? String(district.id) : null);
+                setSelectedCity(city ? String(city.id) : null);
+                setSelectedArea(area ? String(area.id) : null);
                 setIsGeoLoading(false);
             }
         };
-        loadGeos();
-    }, []);
+        initializeForm();
+    }, [contextCompany]);
 
     useEffect(() => {
-        if (contextCompany && !isGeoLoading) {
-            const companyCopy = JSON.parse(JSON.stringify(contextCompany));
-            setFormData(companyCopy);
-            setInitialFormData(companyCopy);
+        (async () => {
+            const [countriesData, statesData, districtsData, citiesData, areasData] = await Promise.all([
+                api.fetchCountries(), api.fetchStates(), api.fetchDistricts(), api.fetchCities(), api.fetchAreas()
+            ]);
+            setCountries(countriesData.data.map(c => ({ value: String(c.id), label: c.country_name })));
+            
+            const filteredStates = selectedCountry ? statesData.data.filter(s => s.country_id === Number(selectedCountry)) : [];
+            setStates(filteredStates.map(s => ({ value: String(s.id), label: s.state })));
+            
+            const filteredDistricts = selectedState ? districtsData.data.filter(d => d.state_id === Number(selectedState)) : [];
+            setDistricts(filteredDistricts.map(d => ({ value: String(d.id), label: d.district })));
+            
+            const filteredCities = selectedDistrict ? citiesData.data.filter(c => c.district_id === Number(selectedDistrict)) : [];
+            setCities(filteredCities.map(c => ({ value: String(c.id), label: c.city })));
+            
+            const filteredAreas = selectedCity ? areasData.data.filter(a => a.city_id === Number(selectedCity)) : [];
+            setAreas(filteredAreas.map(a => ({ value: String(a.id), label: a.area })));
+        })();
+    }, [selectedCountry, selectedState, selectedDistrict, selectedCity]);
 
-            const { AREA_ID, CITY_ID, STATE_ID } = companyCopy;
-            const geoPath = getGeographyPath(AREA_ID, CITY_ID, STATE_ID);
-
-            setSelectedCountry(geoPath.countryId);
-            setSelectedState(geoPath.stateId);
-            setSelectedDistrict(geoPath.districtId);
-            setSelectedCity(geoPath.cityId);
-            setSelectedArea(geoPath.areaId);
-        }
-    }, [contextCompany, isGeoLoading, getGeographyPath]);
 
     useEffect(() => {
         if (!formData || !initialFormData) {
@@ -117,11 +108,12 @@ const CompanyMasterPage: React.FC = () => {
         if (!formData || !isDirty) return;
         setIsSaving(true);
         try {
-            const oldStatus = initialFormData?.STATUS;
-            const newStatus = formData.STATUS;
+            const oldStatus = initialFormData?.status;
+            const newStatus = formData.status;
     
             const updatedCompanyFromApi = await api.updateCompany(formData);
             updateContextCompany(updatedCompanyFromApi);
+            setInitialFormData(JSON.parse(JSON.stringify(updatedCompanyFromApi)));
             
             if (oldStatus !== newStatus) {
                 if (newStatus === 1) {
@@ -145,8 +137,8 @@ const CompanyMasterPage: React.FC = () => {
 
     const handleStatusToggle = (checked: boolean) => {
         const newStatus = checked ? 1 : 0;
-        handleDataChange('STATUS', newStatus);
-        if (newStatus === 0 && initialFormData?.STATUS === 1) {
+        handleDataChange('status', newStatus);
+        if (newStatus === 0 && initialFormData?.status === 1) {
             setIsWarningModalOpen(true);
         }
     };
@@ -157,15 +149,9 @@ const CompanyMasterPage: React.FC = () => {
     };
 
     const cancelDeactivation = () => {
-        handleDataChange('STATUS', 1);
+        handleDataChange('status', 1);
         setIsWarningModalOpen(false);
     };
-
-    const countryOptions = useMemo<SelectOption[]>(() => countries.filter(c => c.STATUS === 1).map(c => ({ value: String(c.ID), label: c.COUNTRY_NAME })), [countries]);
-    const stateOptions = useMemo<SelectOption[]>(() => !selectedCountry ? [] : states.filter(s => s.COUNTRY_ID === Number(selectedCountry) && s.STATUS === 1).map(s => ({ value: String(s.ID), label: s.STATE })), [states, selectedCountry]);
-    const districtOptions = useMemo<SelectOption[]>(() => !selectedState ? [] : districts.filter(d => d.STATE_ID === Number(selectedState) && d.STATUS === 1).map(d => ({ value: String(d.ID), label: d.DISTRICT })), [districts, selectedState]);
-    const cityOptions = useMemo<SelectOption[]>(() => !selectedDistrict ? [] : cities.filter(c => c.DISTRICT_ID === Number(selectedDistrict) && c.STATUS === 1).map(c => ({ value: String(c.ID), label: c.CITY })), [cities, selectedDistrict]);
-    const areaOptions = useMemo<SelectOption[]>(() => !selectedCity ? [] : areas.filter(a => a.CITY_ID === Number(selectedCity) && a.STATUS === 1).map(a => ({ value: String(a.ID), label: a.AREA })), [areas, selectedCity]);
     
     const isLoading = isContextLoading || isGeoLoading;
 
@@ -183,7 +169,7 @@ const CompanyMasterPage: React.FC = () => {
             </div>
         );
     }
-    const isActive = formData.STATUS === 1;
+    const isActive = formData.status === 1;
 
     return (
         <div className="w-full">
@@ -199,10 +185,10 @@ const CompanyMasterPage: React.FC = () => {
                     <div className="bg-white dark:bg-slate-700/50 p-6 rounded-lg shadow-md">
                         <h4 className="text-lg font-semibold mb-4 text-slate-700 dark:text-slate-300">Company Info</h4>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <Input label="Company Code" name="COMP_CODE" value={formData.COMP_CODE || ''} onChange={e => handleDataChange('COMP_CODE', e.target.value)} disabled/>
-                            <Input label="Company Name" name="COMP_NAME" value={formData.COMP_NAME} onChange={e => handleDataChange('COMP_NAME', e.target.value)} />
-                            <Input label="Registered Name" name="MAILING_NAME" value={formData.MAILING_NAME || ''} onChange={e => handleDataChange('MAILING_NAME', e.target.value)} />
-                            <Input label="Date of Creation" name="DATE_OF_CREATION" type="date" value={formData.DATE_OF_CREATION || ''} onChange={e => handleDataChange('DATE_OF_CREATION', e.target.value)} />
+                            <Input label="Company Code" name="comp_code" value={formData.comp_code || ''} onChange={e => handleDataChange('comp_code', e.target.value)} disabled/>
+                            <Input label="Company Name" name="comp_name" value={formData.comp_name} onChange={e => handleDataChange('comp_name', e.target.value)} />
+                            <Input label="Registered Name" name="mailing_name" value={formData.mailing_name || ''} onChange={e => handleDataChange('mailing_name', e.target.value)} />
+                            <Input label="Date of Creation" name="date_of_creation" type="date" value={formData.date_of_creation || ''} onChange={e => handleDataChange('date_of_creation', e.target.value)} />
                              <div className="flex items-center gap-4">
                                 <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Status</label>
                                 <ToggleSwitch enabled={isActive} onChange={handleStatusToggle} />
@@ -213,31 +199,31 @@ const CompanyMasterPage: React.FC = () => {
                     <div className="bg-white dark:bg-slate-700/50 p-6 rounded-lg shadow-md">
                         <h4 className="text-lg font-semibold mb-4 text-slate-700 dark:text-slate-300">Address & Contact</h4>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <Input label="Line 1" value={formData.ADDRESS_1 || ''} onChange={e => handleDataChange('ADDRESS_1', e.target.value)} />
-                            <Input label="Line 2" value={formData.ADDRESS_2 || ''} onChange={e => handleDataChange('ADDRESS_2', e.target.value)} />
+                            <Input label="Line 1" value={formData.address_1 || ''} onChange={e => handleDataChange('address_1', e.target.value)} />
+                            <Input label="Line 2" value={formData.address_2 || ''} onChange={e => handleDataChange('address_2', e.target.value)} />
                             
                             <div className="md:col-span-2">
-                                <SearchableSelect label="Country" options={countryOptions} value={selectedCountry} onChange={val => { setSelectedCountry(val); setSelectedState(null); setSelectedDistrict(null); setSelectedCity(null); setSelectedArea(null); handleDataChange('STATE_ID', null); }} />
+                                <SearchableSelect label="Country" options={countries} value={selectedCountry} onChange={val => { setSelectedCountry(val); setSelectedState(null); setSelectedDistrict(null); setSelectedCity(null); setSelectedArea(null); handleDataChange('state_id', null); }} />
                             </div>
 
-                            <SearchableSelect label="State" options={stateOptions} value={selectedState} onChange={val => { setSelectedState(val); setSelectedDistrict(null); setSelectedCity(null); setSelectedArea(null); handleDataChange('STATE_ID', val ? Number(val) : null); handleDataChange('CITY_ID', null); }} disabled={!selectedCountry} />
-                            <SearchableSelect label="District" options={districtOptions} value={selectedDistrict} onChange={val => { setSelectedDistrict(val); setSelectedCity(null); setSelectedArea(null); handleDataChange('CITY_ID', null); }} disabled={!selectedState} />
+                            <SearchableSelect label="State" options={states} value={selectedState} onChange={val => { setSelectedState(val); setSelectedDistrict(null); setSelectedCity(null); setSelectedArea(null); handleDataChange('state_id', val ? Number(val) : null); handleDataChange('city_id', null); }} disabled={!selectedCountry} />
+                            <SearchableSelect label="District" options={districts} value={selectedDistrict} onChange={val => { setSelectedDistrict(val); setSelectedCity(null); setSelectedArea(null); handleDataChange('city_id', null); }} disabled={!selectedState} />
                             
-                            <SearchableSelect label="City" options={cityOptions} value={selectedCity} onChange={val => { setSelectedCity(val); setSelectedArea(null); handleDataChange('CITY_ID', val ? Number(val) : null); handleDataChange('AREA_ID', null); }} disabled={!selectedDistrict} />
-                            <SearchableSelect label="Area" options={areaOptions} value={selectedArea} onChange={val => { setSelectedArea(val); handleDataChange('AREA_ID', val ? Number(val) : null); }} disabled={!selectedCity} />
+                            <SearchableSelect label="City" options={cities} value={selectedCity} onChange={val => { setSelectedCity(val); setSelectedArea(null); handleDataChange('city_id', val ? Number(val) : null); handleDataChange('area_id', null); }} disabled={!selectedDistrict} />
+                            <SearchableSelect label="Area" options={areas} value={selectedArea} onChange={val => { setSelectedArea(val); handleDataChange('area_id', val ? Number(val) : null); }} disabled={!selectedCity} />
 
-                            <Input label="Pin Code" value={formData.PIN_CODE || ''} onChange={e => handleDataChange('PIN_CODE', e.target.value)} />
-                            <Input label="Phone No." name="PHONE_NO" value={formData.PHONE_NO || ''} onChange={e => handleDataChange('PHONE_NO', e.target.value)} />
-                            <Input label="Email ID" name="EMAIL" type="email" value={formData.EMAIL || ''} onChange={e => handleDataChange('EMAIL', e.target.value)} />
-                            <Input label="FAX No." name="FAX_NO" value={formData.FAX_NO || ''} onChange={e => handleDataChange('FAX_NO', e.target.value)} />
+                            <Input label="Pin Code" value={formData.pin_code || ''} onChange={e => handleDataChange('pin_code', e.target.value)} />
+                            <Input label="Phone No." name="phone_no" value={formData.phone_no || ''} onChange={e => handleDataChange('phone_no', e.target.value)} />
+                            <Input label="Email ID" name="email" type="email" value={formData.email || ''} onChange={e => handleDataChange('email', e.target.value)} />
+                            <Input label="FAX No." name="fax_no" value={formData.fax_no || ''} onChange={e => handleDataChange('fax_no', e.target.value)} />
                         </div>
                     </div>
                     <div className="bg-white dark:bg-slate-700/50 p-6 rounded-lg shadow-md">
                         <h4 className="text-lg font-semibold mb-4 text-slate-700 dark:text-slate-300">Tax Info</h4>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            <Input label="GSTIN" name="GST_NO" value={formData.GST_NO || ''} onChange={e => handleDataChange('GST_NO', e.target.value)} />
-                            <Input label="PAN" name="PAN_NO" value={formData.PAN_NO || ''} onChange={e => handleDataChange('PAN_NO', e.target.value)} />
-                            <Input label="TAN" name="TAN_NO" value={formData.TAN_NO || ''} onChange={e => handleDataChange('TAN_NO', e.target.value)} />
+                            <Input label="GSTIN" name="gst_no" value={formData.gst_no || ''} onChange={e => handleDataChange('gst_no', e.target.value)} />
+                            <Input label="PAN" name="pan_no" value={formData.pan_no || ''} onChange={e => handleDataChange('pan_no', e.target.value)} />
+                            <Input label="TAN" name="tan_no" value={formData.tan_no || ''} onChange={e => handleDataChange('tan_no', e.target.value)} />
                         </div>
                     </div>
                 </div>

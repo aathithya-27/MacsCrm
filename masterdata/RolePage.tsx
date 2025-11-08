@@ -1,5 +1,6 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import type { Role, Company } from '../types';
+
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import type { Role, Company, PaginatedResponse } from '../types';
 import * as api from '../services/api';
 import { useToast } from '../context/ToastContext';
 import Button from '../components/ui/Button';
@@ -11,51 +12,57 @@ import { Plus, Edit2, Search } from 'lucide-react';
 const RolePage: React.FC = () => {
     const { addToast } = useToast();
     const [companyData, setCompanyData] = useState<Company | null>(null);
-    const [roles, setRoles] = useState<Role[]>([]);
+    const [response, setResponse] = useState<PaginatedResponse<Role> | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
+    const [page, setPage] = useState(1);
     
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingItem, setEditingItem] = useState<Partial<Role> | null>(null);
 
-    const canCreate = companyData?.STATUS === 1;
-    const canModify = companyData?.STATUS === 1;
+    const canCreate = companyData?.status === 1;
+    const canModify = companyData?.status === 1;
 
+    const loadData = useCallback(async () => {
+        if (!companyData) return;
+        setIsLoading(true);
+        try {
+            const data = await api.fetchRoles(companyData.comp_id, { page, search: searchQuery });
+            setResponse(data);
+        } catch (error) {
+            addToast("Failed to load roles.", "error");
+        } finally {
+            setIsLoading(false);
+        }
+    }, [addToast, companyData, page, searchQuery]);
+    
     useEffect(() => {
-        const loadData = async () => {
-            setIsLoading(true);
+        const loadInitialCompany = async () => {
             try {
                 const user = await api.fetchCurrentUser();
                 const companies = await api.fetchCompanies();
-                const currentCompany = companies.find(c => c.COMP_ID === user.comp_id) || null;
+                const currentCompany = companies.find(c => c.comp_id === user.comp_id) || null;
                 setCompanyData(currentCompany);
-
-                if (currentCompany) {
-                    const data = await api.fetchRoles();
-                    const companyItems = data.filter(r => r.COMP_ID === currentCompany.COMP_ID);
-                    setRoles(companyItems);
-                } else {
-                    setRoles([]);
-                }
             } catch (error) {
-                console.error("Failed to load data", error);
-                addToast("Failed to load roles.", "error");
-            } finally {
-                setIsLoading(false);
+                addToast("Failed to load company data.", "error");
             }
         };
-        loadData();
+        loadInitialCompany();
     }, [addToast]);
 
-    const filteredItems = useMemo(() => {
-        const query = searchQuery.toLowerCase();
-        return roles.filter(item =>
-            item.ROLE_DESC.toLowerCase().includes(query)
-        );
-    }, [roles, searchQuery]);
+    useEffect(() => {
+        const debounceTimer = setTimeout(() => {
+            if (companyData) {
+                loadData();
+            }
+        }, 300);
+        return () => clearTimeout(debounceTimer);
+    }, [loadData, companyData]);
+    
+    const roles = useMemo(() => response?.data || [], [response]);
 
     const openModal = (item: Role | null) => {
-        setEditingItem(item ? { ...item } : { COMP_ID: companyData!.COMP_ID, STATUS: 1, ROLE_DESC: '', IS_ADVISOR_ROLE: 0 });
+        setEditingItem(item ? { ...item } : { comp_id: companyData!.comp_id, status: 1, role_desc: '', is_advisor_role: 0 });
         setIsModalOpen(true);
     };
 
@@ -65,40 +72,34 @@ const RolePage: React.FC = () => {
     };
 
     const handleSave = async () => {
-        if (!editingItem || !editingItem.ROLE_DESC?.trim()) {
+        if (!editingItem || !editingItem.role_desc?.trim()) {
             addToast("Role name is required.", "error");
             return;
         }
-
         try {
-            const saved = await api.saveRole(editingItem);
-            if (editingItem.ID) {
-                setRoles(roles.map(r => r.ID === saved.ID ? saved : r));
-                addToast("Role updated successfully.");
-            } else {
-                setRoles([...roles, saved]);
-                addToast("Role created successfully.");
-            }
+            await api.saveRole(editingItem);
+            addToast(`Role ${editingItem.id ? 'updated' : 'created'} successfully.`);
+            loadData();
             closeModal();
         } catch (error) {
-            console.error("Failed to save role", error);
             addToast("Failed to save role.", "error");
         }
     };
     
-    const handleToggleStatus = async (item: Role, field: 'STATUS' | 'IS_ADVISOR_ROLE') => {
+    const handleToggleStatus = async (item: Role, field: 'status' | 'is_advisor_role') => {
         const updatedItem = { ...item, [field]: item[field] === 1 ? 0 : 1 };
          try {
-            const saved = await api.saveRole(updatedItem);
-            setRoles(roles.map(r => r.ID === saved.ID ? saved : r));
+            await api.saveRole(updatedItem);
             addToast("Role updated.");
+            loadData();
         } catch (error) {
-            console.error(`Failed to update ${field}`, error);
             addToast(`Failed to update ${field}.`, "error");
         }
     };
     
-    if (isLoading) return <div className="p-8 text-center">Loading roles...</div>;
+    if (!companyData && !isLoading) {
+        return <div className="p-8 text-center">Could not load company information.</div>
+    }
 
     return (
         <div className="w-full h-full flex flex-col">
@@ -113,7 +114,7 @@ const RolePage: React.FC = () => {
                         type="text"
                         placeholder="Search Roles..."
                         value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
+                        onChange={(e) => { setSearchQuery(e.target.value); setPage(1); }}
                         className="block w-full pl-10 pr-3 py-2 bg-white border border-slate-300 rounded-md shadow-sm placeholder-slate-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm dark:bg-slate-700 dark:border-slate-600 dark:text-white dark:placeholder-slate-400"
                     />
                 </div>
@@ -137,15 +138,17 @@ const RolePage: React.FC = () => {
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
-                        {filteredItems.length > 0 ? filteredItems.map((item, index) => (
-                            <tr key={item.ID} className="hover:bg-slate-50 dark:hover:bg-slate-700/40">
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">{index + 1}</td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900 dark:text-slate-100">{item.ROLE_DESC}</td>
+                        {isLoading ? (
+                            <tr><td colSpan={5} className="p-8 text-center text-slate-500">Loading...</td></tr>
+                        ) : roles.length > 0 ? roles.map((item, index) => (
+                            <tr key={item.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/40">
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">{((page - 1) * 25) + index + 1}</td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900 dark:text-slate-100">{item.role_desc}</td>
                                 <td className="px-6 py-4 whitespace-nowrap">
-                                    <ToggleSwitch enabled={item.IS_ADVISOR_ROLE === 1} onChange={() => handleToggleStatus(item, 'IS_ADVISOR_ROLE')} disabled={!canModify}/>
+                                    <ToggleSwitch enabled={item.is_advisor_role === 1} onChange={() => handleToggleStatus(item, 'is_advisor_role')} disabled={!canModify}/>
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap">
-                                    <ToggleSwitch enabled={item.STATUS === 1} onChange={() => handleToggleStatus(item, 'STATUS')} disabled={!canModify}/>
+                                    <ToggleSwitch enabled={item.status === 1} onChange={() => handleToggleStatus(item, 'status')} disabled={!canModify}/>
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                     <div className="flex items-center gap-2">
@@ -164,20 +167,32 @@ const RolePage: React.FC = () => {
                 </table>
             </div>
 
+            {response && response.meta.pages > 1 && (
+                <div className="flex justify-between items-center mt-4">
+                    <span className="text-sm text-slate-500 dark:text-slate-400">
+                        Page {response.meta.page} of {response.meta.pages}
+                    </span>
+                    <div className="flex gap-2">
+                        <Button onClick={() => setPage(p => p - 1)} disabled={!response.meta.has_prev_page} size="small">Previous</Button>
+                        <Button onClick={() => setPage(p => p + 1)} disabled={!response.meta.has_next_page} size="small">Next</Button>
+                    </div>
+                </div>
+            )}
+
             <Modal isOpen={isModalOpen} onClose={closeModal} contentClassName="bg-white dark:bg-slate-800 rounded-lg shadow-xl w-full max-w-lg">
                 <form onSubmit={(e) => { e.preventDefault(); handleSave(); }}>
                     <div className="p-6">
-                        <h2 className="text-xl font-bold mb-4">{editingItem?.ID ? 'Edit' : 'Add'} Role</h2>
+                        <h2 className="text-xl font-bold mb-4">{editingItem?.id ? 'Edit' : 'Add'} Role</h2>
                         <div className="space-y-4">
-                            <Input label="Role Name" value={editingItem?.ROLE_DESC || ''} onChange={e => setEditingItem(p => p ? {...p, ROLE_DESC: e.target.value} : null)} required autoFocus />
+                            <Input label="Role Name" value={editingItem?.role_desc || ''} onChange={e => setEditingItem(p => p ? {...p, role_desc: e.target.value} : null)} required autoFocus />
                             <div className="flex items-center justify-between pt-2">
                                 <div>
                                     <label className="font-medium text-sm text-slate-700 dark:text-slate-300">Is Advisor Role?</label>
                                     <p className="text-xs text-slate-500 dark:text-slate-400">Enable this if this role is for sales and customer-facing activities.</p>
                                 </div>
                                 <ToggleSwitch
-                                    enabled={editingItem?.IS_ADVISOR_ROLE === 1}
-                                    onChange={checked => setEditingItem(p => p ? { ...p, IS_ADVISOR_ROLE: checked ? 1 : 0 } : null)}
+                                    enabled={editingItem?.is_advisor_role === 1}
+                                    onChange={checked => setEditingItem(p => p ? { ...p, is_advisor_role: checked ? 1 : 0 } : null)}
                                     disabled={!canModify}
                                 />
                             </div>

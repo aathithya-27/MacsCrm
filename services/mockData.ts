@@ -13,366 +13,368 @@ const now = new Date().toISOString();
 const dummyUser = 1;
 
 let countries: Country[] = [
-    { ID: 1, COUNTRY_NAME: 'India', STATUS: 1, CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
+    { id: 1, country_name: 'India', status: 1, created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser },
 ];
 
 let states: State[] = [
-    { ID: 1, COUNTRY_ID: 1, STATE: 'Maharashtra', STATUS: 1, CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
-    { ID: 2, COUNTRY_ID: 1, STATE: 'Karnataka', STATUS: 1, CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
-    { ID: 3, COUNTRY_ID: 1, STATE: 'Andaman and Nicobar Islands', STATUS: 1, CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
-    { ID: 4, COUNTRY_ID: 1, STATE: 'Andhra Pradesh', STATUS: 1, CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
+    { id: 1, country_id: 1, state: 'Maharashtra', status: 1, created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser },
+    { id: 2, country_id: 1, state: 'Karnataka', status: 1, created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser },
+    { id: 3, country_id: 1, state: 'Andaman and Nicobar Islands', status: 1, created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser },
+    { id: 4, country_id: 1, state: 'Andhra Pradesh', status: 1, created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser },
 ];
 
 let districts: District[] = [
-    { ID: 1, COUNTRY_ID: 1, STATE_ID: 1, DISTRICT: 'Mumbai', STATUS: 1, CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
-    { ID: 2, COUNTRY_ID: 1, STATE_ID: 1, DISTRICT: 'Pune', STATUS: 1, CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
-    { ID: 3, COUNTRY_ID: 1, STATE_ID: 2, DISTRICT: 'Bengaluru Urban', STATUS: 1, CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
-    { ID: 4, COUNTRY_ID: 1, STATE_ID: 4, DISTRICT: 'Adilabad', STATUS: 1, CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
+    { id: 1, country_id: 1, state_id: 1, district: 'Mumbai', status: 1, created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser },
+    { id: 2, country_id: 1, state_id: 1, district: 'Pune', status: 1, created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser },
+    { id: 3, country_id: 1, state_id: 2, district: 'Bengaluru Urban', status: 1, created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser },
+    { id: 4, country_id: 1, state_id: 4, district: 'Adilabad', status: 1, created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser },
 ];
 
 let cities: City[] = [
-    { ID: 1, COUNTRY_ID: 1, STATE_ID: 1, DISTRICT_ID: 1, CITY: 'Bandra', STATUS: 1, CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
-    { ID: 2, COUNTRY_ID: 1, STATE_ID: 1, DISTRICT_ID: 2, CITY: 'Pune City', STATUS: 1, CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
-    { ID: 3, COUNTRY_ID: 1, STATE_ID: 2, DISTRICT_ID: 3, CITY: 'Bengaluru', STATUS: 1, CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
+    { id: 1, country_id: 1, state_id: 1, district_id: 1, city: 'Bandra', status: 1, created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser },
+    { id: 2, country_id: 1, state_id: 1, district_id: 2, city: 'Pune City', status: 1, created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser },
+    { id: 3, country_id: 1, state_id: 2, district_id: 3, city: 'Bengaluru', status: 1, created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser },
 ];
 
 let areas: Area[] = [
-    { ID: 1, COUNTRY_ID: 1, STATE_ID: 1, DISTRICT_ID: 1, CITY_ID: 1, AREA: 'Financial District', STATUS: 1, CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
+    { id: 1, country_id: 1, state_id: 1, district_id: 1, city_id: 1, area: 'Financial District', status: 1, created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser },
 ];
 
 
 const companies: Company[] = [
     {
         id: 1,
-        COMP_ID: 1,
-        CLIENT_ID: 101,
-        COMP_CODE: 'FIN01',
-        COMP_NAME: 'Finroots',
-        MAILING_NAME: 'Finroots Financial Services Pvt. Ltd.',
-        DATE_OF_CREATION: '2020-07-01',
-        STATUS: 1,
-        ADDRESS_1: '123 Financial Street',
-        ADDRESS_2: 'Bandra',
-        ADDRESS_3: '',
-        STATE_ID: 1, 
-        CITY_ID: 1, 
-        AREA_ID: 1, 
-        PIN_CODE: '400050',
-        PHONE_NO: '+91 22 12345678',
-        EMAIL: 'info@finroots.com',
-        FAX_NO: '',
-        GST_NO: '27ABCDE1234F1Z5',
-        PAN_NO: 'ABCDE1234F',
-        TAN_NO: 'MUMF12345G',
-        MODIFIED_ON: '2023-10-27T10:00:00Z',
+        comp_id: 1,
+        client_id: 101,
+        comp_code: 'FIN01',
+        comp_name: 'Finroots',
+        mailing_name: 'Finroots Financial Services Pvt. Ltd.',
+        date_of_creation: '2020-07-01',
+        status: 1,
+        address_1: '123 Financial Street',
+        address_2: 'Bandra',
+        address_3: '',
+        state_id: 1, 
+        city_id: 1, 
+        area_id: 1, 
+        pin_code: '400050',
+        phone_no: '+91 22 12345678',
+        email: 'info@finroots.com',
+        fax_no: '',
+        gst_no: '27ABCDE1234F1Z5',
+        pan_no: 'ABCDE1234F',
+        tan_no: 'MUMF12345G',
+        modified_on: '2023-10-27T10:00:00Z',
     }
 ];
 
 let branches: Branch[] = [
     {
-        BRANCH_ID: 1,
-        COMP_ID: 1,
-        BRANCH_CODE: 'MUM',
-        BRANCH_NAME: 'Mumbai Head Office',
-        DATE_OF_CREATION: '2021-01-15',
-        STATUS: 1,
-        ADDRESS_1: '456 Business Avenue',
-        ADDRESS_2: 'Andheri',
-        ADDRESS_3: 'Near Metro Station',
-        STATE_ID: 1, 
-        CITY_ID: 1, 
-        AREA_ID: 1, 
-        PINCODE: '400093',
-        PHONE_NO: '+91 22 87654321',
-        FAX_NO: '',
-        GST_NO: '27LMNOP1234F1Z5',
-        PAN_NO: 'LMNOP1234F',
-        TAN_NO: 'MUML12345G',
-        CREATED_BY: 1,
-        MODIFIED_BY: 1,
-        MODIFIED_ON: '2023-11-10T11:00:00Z',
+        id: 1,
+        branch_id: 1,
+        comp_id: 1,
+        branch_code: 'MUM',
+        branch_name: 'Mumbai Head Office',
+        date_of_creation: '2021-01-15',
+        status: 1,
+        address_1: '456 Business Avenue',
+        address_2: 'Andheri',
+        address_3: 'Near Metro Station',
+        state_id: 1, 
+        city_id: 1, 
+        area_id: 1, 
+        pincode: '400093',
+        phone_no: '+91 22 87654321',
+        fax_no: '',
+        gst_no: '27LMNOP1234F1Z5',
+        pan_no: 'LMNOP1234F',
+        tan_no: 'MUML12345G',
+        created_by: 1,
+        modified_by: 1,
+        modified_on: '2023-11-10T11:00:00Z',
     },
     {
-        BRANCH_ID: 2,
-        COMP_ID: 1,
-        BRANCH_CODE: 'PUN',
-        BRANCH_NAME: 'Pune Branch',
-        DATE_OF_CREATION: '2022-05-20',
-        STATUS: 1,
-        ADDRESS_1: '789 Tech Park',
-        ADDRESS_2: 'Hinjewadi',
-        ADDRESS_3: '',
-        STATE_ID: 1, 
-        CITY_ID: 2, 
-        AREA_ID: null,
-        PINCODE: '411057',
-        PHONE_NO: '+91 20 98765432',
-        FAX_NO: '',
-        GST_NO: '27QRSTU1234F1Z6',
-        PAN_NO: 'QRSTU1234F',
-        TAN_NO: 'PUNQ12345H',
-        CREATED_BY: 1,
-        MODIFIED_BY: 1,
-        MODIFIED_ON: '2023-12-01T15:30:00Z',
+        id: 2,
+        branch_id: 2,
+        comp_id: 1,
+        branch_code: 'PUN',
+        branch_name: 'Pune Branch',
+        date_of_creation: '2022-05-20',
+        status: 1,
+        address_1: '789 Tech Park',
+        address_2: 'Hinjewadi',
+        address_3: '',
+        state_id: 1, 
+        city_id: 2, 
+        area_id: null,
+        pincode: '411057',
+        phone_no: '+91 20 98765432',
+        fax_no: '',
+        gst_no: '27QRSTU1234F1Z6',
+        pan_no: 'QRSTU1234F',
+        tan_no: 'PUNQ12345H',
+        created_by: 1,
+        modified_by: 1,
+        modified_on: '2023-12-01T15:30:00Z',
     }
 ];
 
 let businessVerticals: BusinessVertical[] = [
-    { ID: 1, CLIENT_ID: 101, COMP_ID: 1, BUSINESS_VERTICAL_NAME: 'Insurance', CREATED_ON: '2023-01-10T10:00:00Z', MODIFIED_ON: '2023-10-27T11:00:00Z', CREATED_BY: 1, MODIFIED_BY: 1, STATUS: 1 },
-    { ID: 2, CLIENT_ID: 101, COMP_ID: 1, BUSINESS_VERTICAL_NAME: 'Mutual Funds', CREATED_ON: '2023-02-15T10:00:00Z', MODIFIED_ON: '2023-11-01T12:00:00Z', CREATED_BY: 1, MODIFIED_BY: 1, STATUS: 1 },
-    { ID: 3, CLIENT_ID: 101, COMP_ID: 1, BUSINESS_VERTICAL_NAME: 'Agent Appointments (SA)', CREATED_ON: '2023-03-20T10:00:00Z', MODIFIED_ON: '2023-11-15T13:00:00Z', CREATED_BY: 1, MODIFIED_BY: 1, STATUS: 0 },
+    { id: 1, client_id: 101, comp_id: 1, business_vertical_name: 'Insurance', created_on: '2023-01-10T10:00:00Z', modified_on: '2023-10-27T11:00:00Z', created_by: 1, modified_by: 1, status: 1 },
+    { id: 2, client_id: 101, comp_id: 1, business_vertical_name: 'Mutual Funds', created_on: '2023-02-15T10:00:00Z', modified_on: '2023-11-01T12:00:00Z', created_by: 1, modified_by: 1, status: 1 },
+    { id: 3, client_id: 101, comp_id: 1, business_vertical_name: 'Agent Appointments (SA)', created_on: '2023-03-20T10:00:00Z', modified_on: '2023-11-15T13:00:00Z', created_by: 1, modified_by: 1, status: 0 },
 ];
 
 
 let insuranceTypes: InsuranceType[] = [
-    { ID: 1, INSURANCE_TYPE: 'Life Insurance', BUSINESS_VERTICAL_ID: 1, STATUS: 1, CLIENT_ID: 101, COMP_ID: 1, DATE_OF_CREATION: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
-    { ID: 2, INSURANCE_TYPE: 'Health Insurance', BUSINESS_VERTICAL_ID: 1, STATUS: 1, CLIENT_ID: 101, COMP_ID: 1, DATE_OF_CREATION: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
-    { ID: 3, INSURANCE_TYPE: 'General Insurance', BUSINESS_VERTICAL_ID: 1, STATUS: 1, CLIENT_ID: 101, COMP_ID: 1, DATE_OF_CREATION: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
+    { id: 1, insurance_type: 'Life Insurance', business_vertical_id: 1, status: 1, client_id: 101, comp_id: 1, date_of_creation: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser },
+    { id: 2, insurance_type: 'Health Insurance', business_vertical_id: 1, status: 1, client_id: 101, comp_id: 1, date_of_creation: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser },
+    { id: 3, insurance_type: 'General Insurance', business_vertical_id: 1, status: 1, client_id: 101, comp_id: 1, date_of_creation: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser },
 ];
 
 let insuranceSubTypes: InsuranceSubType[] = [
-    { ID: 101, INSURANCE_SUB_TYPE: 'Whole Life Insurance', INSURANCE_TYPE_ID: 1, STATUS: 1, CLIENT_ID: 101, COMP_ID: 1, DATE_OF_CREATION: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
-    { ID: 102, INSURANCE_SUB_TYPE: 'Term Life Insurance', INSURANCE_TYPE_ID: 1, STATUS: 1, CLIENT_ID: 101, COMP_ID: 1, DATE_OF_CREATION: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
-    { ID: 103, INSURANCE_SUB_TYPE: 'Endowment Plans', INSURANCE_TYPE_ID: 1, STATUS: 0, CLIENT_ID: 101, COMP_ID: 1, DATE_OF_CREATION: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
-    { ID: 104, INSURANCE_SUB_TYPE: 'Unit-linked Insurance Plan', INSURANCE_TYPE_ID: 1, STATUS: 1, CLIENT_ID: 101, COMP_ID: 1, DATE_OF_CREATION: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
+    { id: 101, insurance_sub_type: 'Whole Life Insurance', insurance_type_id: 1, status: 1, client_id: 101, comp_id: 1, date_of_creation: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser },
+    { id: 102, insurance_sub_type: 'Term Life Insurance', insurance_type_id: 1, status: 1, client_id: 101, comp_id: 1, date_of_creation: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser },
+    { id: 103, insurance_sub_type: 'Endowment Plans', insurance_type_id: 1, status: 0, client_id: 101, comp_id: 1, date_of_creation: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser },
+    { id: 104, insurance_sub_type: 'Unit-linked Insurance Plan', insurance_type_id: 1, status: 1, client_id: 101, comp_id: 1, date_of_creation: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser },
 ];
 
 let processFlows: ProcessFlow[] = [
-    { ID: 1, INSURANCE_TYPE_ID: 1, PROCESS_DESC: 'Initial Contact', STATUS: 1, SEQ_NO: 0, REPEAT: false, CLIENT_ID: 101, COMP_ID: 1, CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
-    { ID: 2, INSURANCE_TYPE_ID: 1, PROCESS_DESC: 'Requirement Analysis', STATUS: 1, SEQ_NO: 1, REPEAT: false, CLIENT_ID: 101, COMP_ID: 1, CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
-    { ID: 3, INSURANCE_TYPE_ID: 1, PROCESS_DESC: 'Plan Presentation', STATUS: 1, SEQ_NO: 2, REPEAT: false, CLIENT_ID: 101, COMP_ID: 1, CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
-    { ID: 4, INSURANCE_TYPE_ID: 1, PROCESS_DESC: 'Application Form Filling', STATUS: 1, SEQ_NO: 3, REPEAT: false, CLIENT_ID: 101, COMP_ID: 1, CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
-    { ID: 5, INSURANCE_TYPE_ID: 1, PROCESS_DESC: 'Premium Collection', STATUS: 1, SEQ_NO: 4, REPEAT: false, CLIENT_ID: 101, COMP_ID: 1, CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
-    { ID: 6, INSURANCE_TYPE_ID: 1, PROCESS_DESC: 'Policy Issuance', STATUS: 1, SEQ_NO: 5, REPEAT: false, CLIENT_ID: 101, COMP_ID: 1, CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
-    { ID: 7, INSURANCE_TYPE_ID: 2, PROCESS_DESC: 'Enquiry', STATUS: 1, SEQ_NO: 0, REPEAT: false, CLIENT_ID: 101, COMP_ID: 1, CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
-    { ID: 8, INSURANCE_TYPE_ID: 2, PROCESS_DESC: 'Medical Check-up', STATUS: 1, SEQ_NO: 1, REPEAT: false, CLIENT_ID: 101, COMP_ID: 1, CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
-    { ID: 9, INSURANCE_TYPE_ID: 2, PROCESS_DESC: 'Documentation', STATUS: 1, SEQ_NO: 2, REPEAT: false, CLIENT_ID: 101, COMP_ID: 1, CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
+    { id: 1, insurance_type_id: 1, process_desc: 'Initial Contact', status: 1, seq_no: 0, repeat: false, client_id: 101, comp_id: 1, created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser },
+    { id: 2, insurance_type_id: 1, process_desc: 'Requirement Analysis', status: 1, seq_no: 1, repeat: false, client_id: 101, comp_id: 1, created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser },
+    { id: 3, insurance_type_id: 1, process_desc: 'Plan Presentation', status: 1, seq_no: 2, repeat: false, client_id: 101, comp_id: 1, created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser },
+    { id: 4, insurance_type_id: 1, process_desc: 'Application Form Filling', status: 1, seq_no: 3, repeat: false, client_id: 101, comp_id: 1, created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser },
+    { id: 5, insurance_type_id: 1, process_desc: 'Premium Collection', status: 1, seq_no: 4, repeat: false, client_id: 101, comp_id: 1, created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser },
+    { id: 6, insurance_type_id: 1, process_desc: 'Policy Issuance', status: 1, seq_no: 5, repeat: false, client_id: 101, comp_id: 1, created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser },
+    { id: 7, insurance_type_id: 2, process_desc: 'Enquiry', status: 1, seq_no: 0, repeat: false, client_id: 101, comp_id: 1, created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser },
+    { id: 8, insurance_type_id: 2, process_desc: 'Medical Check-up', status: 1, seq_no: 1, repeat: false, client_id: 101, comp_id: 1, created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser },
+    { id: 9, insurance_type_id: 2, process_desc: 'Documentation', status: 1, seq_no: 2, repeat: false, client_id: 101, comp_id: 1, created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser },
 ];
 
 let insuranceFields: InsuranceFieldMaster[] = [
-    { ID: 1, INSURANCE_TYPE_ID: 1, FIELD_GROUP: 'Personal Information', FIELD_LABEL: "Father's Name", FIELD_NAME: "fatherName", CDATA_TYPE: 'Text Input', COLUMN_SPAN: 1, STATUS: 1, SEQ_NO: 0 },
-    { ID: 2, INSURANCE_TYPE_ID: 1, FIELD_GROUP: 'Personal Information', FIELD_LABEL: "Mother's Name", FIELD_NAME: "motherName", CDATA_TYPE: 'Text Input', COLUMN_SPAN: 1, STATUS: 1, SEQ_NO: 1 },
-    { ID: 3, INSURANCE_TYPE_ID: 1, FIELD_GROUP: 'Personal Information', FIELD_LABEL: "Spouse's Full Name", FIELD_NAME: "spouseName", CDATA_TYPE: 'Text Input', COLUMN_SPAN: 1, STATUS: 1, SEQ_NO: 2 },
-    { ID: 4, INSURANCE_TYPE_ID: 1, FIELD_GROUP: 'Personal Information', FIELD_LABEL: "Place of Birth", FIELD_NAME: "birthPlace", CDATA_TYPE: 'Text Input', COLUMN_SPAN: 1, STATUS: 0, SEQ_NO: 3 },
+    { id: 1, insurance_type_id: 1, field_group: 'Personal Information', field_label: "Father's Name", field_name: "fatherName", cdata_type: 'Text Input', column_span: 1, status: 1, seq_no: 0 },
+    { id: 2, insurance_type_id: 1, field_group: 'Personal Information', field_label: "Mother's Name", field_name: "motherName", cdata_type: 'Text Input', column_span: 1, status: 1, seq_no: 1 },
+    { id: 3, insurance_type_id: 1, field_group: 'Personal Information', field_label: "Spouse's Full Name", field_name: "spouseName", cdata_type: 'Text Input', column_span: 1, status: 1, seq_no: 2 },
+    { id: 4, insurance_type_id: 1, field_group: 'Personal Information', field_label: "Place of Birth", field_name: "birthPlace", cdata_type: 'Text Input', column_span: 1, status: 0, seq_no: 3 },
 ];
 
 let documentMasters: DocumentMaster[] = [
-    { ID: 1, DOC_NAME: 'PAN Card', STATUS: 1, SEQ_NO: 0 },
-    { ID: 2, DOC_NAME: 'Aadhaar Card', STATUS: 1, SEQ_NO: 1 },
-    { ID: 3, DOC_NAME: 'Passport', STATUS: 1, SEQ_NO: 2 },
-    { ID: 4, DOC_NAME: 'Driving License', STATUS: 1, SEQ_NO: 3 },
-    { ID: 5, DOC_NAME: 'Bank Statement', STATUS: 1, SEQ_NO: 4 },
+    { id: 1, doc_name: 'PAN Card', status: 1, seq_no: 0 },
+    { id: 2, doc_name: 'Aadhaar Card', status: 1, seq_no: 1 },
+    { id: 3, doc_name: 'Passport', status: 1, seq_no: 2 },
+    { id: 4, doc_name: 'Driving License', status: 1, seq_no: 3 },
+    { id: 5, doc_name: 'Bank Statement', status: 1, seq_no: 4 },
 ];
 
 let documentRequirements: DocumentRequirement[] = [
-    { ID: 1, INSU_TYPE_ID: 1, DOC_ID: 1, IS_MANDATORY: 1, COMP_ID: 1, STATUS: 1, CREATED_BY: 1, CREATED_ON: now, MODIFIED_BY: 1, MODIFIED_ON: now },
-    { ID: 2, INSU_TYPE_ID: 1, DOC_ID: 2, IS_MANDATORY: 1, COMP_ID: 1, STATUS: 1, CREATED_BY: 1, CREATED_ON: now, MODIFIED_BY: 1, MODIFIED_ON: now },
-    { ID: 3, INSU_TYPE_ID: 1, INSU_SUB_TYPE_ID: 101, DOC_ID: 1, IS_MANDATORY: 1, COMP_ID: 1, STATUS: 1, CREATED_BY: 1, CREATED_ON: now, MODIFIED_BY: 1, MODIFIED_ON: now },
+    { id: 1, insu_type_id: 1, doc_id: 1, is_mandatory: 1, comp_id: 1, status: 1, created_by: 1, created_on: now, modified_by: 1, modified_on: now },
+    { id: 2, insu_type_id: 1, doc_id: 2, is_mandatory: 1, comp_id: 1, status: 1, created_by: 1, created_on: now, modified_by: 1, modified_on: now },
+    { id: 3, insu_type_id: 1, insu_sub_type_id: 101, doc_id: 1, is_mandatory: 1, comp_id: 1, status: 1, created_by: 1, created_on: now, modified_by: 1, modified_on: now },
 ];
 
 const allMembers: Member[] = [
-    { id: 'mem_1', name: 'John Doe', processStages: { 'it_1': 'Premium Collection' }, policies: [{ id: 'pol_1', insuranceTypeId: 'it_1', schemeName: 'Jeevan Anand', dynamicData: { fatherName: 'Richard Doe' } }], routeId: 1, genderId: 1, maritalStatusId: 2, customerCategoryId: 1, customerSubCategoryId: 1, customerGroupId: 1, customerTypeId: 2 },
-    { id: 'mem_2', name: 'Jane Smith', processStages: { 'it_1': 'Plan Presentation' }, routeId: 2, genderId: 2, maritalStatusId: 1, customerCategoryId: 2, customerGroupId: 2, customerTypeId: 1 },
+    { id: 'mem_1', name: 'John Doe', process_stages: { 'it_1': 'Premium Collection' }, policies: [{ id: 'pol_1', insurance_type_id: 'it_1', scheme_name: 'Jeevan Anand', dynamic_data: { fatherName: 'Richard Doe' } }], route_id: 1, gender_id: 1, marital_status_id: 2, customer_category_id: 1, customer_sub_category_id: 1, customer_group_id: 1, customer_type_id: 2 },
+    { id: 'mem_2', name: 'Jane Smith', process_stages: { 'it_1': 'Plan Presentation' }, route_id: 2, gender_id: 2, marital_status_id: 1, customer_category_id: 2, customer_group_id: 2, customer_type_id: 1 },
 ];
 
 const schemesMaster: SchemeMaster[] = [
-    { id: 'sch_1', name: 'Jeevan Anand', insuranceTypeId: 'it_1' },
-    { id: 'sch_2', name: 'Health Guard', insuranceTypeId: 'it_2' },
-    { id: 'sch_3', name: 'Term Shield', insuranceTypeId: 'it_sub_2' },
+    { id: 'sch_1', name: 'Jeevan Anand', insurance_type_id: 'it_1' },
+    { id: 'sch_2', name: 'Health Guard', insurance_type_id: 'it_2' },
+    { id: 'sch_3', name: 'Term Shield', insurance_type_id: 'it_sub_2' },
 ];
 
 let agencies: Agency[] = [
-    { ID: 1, COMP_ID: 1, AGENCY_NAME: 'Max Life Insurance', CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser, STATUS: 1 },
-    { ID: 2, COMP_ID: 1, AGENCY_NAME: 'Life Insurance Corporation (LIC)', CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser, STATUS: 1 },
-    { ID: 3, COMP_ID: 1, AGENCY_NAME: 'HDFC Life', CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser, STATUS: 1 },
-    { ID: 4, COMP_ID: 1, AGENCY_NAME: 'ICICI Prudential Life Insurance', CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser, STATUS: 1 },
-    { ID: 5, COMP_ID: 1, AGENCY_NAME: 'Star Health & Allied Insurance', CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser, STATUS: 1 },
-    { ID: 6, COMP_ID: 1, AGENCY_NAME: 'Niva Bupa', CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser, STATUS: 0 },
-    { ID: 7, COMP_ID: 1, AGENCY_NAME: 'HDFC ERGO Health', CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser, STATUS: 1 },
-    { ID: 8, COMP_ID: 1, AGENCY_NAME: 'Care Health Insurance', CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser, STATUS: 1 },
-    { ID: 9, COMP_ID: 1, AGENCY_NAME: 'ICICI Lombard', CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser, STATUS: 1 },
-    { ID: 10, COMP_ID: 1, AGENCY_NAME: 'Bajaj Allianz General Insurance', CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser, STATUS: 1 },
-    { ID: 11, COMP_ID: 1, AGENCY_NAME: 'Tata AIG General Insurance', CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser, STATUS: 1 },
-    { ID: 12, COMP_ID: 1, AGENCY_NAME: 'New India Assurance', CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser, STATUS: 1 },
-    { ID: 13, COMP_ID: 1, AGENCY_NAME: 'Oriental Insurance', CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser, STATUS: 1 },
-    { ID: 14, COMP_ID: 1, AGENCY_NAME: 'United India Insurance', CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser, STATUS: 1 },
+    { id: 1, comp_id: 1, agency_name: 'Max Life Insurance', created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser, status: 1 },
+    { id: 2, comp_id: 1, agency_name: 'Life Insurance Corporation (LIC)', created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser, status: 1 },
+    { id: 3, comp_id: 1, agency_name: 'HDFC Life', created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser, status: 1 },
+    { id: 4, comp_id: 1, agency_name: 'ICICI Prudential Life Insurance', created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser, status: 1 },
+    { id: 5, comp_id: 1, agency_name: 'Star Health & Allied Insurance', created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser, status: 1 },
+    { id: 6, comp_id: 1, agency_name: 'Niva Bupa', created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser, status: 0 },
+    { id: 7, comp_id: 1, agency_name: 'HDFC ERGO Health', created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser, status: 1 },
+    { id: 8, comp_id: 1, agency_name: 'Care Health Insurance', created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser, status: 1 },
+    { id: 9, comp_id: 1, agency_name: 'ICICI Lombard', created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser, status: 1 },
+    { id: 10, comp_id: 1, agency_name: 'Bajaj Allianz General Insurance', created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser, status: 1 },
+    { id: 11, comp_id: 1, agency_name: 'Tata AIG General Insurance', created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser, status: 1 },
+    { id: 12, comp_id: 1, agency_name: 'New India Assurance', created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser, status: 1 },
+    { id: 13, comp_id: 1, agency_name: 'Oriental Insurance', created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser, status: 1 },
+    { id: 14, comp_id: 1, agency_name: 'United India Insurance', created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser, status: 1 },
 ];
 
 let schemes: Scheme[] = [
-    { ID: 1, COMP_ID: 1, AGENCY_ID: 1, SCHEME_NAME: 'Smart Secure Plus Plan', INSURANCE_TYPE_ID: 1, INSURANCE_SUB_TYPE_ID: 102, CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser, STATUS: 1, SEQ_NO: 0 },
-    { ID: 2, COMP_ID: 1, AGENCY_ID: 1, SCHEME_NAME: 'Smart Secure Plus Plan', INSURANCE_TYPE_ID: 1, INSURANCE_SUB_TYPE_ID: 101, CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser, STATUS: 1, SEQ_NO: 1 },
-    { ID: 3, COMP_ID: 1, AGENCY_ID: 2, SCHEME_NAME: 'Jeevan Labh', INSURANCE_TYPE_ID: 1, INSURANCE_SUB_TYPE_ID: 103, CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser, STATUS: 1, SEQ_NO: 0 },
+    { id: 1, comp_id: 1, agency_id: 1, scheme_name: 'Smart Secure Plus Plan', insurance_type_id: 1, insurance_sub_type_id: 102, created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser, status: 1, seq_no: 0 },
+    { id: 2, comp_id: 1, agency_id: 1, scheme_name: 'Smart Secure Plus Plan', insurance_type_id: 1, insurance_sub_type_id: 101, created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser, status: 1, seq_no: 1 },
+    { id: 3, comp_id: 1, agency_id: 2, scheme_name: 'Jeevan Labh', insurance_type_id: 1, insurance_sub_type_id: 103, created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser, status: 1, seq_no: 0 },
 ];
 
 let designations: Designation[] = [
-    { ID: 1, COMP_ID: 1, DESIGNATION_NAME: 'Admin', RANK: null, STATUS: 1, CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
-    { ID: 2, COMP_ID: 1, DESIGNATION_NAME: 'Advisor', RANK: null, STATUS: 1, CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
-    { ID: 3, COMP_ID: 1, DESIGNATION_NAME: 'Secretary', RANK: null, STATUS: 1, CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
-    { ID: 4, COMP_ID: 1, DESIGNATION_NAME: 'Support', RANK: null, STATUS: 1, CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
-    { ID: 5, COMP_ID: 1, DESIGNATION_NAME: 'Security', RANK: null, STATUS: 1, CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
+    { id: 1, comp_id: 1, designation_name: 'Admin', rank: null, status: 1, created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser },
+    { id: 2, comp_id: 1, designation_name: 'Advisor', rank: null, status: 1, created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser },
+    { id: 3, comp_id: 1, designation_name: 'Secretary', rank: null, status: 1, created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser },
+    { id: 4, comp_id: 1, designation_name: 'Support', rank: null, status: 1, created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser },
+    { id: 5, comp_id: 1, designation_name: 'Security', rank: null, status: 1, created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser },
 ];
 
 let roles: Role[] = [
-    { ID: 1, COMP_ID: 1, ROLE_DESC: 'System Administrator', IS_ADVISOR_ROLE: 0, STATUS: 1, CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
-    { ID: 2, COMP_ID: 1, ROLE_DESC: 'Sales Advisor', IS_ADVISOR_ROLE: 1, STATUS: 1, CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
-    { ID: 3, COMP_ID: 1, ROLE_DESC: 'Office Secretary', IS_ADVISOR_ROLE: 0, STATUS: 1, CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
-    { ID: 4, COMP_ID: 1, ROLE_DESC: 'Support Staff', IS_ADVISOR_ROLE: 0, STATUS: 1, CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
+    { id: 1, comp_id: 1, role_desc: 'System Administrator', is_advisor_role: 0, status: 1, created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser },
+    { id: 2, comp_id: 1, role_desc: 'Sales Advisor', is_advisor_role: 1, status: 1, created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser },
+    { id: 3, comp_id: 1, role_desc: 'Office Secretary', is_advisor_role: 0, status: 1, created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser },
+    { id: 4, comp_id: 1, role_desc: 'Support Staff', is_advisor_role: 0, status: 1, created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser },
 ];
 
 let routes: Route[] = [
-    { ID: 1, ROUTE_NAME: 'Chennai-Madurai', COMP_ID: 1, STATUS: 1, SEQ_NO: 0, CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
-    { ID: 2, ROUTE_NAME: 'Zone A Delivery Route', COMP_ID: 1, STATUS: 1, SEQ_NO: 1, CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
-    { ID: 3, ROUTE_NAME: 'Mumbai-Pune Express', COMP_ID: 1, STATUS: 0, SEQ_NO: 2, CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
+    { id: 1, route_name: 'Chennai-Madurai', comp_id: 1, status: 1, seq_no: 0, created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser },
+    { id: 2, route_name: 'Zone A Delivery Route', comp_id: 1, status: 1, seq_no: 1, created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser },
+    { id: 3, route_name: 'Mumbai-Pune Express', comp_id: 1, status: 0, seq_no: 2, created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser },
 ];
 
 let maritalStatuses: MaritalStatus[] = [
-    { ID: 1, MARITAL_STATUS: 'Single', STATUS: 1, SEQ_NO: 0, CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
-    { ID: 2, MARITAL_STATUS: 'Married', STATUS: 1, SEQ_NO: 1, CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
-    { ID: 3, MARITAL_STATUS: 'Divorced', STATUS: 1, SEQ_NO: 2, CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
-    { ID: 4, MARITAL_STATUS: 'Widowed', STATUS: 1, SEQ_NO: 3, CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
+    { id: 1, marital_status: 'Single', status: 1, seq_no: 0, created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser },
+    { id: 2, marital_status: 'Married', status: 1, seq_no: 1, created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser },
+    { id: 3, marital_status: 'Divorced', status: 1, seq_no: 2, created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser },
+    { id: 4, marital_status: 'Widowed', status: 1, seq_no: 3, created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser },
 ];
 
 let genders: Gender[] = [
-    { ID: 1, GENDER_NAME: 'Male', STATUS: 1, SEQ_NO: 0, CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
-    { ID: 2, GENDER_NAME: 'Female', STATUS: 1, SEQ_NO: 1, CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
-    { ID: 3, GENDER_NAME: 'Transgender', STATUS: 1, SEQ_NO: 2, CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
-    { ID: 4, GENDER_NAME: 'Other', STATUS: 1, SEQ_NO: 3, CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
+    { id: 1, gender_name: 'Male', status: 1, seq_no: 0, created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser },
+    { id: 2, gender_name: 'Female', status: 1, seq_no: 1, created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser },
+    { id: 3, gender_name: 'Transgender', status: 1, seq_no: 2, created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser },
+    { id: 4, gender_name: 'Other', status: 1, seq_no: 3, created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser },
 ];
 
 let relationshipTypes: RelationshipType[] = [
-    { ID: 1, RELATIONSHIP_NAME: 'Self', COMP_ID: 1, STATUS: 1, SEQ_NO: 0, CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
-    { ID: 2, RELATIONSHIP_NAME: 'Spouse', COMP_ID: 1, STATUS: 1, SEQ_NO: 1, CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
-    { ID: 3, RELATIONSHIP_NAME: 'Son', COMP_ID: 1, STATUS: 1, SEQ_NO: 2, CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
-    { ID: 4, RELATIONSHIP_NAME: 'Daughter', COMP_ID: 1, STATUS: 1, SEQ_NO: 3, CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
-    { ID: 5, RELATIONSHIP_NAME: 'Father', COMP_ID: 1, STATUS: 1, SEQ_NO: 4, CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
-    { ID: 6, RELATIONSHIP_NAME: 'Mother', COMP_ID: 1, STATUS: 1, SEQ_NO: 5, CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
+    { id: 1, relationship_name: 'Self', comp_id: 1, status: 1, seq_no: 0, created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser },
+    { id: 2, relationship_name: 'Spouse', comp_id: 1, status: 1, seq_no: 1, created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser },
+    { id: 3, relationship_name: 'Son', comp_id: 1, status: 1, seq_no: 2, created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser },
+    { id: 4, relationship_name: 'Daughter', comp_id: 1, status: 1, seq_no: 3, created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser },
+    { id: 5, relationship_name: 'Father', comp_id: 1, status: 1, seq_no: 4, created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser },
+    { id: 6, relationship_name: 'Mother', comp_id: 1, status: 1, seq_no: 5, created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser },
 ];
 
 let leadStages: LeadStage[] = [
-    { ID: 1, LEAD_NAME: 'Lead', COMP_ID: 1, STATUS: 1, SEQ_NO: 0, CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
-    { ID: 2, LEAD_NAME: 'Contacted', COMP_ID: 1, STATUS: 1, SEQ_NO: 1, CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
-    { ID: 3, LEAD_NAME: 'Meeting Scheduled', COMP_ID: 1, STATUS: 1, SEQ_NO: 2, CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
-    { ID: 4, LEAD_NAME: 'Proposal Sent', COMP_ID: 1, STATUS: 1, SEQ_NO: 3, CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
+    { id: 1, lead_name: 'Lead', comp_id: 1, status: 1, seq_no: 0, created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser },
+    { id: 2, lead_name: 'Contacted', comp_id: 1, status: 1, seq_no: 1, created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser },
+    { id: 3, lead_name: 'Meeting Scheduled', comp_id: 1, status: 1, seq_no: 2, created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser },
+    { id: 4, lead_name: 'Proposal Sent', comp_id: 1, status: 1, seq_no: 3, created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser },
 ];
 
 
 let expenseCategories: ExpenseCategory[] = [
-    { ID: 1, COMP_ID: 1, EXPENSE_CATE_NAME: 'Administrative Expenses', STATUS: 1, CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
-    { ID: 2, COMP_ID: 1, EXPENSE_CATE_NAME: 'Marketing Expenses', STATUS: 1, CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
+    { id: 1, comp_id: 1, expense_cate_name: 'Administrative Expenses', status: 1, created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser },
+    { id: 2, comp_id: 1, expense_cate_name: 'Marketing Expenses', status: 1, created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser },
 ];
 
 let expenseHeads: ExpenseHead[] = [
-    { ID: 1, COMP_ID: 1, EXPENSE_HEAD_NAME: 'Salary', EXPENSE_CATE_ID: 1, GET_INDIVIDUAL: 0, STATUS: 1, CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
-    { ID: 2, COMP_ID: 1, EXPENSE_HEAD_NAME: 'Rent', EXPENSE_CATE_ID: 1, GET_INDIVIDUAL: 0, STATUS: 1, CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
-    { ID: 3, COMP_ID: 1, EXPENSE_HEAD_NAME: "MD's Travel", EXPENSE_CATE_ID: 1, GET_INDIVIDUAL: 0, STATUS: 1, CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
-    { ID: 4, COMP_ID: 1, EXPENSE_HEAD_NAME: 'Print Media Ad', EXPENSE_CATE_ID: 2, GET_INDIVIDUAL: 1, STATUS: 1, CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
-    { ID: 5, COMP_ID: 1, EXPENSE_HEAD_NAME: 'Digital Media', EXPENSE_CATE_ID: 2, GET_INDIVIDUAL: 1, STATUS: 1, CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
+    { id: 1, comp_id: 1, expense_head_name: 'Salary', expense_cate_id: 1, get_individual: 0, status: 1, created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser },
+    { id: 2, comp_id: 1, expense_head_name: 'Rent', expense_cate_id: 1, get_individual: 0, status: 1, created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser },
+    { id: 3, comp_id: 1, expense_head_name: "MD's Travel", expense_cate_id: 1, get_individual: 0, status: 1, created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser },
+    { id: 4, comp_id: 1, expense_head_name: 'Print Media Ad', expense_cate_id: 2, get_individual: 1, status: 1, created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser },
+    { id: 5, comp_id: 1, expense_head_name: 'Digital Media', expense_cate_id: 2, get_individual: 1, status: 1, created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser },
 ];
 
 let expenseIndividuals: ExpenseIndividual[] = [
-    { ID: 1, COMP_ID: 1, INDIVIDUAL_NAME: 'Staff Incentive', EXPENSE_HEAD_ID: 1, EXPENSE_CATEGORY_ID: 1, STATUS: 1, CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
-    { ID: 2, COMP_ID: 1, INDIVIDUAL_NAME: 'Google Ads', EXPENSE_HEAD_ID: 5, EXPENSE_CATEGORY_ID: 2, STATUS: 1, CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
+    { id: 1, comp_id: 1, individual_name: 'Staff Incentive', expense_head_id: 1, expense_cate_id: 1, status: 1, created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser },
+    { id: 2, comp_id: 1, individual_name: 'Google Ads', expense_head_id: 5, expense_cate_id: 2, status: 1, created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser },
 ];
 
 let incomeCategories: IncomeCategory[] = [
-    { ID: 1, COMP_ID: 1, INCOME_CATE: 'Direct Income', STATUS: 1, CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
-    { ID: 2, COMP_ID: 1, INCOME_CATE: 'Indirect Income', STATUS: 1, CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
+    { id: 1, comp_id: 1, income_cate: 'Direct Income', status: 1, created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser },
+    { id: 2, comp_id: 1, income_cate: 'Indirect Income', status: 1, created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser },
 ];
 
 let incomeHeads: IncomeHead[] = [
-    { ID: 1, COMP_ID: 1, INCOME_HEAD: 'Commission', INCOME_CATE_ID: 1, STATUS: 1, CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
-    { ID: 2, COMP_ID: 1, INCOME_HEAD: 'Consultancy Fees', INCOME_CATE_ID: 1, STATUS: 1, CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
-    { ID: 3, COMP_ID: 1, INCOME_HEAD: 'Interest Received', INCOME_CATE_ID: 2, STATUS: 1, CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
+    { id: 1, comp_id: 1, income_head: 'Commission', income_cate_id: 1, status: 1, created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser },
+    { id: 2, comp_id: 1, income_head: 'Consultancy Fees', income_cate_id: 1, status: 1, created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser },
+    { id: 3, comp_id: 1, income_head: 'Interest Received', income_cate_id: 2, status: 1, created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser },
 ];
 
 let customerCategories: CustomerCategory[] = [
-    { ID: 1, COMP_ID: 1, CUSTOMER_CATEGORY: 'Salaried', STATUS: 1, CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
-    { ID: 2, COMP_ID: 1, CUSTOMER_CATEGORY: 'Business', STATUS: 1, CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
-    { ID: 3, COMP_ID: 1, CUSTOMER_CATEGORY: 'Professional', STATUS: 1, CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
+    { id: 1, comp_id: 1, customer_category: 'Salaried', status: 1, created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser },
+    { id: 2, comp_id: 1, customer_category: 'Business', status: 1, created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser },
+    { id: 3, comp_id: 1, customer_category: 'Professional', status: 1, created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser },
 ];
 
 let customerSubCategories: CustomerSubCategory[] = [
-    { ID: 1, COMP_ID: 1, CUST_CATE_ID: 1, CUST_SUB_CATE: 'IT/Software', STATUS: 1, CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
-    { ID: 2, COMP_ID: 1, CUST_CATE_ID: 1, CUST_SUB_CATE: 'Manufacturing', STATUS: 1, CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
-    { ID: 3, COMP_ID: 1, CUST_CATE_ID: 3, CUST_SUB_CATE: 'Doctor', STATUS: 1, CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
-    { ID: 4, COMP_ID: 1, CUST_CATE_ID: 3, CUST_SUB_CATE: 'Government', STATUS: 1, CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
-    { ID: 5, COMP_ID: 1, CUST_CATE_ID: 2, CUST_SUB_CATE: 'Trading', STATUS: 1, CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
-    { ID: 6, COMP_ID: 1, CUST_CATE_ID: 3, CUST_SUB_CATE: 'Lawyer', STATUS: 1, CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
+    { id: 1, comp_id: 1, cust_cate_id: 1, cust_sub_cate: 'IT/Software', status: 1, created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser },
+    { id: 2, comp_id: 1, cust_cate_id: 1, cust_sub_cate: 'Manufacturing', status: 1, created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser },
+    { id: 3, comp_id: 1, cust_cate_id: 3, cust_sub_cate: 'Doctor', status: 1, created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser },
+    { id: 4, comp_id: 1, cust_cate_id: 3, cust_sub_cate: 'Government', status: 1, created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser },
+    { id: 5, comp_id: 1, cust_cate_id: 2, cust_sub_cate: 'Trading', status: 1, created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser },
+    { id: 6, comp_id: 1, cust_cate_id: 3, cust_sub_cate: 'Lawyer', status: 1, created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser },
 ];
 
 let customerGroups: CustomerGroup[] = [
-    { ID: 1, COMP_ID: 1, CUSTOMER_GROUP: 'HNI', STATUS: 1, CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
-    { ID: 2, COMP_ID: 1, CUSTOMER_GROUP: 'Mid-Income', STATUS: 1, CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
-    { ID: 3, COMP_ID: 1, CUSTOMER_GROUP: 'Affluent', STATUS: 1, CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
+    { id: 1, comp_id: 1, customer_group: 'HNI', status: 1, created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser },
+    { id: 2, comp_id: 1, customer_group: 'Mid-Income', status: 1, created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser },
+    { id: 3, comp_id: 1, customer_group: 'Affluent', status: 1, created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser },
 ];
 
 let customerTypes: CustomerType[] = [
-    { ID: 1, COMP_ID: 1, CUST_TYPE: 'Silver', STATUS: 1, CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
-    { ID: 2, COMP_ID: 1, CUST_TYPE: 'Gold', STATUS: 1, CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
-    { ID: 3, COMP_ID: 1, CUST_TYPE: 'Diamond', STATUS: 1, CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
-    { ID: 4, COMP_ID: 1, CUST_TYPE: 'Platinum', STATUS: 1, CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
+    { id: 1, comp_id: 1, cust_type: 'Silver', status: 1, created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser },
+    { id: 2, comp_id: 1, cust_type: 'Gold', status: 1, created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser },
+    { id: 3, comp_id: 1, cust_type: 'Diamond', status: 1, created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser },
+    { id: 4, comp_id: 1, cust_type: 'Platinum', status: 1, created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser },
 ];
 
 let customerTiers: CustomerTier[] = [
-    { ID: 1, COMP_ID: 1, CUST_TYPE_ID: 1, MINIMUM_SUM_ASSURED: 100000, MINIMUM_PREMIUM: 10000, ASSIGNED_GIFT_ID: 1, STATUS: 1, SEQ_NO: 0, CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
-    { ID: 2, COMP_ID: 1, CUST_TYPE_ID: 2, MINIMUM_SUM_ASSURED: 500000, MINIMUM_PREMIUM: 25000, ASSIGNED_GIFT_ID: 2, STATUS: 1, SEQ_NO: 1, CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
-    { ID: 3, COMP_ID: 1, CUST_TYPE_ID: 3, MINIMUM_SUM_ASSURED: 1000000, MINIMUM_PREMIUM: 50000, ASSIGNED_GIFT_ID: 3, STATUS: 1, SEQ_NO: 2, CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
+    { id: 1, comp_id: 1, cust_type_id: 1, minimum_sum_assured: 100000, minimum_premium: 10000, assigned_gift_id: 1, status: 1, seq_no: 0, created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser },
+    { id: 2, comp_id: 1, cust_type_id: 2, minimum_sum_assured: 500000, minimum_premium: 25000, assigned_gift_id: 2, status: 1, seq_no: 1, created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser },
+    { id: 3, comp_id: 1, cust_type_id: 3, minimum_sum_assured: 1000000, minimum_premium: 50000, assigned_gift_id: 3, status: 1, seq_no: 2, created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser },
 ];
 
 let gifts: Gift[] = [
-    { ID: 1, COMP_ID: 1, GIFT_NAME: 'Travel Voucher', STATUS: 1, SEQ_NO: 0, CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
-    { ID: 2, COMP_ID: 1, GIFT_NAME: 'Smartwatch', STATUS: 1, SEQ_NO: 1, CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
-    { ID: 3, COMP_ID: 1, GIFT_NAME: 'Bluetooth Speaker', STATUS: 1, SEQ_NO: 2, CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
-    { ID: 4, COMP_ID: 1, GIFT_NAME: 'Mug', STATUS: 0, SEQ_NO: 3, CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
+    { id: 1, comp_id: 1, gift_name: 'Travel Voucher', status: 1, seq_no: 0, created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser },
+    { id: 2, comp_id: 1, gift_name: 'Smartwatch', status: 1, seq_no: 1, created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser },
+    { id: 3, comp_id: 1, gift_name: 'Bluetooth Speaker', status: 1, seq_no: 2, created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser },
+    { id: 4, comp_id: 1, gift_name: 'Mug', status: 0, seq_no: 3, created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser },
 ];
 
 let religions: Religion[] = [
-    { ID: 1, COMP_ID: 1, RELIGION: 'Hinduism', STATUS: 1, SEQ_NO: 0, CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
-    { ID: 2, COMP_ID: 1, RELIGION: 'Christianity', STATUS: 1, SEQ_NO: 1, CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
-    { ID: 3, COMP_ID: 1, RELIGION: 'Islam', STATUS: 1, SEQ_NO: 2, CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
-    { ID: 4, COMP_ID: 1, RELIGION: 'Sikhism', STATUS: 1, SEQ_NO: 3, CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
-    { ID: 5, COMP_ID: 1, RELIGION: 'General', STATUS: 1, SEQ_NO: 4, CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
+    { id: 1, comp_id: 1, religion: 'Hinduism', status: 1, seq_no: 0, created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser },
+    { id: 2, comp_id: 1, religion: 'Christianity', status: 1, seq_no: 1, created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser },
+    { id: 3, comp_id: 1, religion: 'Islam', status: 1, seq_no: 2, created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser },
+    { id: 4, comp_id: 1, religion: 'Sikhism', status: 1, seq_no: 3, created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser },
+    { id: 5, comp_id: 1, religion: 'General', status: 1, seq_no: 4, created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser },
 ];
 
 let festivals: Festival[] = [
-    { ID: 1, COMP_ID: 1, RELIGION_ID: 1, FEST_DESC: 'Diwali', STATUS: 1, CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
-    { ID: 2, COMP_ID: 1, RELIGION_ID: 3, FEST_DESC: 'Eid al-Fitr', STATUS: 1, CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
-    { ID: 3, COMP_ID: 1, RELIGION_ID: 1, FEST_DESC: 'Holi', STATUS: 1, CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
-    { ID: 4, COMP_ID: 1, RELIGION_ID: 2, FEST_DESC: 'Good Friday', STATUS: 1, CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
-    { ID: 5, COMP_ID: 1, RELIGION_ID: 2, FEST_DESC: 'Christmas', STATUS: 1, CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
-    { ID: 6, COMP_ID: 1, RELIGION_ID: 5, FEST_DESC: "New Year's Day", STATUS: 1, CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
+    { id: 1, comp_id: 1, religion_id: 1, fest_desc: 'Diwali', status: 1, created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser },
+    { id: 2, comp_id: 1, religion_id: 3, fest_desc: 'Eid al-Fitr', status: 1, created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser },
+    { id: 3, comp_id: 1, religion_id: 1, fest_desc: 'Holi', status: 1, created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser },
+    { id: 4, comp_id: 1, religion_id: 2, fest_desc: 'Good Friday', status: 1, created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser },
+    { id: 5, comp_id: 1, religion_id: 2, fest_desc: 'Christmas', status: 1, created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser },
+    { id: 6, comp_id: 1, religion_id: 5, fest_desc: "New Year's Day", status: 1, created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser },
 ];
 
 let festivalDates: FestivalDate[] = [
-    { ID: 1, COMP_ID: 1, FEST_ID: 5, FESTVEL_DATE: '2025-12-25', STATUS: 1, CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
-    { ID: 2, COMP_ID: 1, FEST_ID: 1, FESTVEL_DATE: '2025-10-21', STATUS: 1, CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
-    { ID: 3, COMP_ID: 1, FEST_ID: 2, FESTVEL_DATE: '2025-03-30', STATUS: 1, CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
-    { ID: 4, COMP_ID: 1, FEST_ID: 4, FESTVEL_DATE: '2025-04-18', STATUS: 1, CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
-    { ID: 5, COMP_ID: 1, FEST_ID: 3, FESTVEL_DATE: '2025-03-14', STATUS: 1, CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
-    { ID: 6, COMP_ID: 1, FEST_ID: 6, FESTVEL_DATE: '2025-01-01', STATUS: 1, CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
-    { ID: 7, COMP_ID: 1, FEST_ID: 5, FESTVEL_DATE: '2024-12-25', STATUS: 1, CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
-    { ID: 8, COMP_ID: 1, FEST_ID: 2, FESTVEL_DATE: '2026-03-20', STATUS: 1, CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
+    { id: 1, comp_id: 1, fest_id: 5, festvel_date: '2025-12-25', status: 1, created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser },
+    { id: 2, comp_id: 1, fest_id: 1, festvel_date: '2025-10-21', status: 1, created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser },
+    { id: 3, comp_id: 1, fest_id: 2, festvel_date: '2025-03-30', status: 1, created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser },
+    { id: 4, comp_id: 1, fest_id: 4, festvel_date: '2025-04-18', status: 1, created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser },
+    { id: 5, comp_id: 1, fest_id: 3, festvel_date: '2025-03-14', status: 1, created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser },
+    { id: 6, comp_id: 1, fest_id: 6, festvel_date: '2025-01-01', status: 1, created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser },
+    { id: 7, comp_id: 1, fest_id: 5, festvel_date: '2024-12-25', status: 1, created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser },
+    { id: 8, comp_id: 1, fest_id: 2, festvel_date: '2026-03-20', status: 1, created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser },
 ];
 
 let financialYears: FinancialYear[] = [
-    { ID: 1, COMP_ID: 1, FROM_DATE: '2023-04-01', TO_DATE: '2024-03-31', FIN_YEAR: '2023-2024', STATUS: 1, CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
-    { ID: 2, COMP_ID: 1, FROM_DATE: '2024-04-01', TO_DATE: '2025-03-31', FIN_YEAR: '2024-2025', STATUS: 1, CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
+    { id: 1, comp_id: 1, from_date: '2023-04-01', to_date: '2024-03-31', fin_year: '2023-2024', status: 1, created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser },
+    { id: 2, comp_id: 1, from_date: '2024-04-01', to_date: '2025-03-31', fin_year: '2024-2025', status: 1, created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser },
 ];
 
 let documentNumberingRules: DocumentNumberingRule[] = [
-    { ID: 1, COMP_ID: 1, FIN_YEAR_ID: 2, TYPE: 'Voucher', PREFIX: 'VCH/24-25/', STARTING_NO: 1, SUFFIX: null, STATUS: 1 },
-    { ID: 2, COMP_ID: 1, FIN_YEAR_ID: 2, TYPE: 'Receipt', PREFIX: 'RCT/24-25/', STARTING_NO: 1, SUFFIX: null, STATUS: 1 },
+    { id: 1, comp_id: 1, fin_year_id: 2, type: 'Voucher', prefix: 'VCH/24-25/', starting_no: 1, suffix: null, status: 1 },
+    { id: 2, comp_id: 1, fin_year_id: 2, type: 'Receipt', prefix: 'RCT/24-25/', starting_no: 1, suffix: null, status: 1 },
 ];
 
 let banks: Bank[] = [
-    { ID: 1, BANK_NAME: 'State Bank of India', COMP_ID: 1, STATUS: 1, CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
-    { ID: 2, BANK_NAME: 'HDFC Bank', COMP_ID: 1, STATUS: 1, CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
+    { id: 1, bank_name: 'State Bank of India', comp_id: 1, status: 1, created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser },
+    { id: 2, bank_name: 'HDFC Bank', comp_id: 1, status: 1, created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser },
 ];
 
 let accountTypes: AccountType[] = [
-    { ID: 1, ACCOUNT_TYPE_NAME: 'Current Account', COMP_ID: 1, STATUS: 1, CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
-    { ID: 2, ACCOUNT_TYPE_NAME: 'Overdraft Account', COMP_ID: 1, STATUS: 1, CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
-    { ID: 3, ACCOUNT_TYPE_NAME: 'Cash Credit Account', COMP_ID: 1, STATUS: 1, CREATED_ON: now, MODIFIED_ON: now, CREATED_BY: dummyUser, MODIFIED_BY: dummyUser },
+    { id: 1, account_type_name: 'Current Account', comp_id: 1, status: 1, created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser },
+    { id: 2, account_type_name: 'Overdraft Account', comp_id: 1, status: 1, created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser },
+    { id: 3, account_type_name: 'Cash Credit Account', comp_id: 1, status: 1, created_on: now, modified_on: now, created_by: dummyUser, modified_by: dummyUser },
 ];
 
 const currentUser: User = {

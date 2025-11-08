@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { Route as RouteType, Member, Company } from '../types';
@@ -25,8 +26,8 @@ const RoutesManager: React.FC = () => {
     const [itemToAction, setItemToAction] = useState<RouteType | null>(null);
     const [dependentItems, setDependentItems] = useState<{ name: string; type: string }[]>([]);
 
-    const canCreate = companyData?.STATUS === 1;
-    const canModify = companyData?.STATUS === 1;
+    const canCreate = companyData?.status === 1;
+    const canModify = companyData?.status === 1;
     const noun = "Route";
 
     const loadData = useCallback(async () => {
@@ -34,15 +35,15 @@ const RoutesManager: React.FC = () => {
         try {
             const user = await api.fetchCurrentUser();
             const companies = await api.fetchCompanies();
-            const currentCompany = companies.find(c => c.COMP_ID === user.comp_id) || null;
+            const currentCompany = companies.find(c => c.comp_id === user.comp_id) || null;
             setCompanyData(currentCompany);
             
             if (currentCompany) {
                 const [routesData, membersData] = await Promise.all([
-                    api.fetchRoutes(),
+                    api.fetchRoutes(currentCompany.comp_id),
                     api.fetchAllMembers()
                 ]);
-                setRoutes(routesData.filter(r => r.COMP_ID === currentCompany.COMP_ID));
+                setRoutes(routesData.data);
                 setMembers(membersData);
             } else {
                 setRoutes([]);
@@ -59,75 +60,59 @@ const RoutesManager: React.FC = () => {
         loadData();
     }, [loadData]);
 
-    const handleUpdateRoutes = async (updatedRoutes: RouteType[], message?: string) => {
-        try {
-            await api.onUpdateRoutes(updatedRoutes);
-            setRoutes(updatedRoutes);
-            if(message) addToast(message);
-        } catch(error) {
-            console.error("Failed to update routes", error);
-            addToast("Failed to update routes.", "error");
-        }
-    };
-
-    const sortedItems = useMemo(() => [...routes].sort((a, b) => a.SEQ_NO - b.SEQ_NO), [routes]);
+    const sortedItems = useMemo(() => [...routes].sort((a, b) => a.seq_no - b.seq_no), [routes]);
 
     const filteredItems = useMemo(() =>
-        searchQuery ? sortedItems.filter(item => item.ROUTE_NAME.toLowerCase().includes(searchQuery.toLowerCase())) : sortedItems,
+        searchQuery ? sortedItems.filter(item => item.route_name.toLowerCase().includes(searchQuery.toLowerCase())) : sortedItems,
         [sortedItems, searchQuery]
     );
 
     const openModal = (item: RouteType | null) => {
-        setEditingItem(item ? { ...item } : { ROUTE_NAME: '', STATUS: 1 });
+        setEditingItem(item ? { ...item } : { route_name: '', status: 1 });
         setIsModalOpen(true);
     };
     
     const closeModal = useCallback(() => setIsModalOpen(false), []);
 
-    const handleSave = () => {
-        if (!editingItem || !editingItem.ROUTE_NAME?.trim() || !companyData) {
+    const handleSave = async () => {
+        if (!editingItem || !editingItem.route_name?.trim() || !companyData) {
             addToast(`${noun} name is required.`, "error");
             return;
         }
 
-        let updatedItems;
-        let message: string;
-        if (editingItem.ID) {
-            updatedItems = routes.map(i => i.ID === editingItem.ID ? { ...i, ...editingItem } as RouteType : i);
-            message = `${noun} updated successfully.`;
-        } else {
-            const newItem: RouteType = {
-                ID: Date.now(),
-                SEQ_NO: routes.length,
-                ROUTE_NAME: editingItem.ROUTE_NAME,
-                STATUS: editingItem.STATUS ?? 1,
-                COMP_ID: companyData.COMP_ID,
-                CREATED_ON: new Date().toISOString(),
-                MODIFIED_ON: new Date().toISOString(),
-                CREATED_BY: 1,
-                MODIFIED_BY: 1, 
-            };
-            updatedItems = [...routes, newItem];
-            message = `${noun} created successfully.`;
+        try {
+            await api.saveRoute({ ...editingItem, comp_id: companyData.comp_id });
+            const message = `${noun} ${editingItem.id ? 'updated' : 'created'} successfully.`;
+            addToast(message);
+            loadData();
+            closeModal();
+        } catch (error) {
+            addToast(`Failed to save ${noun}.`, "error");
         }
-        handleUpdateRoutes(updatedItems, message);
-        closeModal();
     };
     
     const dependencyCheck = useCallback((id: number) => {
         return members
-            .filter(member => member.routeId === id)
+            .filter(member => member.route_id === id)
             .map(member => ({ name: `Customer: ${member.name}`, type: 'member' as const }));
     }, [members]);
 
-    const performToggle = (id: number) => {
-        const updatedItems = routes.map(i => i.ID === id ? { ...i, STATUS: i.STATUS === 1 ? 0 : 1 } : i);
-        handleUpdateRoutes(updatedItems, "Status updated.");
+    const performToggle = async (id: number) => {
+        const itemToToggle = routes.find(i => i.id === id);
+        if (!itemToToggle) return;
+        const updatedItem = { ...itemToToggle, status: itemToToggle.status === 1 ? 0 : 1 };
+        try {
+            await api.saveRoute(updatedItem);
+            addToast("Status updated.");
+            loadData();
+        } catch (error) {
+            addToast("Failed to update status.", "error");
+        }
     };
 
     const handleToggle = (item: RouteType) => {
-        if (item.STATUS === 1) {
-            const dependents = dependencyCheck(item.ID);
+        if (item.status === 1) {
+            const dependents = dependencyCheck(item.id);
             if (dependents.length > 0) {
                 setItemToAction(item);
                 setDependentItems(dependents);
@@ -135,7 +120,7 @@ const RoutesManager: React.FC = () => {
                 return;
             }
         }
-        performToggle(item.ID);
+        performToggle(item.id);
     };
 
     const handleDragStart = (e: React.DragEvent, id: number) => {
@@ -144,21 +129,29 @@ const RoutesManager: React.FC = () => {
         setDraggedItemId(id);
     };
 
-    const handleDrop = (e: React.DragEvent, dropTargetId: number) => {
+    const handleDrop = async (e: React.DragEvent, dropTargetId: number) => {
         e.preventDefault();
-        if (searchQuery || !draggedItemId || !canModify) return;
+        const currentDraggedItemId = draggedItemId;
+        if (searchQuery || !currentDraggedItemId || !canModify) return;
         setDraggedItemId(null);
-        if (draggedItemId === dropTargetId) return;
+        if (currentDraggedItemId === dropTargetId) return;
 
         const currentItems = [...sortedItems];
-        const draggedIndex = currentItems.findIndex(item => item.ID === draggedItemId);
-        const targetIndex = currentItems.findIndex(item => item.ID === dropTargetId);
+        const draggedIndex = currentItems.findIndex(item => item.id === currentDraggedItemId);
+        const targetIndex = currentItems.findIndex(item => item.id === dropTargetId);
         if (draggedIndex === -1 || targetIndex === -1) return;
 
         const [draggedItem] = currentItems.splice(draggedIndex, 1);
         currentItems.splice(targetIndex, 0, draggedItem);
-        const finalItems = currentItems.map((item, index) => ({ ...item, SEQ_NO: index }));
-        handleUpdateRoutes(finalItems, "Route order saved.");
+        const finalItems = currentItems.map((item, index) => ({ ...item, seq_no: index }));
+        try {
+            await Promise.all(finalItems.map(item => api.saveRoute(item)));
+            addToast("Route order saved.");
+            loadData();
+        } catch (error) {
+            addToast("Failed to save order.", "error");
+            loadData();
+        }
     };
     
     if (isLoading) {
@@ -186,12 +179,12 @@ const RoutesManager: React.FC = () => {
                     </thead>
                     <tbody className="divide-y divide-slate-200 dark:divide-slate-700" onDragEnd={() => setDraggedItemId(null)}>
                         {filteredItems.map((item, index) => (
-                            <tr key={item.ID} draggable={!searchQuery && canModify} onDragStart={e => handleDragStart(e, item.ID)} onDragOver={e => e.preventDefault()} onDrop={e => handleDrop(e, item.ID)}
-                                className={`${!searchQuery && canModify ? 'cursor-grab' : ''} ${draggedItemId === item.ID ? 'opacity-30' : ''} hover:bg-slate-50 dark:hover:bg-slate-700/40`}>
+                            <tr key={item.id} draggable={!searchQuery && canModify} onDragStart={e => handleDragStart(e, item.id)} onDragOver={e => e.preventDefault()} onDrop={e => handleDrop(e, item.id)}
+                                className={`${!searchQuery && canModify ? 'cursor-grab' : ''} ${draggedItemId === item.id ? 'opacity-30' : ''} hover:bg-slate-50 dark:hover:bg-slate-700/40`}>
                                 <td className="px-3 py-4 text-center text-slate-400"><GripVertical size={16}/></td>
                                 <td className="px-6 py-4 text-sm">{index + 1}</td>
-                                <td className="px-6 py-4 font-medium">{item.ROUTE_NAME}</td>
-                                <td className="px-6 py-4"><ToggleSwitch enabled={item.STATUS === 1} onChange={() => handleToggle(item)} disabled={!canModify} /></td>
+                                <td className="px-6 py-4 font-medium">{item.route_name}</td>
+                                <td className="px-6 py-4"><ToggleSwitch enabled={item.status === 1} onChange={() => handleToggle(item)} disabled={!canModify} /></td>
                                 <td className="px-6 py-4">
                                     <Button size="small" variant="light" className="!p-1.5" onClick={() => openModal(item)} disabled={!canModify}><Edit2 size={14}/></Button>
                                 </td>
@@ -204,8 +197,8 @@ const RoutesManager: React.FC = () => {
             <Modal isOpen={isModalOpen} onClose={closeModal} contentClassName="bg-white dark:bg-slate-800 rounded-lg shadow-xl w-full max-w-md">
                 <form onSubmit={(e) => { e.preventDefault(); handleSave(); }}>
                     <div className="p-6">
-                        <h2 className="text-xl font-bold mb-4">{editingItem?.ID ? 'Edit' : 'Add'} {noun}</h2>
-                        <Input label={`${noun} Name`} value={editingItem?.ROUTE_NAME || ''} onChange={e => setEditingItem(p => p ? {...p, ROUTE_NAME: e.target.value} : null)} required autoFocus disabled={!canModify} />
+                        <h2 className="text-xl font-bold mb-4">{editingItem?.id ? 'Edit' : 'Add'} {noun}</h2>
+                        <Input label={`${noun} Name`} value={editingItem?.route_name || ''} onChange={e => setEditingItem(p => p ? {...p, route_name: e.target.value} : null)} required autoFocus disabled={!canModify} />
                     </div>
                     <footer className="flex justify-end gap-4 px-6 py-4 bg-slate-50 dark:bg-slate-800/50 rounded-b-lg">
                         <Button type="button" variant="secondary" onClick={closeModal}>Cancel</Button>
@@ -220,12 +213,12 @@ const RoutesManager: React.FC = () => {
                         <AlertTriangle className="h-6 w-6 text-red-600" />
                     </div>
                     <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-                        <h3 className="text-lg font-medium">Deactivate "{itemToAction?.ROUTE_NAME}"?</h3>
+                        <h3 className="text-lg font-medium">Deactivate "{itemToAction?.route_name}"?</h3>
                         <p className="text-sm text-slate-500 mt-2">This item is used by {dependentItems.length} record(s) and deactivating it may cause issues.</p>
                     </div>
                 </div>
                 <div className="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse gap-3">
-                    <Button variant="danger" onClick={() => { if(itemToAction) performToggle(itemToAction.ID); setIsWarningModalOpen(false); }}>Deactivate Anyway</Button>
+                    <Button variant="danger" onClick={() => { if(itemToAction) performToggle(itemToAction.id); setIsWarningModalOpen(false); }}>Deactivate Anyway</Button>
                     <Button variant="secondary" onClick={() => setIsWarningModalOpen(false)}>Cancel</Button>
                 </div>
             </Modal>

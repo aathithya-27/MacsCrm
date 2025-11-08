@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo, useRef } from 'react';
 import { ProcessFlow, Member } from '../types';
 import { useToast } from '../context/ToastContext';
@@ -26,11 +27,11 @@ const ProcessStageManager: React.FC<ProcessStageManagerProps> = ({
     const triggerButtonRef = useRef<HTMLButtonElement>(null);
     const [draggedItemId, setDraggedItemId] = useState<number | null>(null);
 
-    const sortedItems = useMemo(() => [...items].sort((a, b) => (a.SEQ_NO || 0) - (b.SEQ_NO || 0)), [items]);
+    const sortedItems = useMemo(() => [...items].sort((a, b) => (a.seq_no || 0) - (b.seq_no || 0)), [items]);
 
     const openModal = (item: ProcessFlow | null, event?: React.MouseEvent<HTMLElement>) => {
         if (event) triggerButtonRef.current = event.currentTarget as HTMLButtonElement;
-        setEditingItem(item ? { ...item } : { PROCESS_DESC: '', STATUS: 1 });
+        setEditingItem(item ? { ...item } : { process_desc: '', status: 1 });
         setIsModalOpen(true);
     };
 
@@ -41,36 +42,29 @@ const ProcessStageManager: React.FC<ProcessStageManagerProps> = ({
     };
 
     const handleSave = () => {
-        const isEditing = !!editingItem?.ID;
+        const isEditing = !!editingItem?.id;
         if ((isEditing && !canModify) || (!isEditing && !canCreate)) {
             addToast("Permission denied: Company is inactive.", "error");
             return;
         }
 
-        if (!editingItem || !editingItem.PROCESS_DESC?.trim()) {
+        if (!editingItem || !editingItem.process_desc?.trim()) {
             addToast('Stage name is required.', 'error');
             return;
         }
 
-        if (editingItem.ID) { 
-            onUpdate(items.map(i => i.ID === editingItem.ID ? (editingItem as ProcessFlow) : i));
+        if (editingItem.id) { 
+            onUpdate(items.map(i => i.id === editingItem.id ? (editingItem as ProcessFlow) : i));
             addToast("Stage updated successfully.");
         } else {
-            const newItem: ProcessFlow = {
-                ID: Date.now(),
-                PROCESS_DESC: editingItem.PROCESS_DESC.trim(),
-                STATUS: 1,
-                SEQ_NO: items.length,
-                COMP_ID: 1,
-                CLIENT_ID: 101,
-                INSURANCE_TYPE_ID: insuranceTypeId,
-                REPEAT: false,
-                CREATED_ON: new Date().toISOString(),
-                CREATED_BY: 1,
-                MODIFIED_ON: new Date().toISOString(),
-                MODIFIED_BY: 1,
+            const newItemPayload: Partial<ProcessFlow> = {
+                process_desc: editingItem.process_desc.trim(),
+                status: 1,
+                seq_no: items.length,
+                insurance_type_id: insuranceTypeId,
+                repeat: false,
             };
-            onUpdate([...items, newItem]);
+            onUpdate([...items, newItemPayload as ProcessFlow]);
             addToast("Stage created successfully.");
         }
         closeModal();
@@ -78,7 +72,7 @@ const ProcessStageManager: React.FC<ProcessStageManagerProps> = ({
 
     const handleToggle = (id: number) => {
         if (!canModify) return;
-        onUpdate(items.map(i => i.ID === id ? { ...i, STATUS: i.STATUS === 1 ? 0 : 1 } : i));
+        onUpdate(items.map(i => i.id === id ? { ...i, status: i.status === 1 ? 0 : 1 } : i));
         addToast("Status updated.");
     };
 
@@ -94,15 +88,15 @@ const ProcessStageManager: React.FC<ProcessStageManagerProps> = ({
         if (draggedId === dropTargetId) return;
 
         const currentItems = [...sortedItems];
-        const draggedIndex = currentItems.findIndex(item => item.ID === draggedId);
-        const targetIndex = currentItems.findIndex(item => item.ID === dropTargetId);
+        const draggedIndex = currentItems.findIndex(item => item.id === draggedId);
+        const targetIndex = currentItems.findIndex(item => item.id === dropTargetId);
 
         if (draggedIndex === -1 || targetIndex === -1) return;
 
         const [draggedItem] = currentItems.splice(draggedIndex, 1);
         currentItems.splice(targetIndex, 0, draggedItem);
 
-        onUpdate(currentItems.map((item, index) => ({ ...item, SEQ_NO: index })));
+        onUpdate(currentItems.map((item, index) => ({ ...item, seq_no: index })));
         addToast("Order saved.");
     };
     const handleDragEnd = () => setDraggedItemId(null);
@@ -127,17 +121,19 @@ const ProcessStageManager: React.FC<ProcessStageManagerProps> = ({
                     <tbody className="bg-white dark:bg-slate-800 divide-y divide-gray-200 dark:divide-slate-700" onDragEnd={handleDragEnd}>
                         {sortedItems.map((item, index) => (
                             <tr
-                                key={item.ID}
+                                key={item.id}
                                 draggable={canModify}
-                                onDragStart={e => handleDragStart(e, item.ID)}
+                                onDragStart={e => handleDragStart(e, item.id)}
                                 onDragOver={handleDragOver}
-                                onDrop={e => handleDrop(e, item.ID)}
-                                className={`transition-all ${item.STATUS === 0 ? 'opacity-60' : ''} ${draggedItemId === item.ID ? 'opacity-30' : ''} ${canModify ? 'hover:bg-slate-50 dark:hover:bg-slate-700/40 cursor-grab' : ''}`}
+                                onDrop={e => handleDrop(e, item.id)}
+                                className={`transition-all ${item.status === 0 ? 'opacity-60' : ''} ${draggedItemId === item.id ? 'opacity-30' : ''} ${canModify ? 'hover:bg-slate-50 dark:hover:bg-slate-700/40 cursor-grab' : ''}`}
                             >
                                 <td className="px-2 py-3"><GripVertical size={16} className="text-gray-400" /></td>
                                 <td className="px-6 py-3 text-sm text-gray-500">{index + 1}</td>
-                                <td className="px-6 py-3 font-medium">{item.PROCESS_DESC}</td>
-                                <td className="px-6 py-3"><ToggleSwitch enabled={item.STATUS === 1} onChange={() => handleToggle(item.ID)} disabled={!canModify}/></td>
+                                {}
+                                <td className="px-6 py-3 font-medium">{item.process_desc}</td>
+                                {}
+                                <td className="px-6 py-3"><ToggleSwitch enabled={item.status === 1} onChange={() => handleToggle(item.id)} disabled={!canModify}/></td>
                                 <td className="px-6 py-3">
                                     <Button size="small" variant="light" className="!p-1.5" onClick={(e) => openModal(item, e)} disabled={!canModify}><Edit2 size={14}/></Button>
                                 </td>
@@ -150,11 +146,12 @@ const ProcessStageManager: React.FC<ProcessStageManagerProps> = ({
                 <Modal isOpen={isModalOpen} onClose={closeModal} contentClassName="bg-white dark:bg-slate-800 rounded-lg shadow-2xl w-full max-w-md text-gray-900 dark:text-gray-200">
                     <form onSubmit={(e) => { e.preventDefault(); handleSave(); }}>
                         <div className="p-6 space-y-4">
-                            <h2 className="text-xl font-bold">{editingItem?.ID ? 'Edit' : 'Add'} Stage</h2>
+                            {}
+                            <h2 className="text-xl font-bold">{editingItem?.id ? 'Edit' : 'Add'} Stage</h2>
                             <Input
                                 label="Stage Name"
-                                value={editingItem?.PROCESS_DESC || ''}
-                                onChange={e => setEditingItem(p => p ? {...p, PROCESS_DESC: e.target.value} : null)}
+                                value={editingItem?.process_desc || ''}
+                                onChange={e => setEditingItem(p => p ? {...p, process_desc: e.target.value} : null)}
                                 disabled={!canModify}
                                 autoFocus
                             />

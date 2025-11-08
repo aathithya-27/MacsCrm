@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { MaritalStatus, Member } from '../types';
 import * as api from '../services/api';
@@ -33,7 +34,7 @@ const MaritalStatusPage: React.FC = () => {
                 api.fetchMaritalStatuses(),
                 api.fetchAllMembers()
             ]);
-            setMaritalStatuses(data);
+            setMaritalStatuses(data.data);
             setMembers(membersData);
         } catch (error) {
             console.error("Failed to load data", error);
@@ -47,74 +48,58 @@ const MaritalStatusPage: React.FC = () => {
         loadData();
     }, [loadData]);
 
-    const handleUpdate = async (updatedData: MaritalStatus[], message?: string) => {
-        try {
-            await api.onUpdateMaritalStatuses(updatedData);
-            setMaritalStatuses(updatedData);
-            if (message) addToast(message);
-        } catch(error) {
-            console.error("Failed to update data", error);
-            addToast("Failed to update data.", "error");
-        }
-    };
-
-    const sortedItems = useMemo(() => [...maritalStatuses].sort((a, b) => a.SEQ_NO - b.SEQ_NO), [maritalStatuses]);
+    const sortedItems = useMemo(() => [...maritalStatuses].sort((a, b) => a.seq_no - b.seq_no), [maritalStatuses]);
 
     const filteredItems = useMemo(() =>
-        searchQuery ? sortedItems.filter(item => item.MARITAL_STATUS.toLowerCase().includes(searchQuery.toLowerCase())) : sortedItems,
+        searchQuery ? sortedItems.filter(item => item.marital_status.toLowerCase().includes(searchQuery.toLowerCase())) : sortedItems,
         [sortedItems, searchQuery]
     );
 
     const openModal = (item: MaritalStatus | null) => {
-        setEditingItem(item ? { ...item } : { MARITAL_STATUS: '', STATUS: 1 });
+        setEditingItem(item ? { ...item } : { marital_status: '', status: 1 });
         setIsModalOpen(true);
     };
     
     const closeModal = useCallback(() => setIsModalOpen(false), []);
 
-    const handleSave = () => {
-        if (!editingItem || !editingItem.MARITAL_STATUS?.trim()) {
+    const handleSave = async () => {
+        if (!editingItem || !editingItem.marital_status?.trim()) {
             addToast(`${noun} name is required.`, "error");
             return;
         }
 
-        let updatedItems;
-        let message;
-        if (editingItem.ID) {
-            updatedItems = maritalStatuses.map(i => i.ID === editingItem.ID ? { ...i, ...editingItem } as MaritalStatus : i);
-            message = `${noun} updated successfully.`;
-        } else {
-            const newItem: MaritalStatus = {
-                ID: Date.now(),
-                SEQ_NO: maritalStatuses.length,
-                MARITAL_STATUS: editingItem.MARITAL_STATUS,
-                STATUS: editingItem.STATUS ?? 1,
-                CREATED_ON: new Date().toISOString(),
-                MODIFIED_ON: new Date().toISOString(),
-                CREATED_BY: 1,
-                MODIFIED_BY: 1,
-            };
-            updatedItems = [...maritalStatuses, newItem];
-            message = `${noun} created successfully.`;
+        try {
+            await api.saveMaritalStatus(editingItem);
+            addToast(`${noun} ${editingItem.id ? 'updated' : 'created'} successfully.`);
+            loadData();
+            closeModal();
+        } catch (error) {
+            addToast(`Failed to save ${noun}.`, 'error');
         }
-        handleUpdate(updatedItems, message);
-        closeModal();
     };
     
     const dependencyCheck = useCallback((id: number) => {
         return members
-            .filter(member => member.maritalStatusId === id)
+            .filter(member => member.marital_status_id === id)
             .map(member => ({ name: `Customer: ${member.name}`, type: 'member' as const }));
     }, [members]);
 
-    const performToggle = (id: number) => {
-        const updatedItems = maritalStatuses.map(i => i.ID === id ? { ...i, STATUS: i.STATUS === 1 ? 0 : 1 } : i);
-        handleUpdate(updatedItems, "Status updated.");
+    const performToggle = async (id: number) => {
+        const itemToToggle = maritalStatuses.find(i => i.id === id);
+        if (!itemToToggle) return;
+        const updatedItem = { ...itemToToggle, status: itemToToggle.status === 1 ? 0 : 1 };
+        try {
+            await api.saveMaritalStatus(updatedItem);
+            addToast("Status updated.");
+            loadData();
+        } catch (error) {
+            addToast("Failed to update status.", "error");
+        }
     };
 
     const handleToggle = (item: MaritalStatus) => {
-        if (item.STATUS === 1) {
-            const dependents = dependencyCheck(item.ID);
+        if (item.status === 1) {
+            const dependents = dependencyCheck(item.id);
             if (dependents.length > 0) {
                 setItemToAction(item);
                 setDependentItems(dependents);
@@ -122,7 +107,7 @@ const MaritalStatusPage: React.FC = () => {
                 return;
             }
         }
-        performToggle(item.ID);
+        performToggle(item.id);
     };
 
     const handleDragStart = (e: React.DragEvent, id: number) => {
@@ -131,21 +116,29 @@ const MaritalStatusPage: React.FC = () => {
         setDraggedItemId(id);
     };
 
-    const handleDrop = (e: React.DragEvent, dropTargetId: number) => {
+    const handleDrop = async (e: React.DragEvent, dropTargetId: number) => {
         e.preventDefault();
-        if (searchQuery || !draggedItemId) return;
+        const currentDraggedItemId = draggedItemId;
+        if (searchQuery || !currentDraggedItemId) return;
         setDraggedItemId(null);
-        if (draggedItemId === dropTargetId) return;
+        if (currentDraggedItemId === dropTargetId) return;
 
         const currentItems = [...sortedItems];
-        const draggedIndex = currentItems.findIndex(item => item.ID === draggedItemId);
-        const targetIndex = currentItems.findIndex(item => item.ID === dropTargetId);
+        const draggedIndex = currentItems.findIndex(item => item.id === currentDraggedItemId);
+        const targetIndex = currentItems.findIndex(item => item.id === dropTargetId);
         if (draggedIndex === -1 || targetIndex === -1) return;
 
         const [draggedItem] = currentItems.splice(draggedIndex, 1);
         currentItems.splice(targetIndex, 0, draggedItem);
-        const finalItems = currentItems.map((item, index) => ({ ...item, SEQ_NO: index }));
-        handleUpdate(finalItems, "Order saved.");
+        const finalItems = currentItems.map((item, index) => ({ ...item, seq_no: index }));
+        try {
+            await Promise.all(finalItems.map(item => api.saveMaritalStatus(item)));
+            addToast("Order saved.");
+            loadData();
+        } catch (error) {
+            addToast("Failed to save order.", "error");
+            loadData();
+        }
     };
     
     if (isLoading) {
@@ -173,12 +166,12 @@ const MaritalStatusPage: React.FC = () => {
                     </thead>
                     <tbody className="divide-y divide-slate-200 dark:divide-slate-700" onDragEnd={() => setDraggedItemId(null)}>
                         {filteredItems.map((item, index) => (
-                            <tr key={item.ID} draggable={!searchQuery} onDragStart={e => handleDragStart(e, item.ID)} onDragOver={e => e.preventDefault()} onDrop={e => handleDrop(e, item.ID)}
-                                className={`${!searchQuery ? 'cursor-grab' : ''} ${draggedItemId === item.ID ? 'opacity-30' : ''} hover:bg-slate-50 dark:hover:bg-slate-700/40`}>
+                            <tr key={item.id} draggable={!searchQuery} onDragStart={e => handleDragStart(e, item.id)} onDragOver={e => e.preventDefault()} onDrop={e => handleDrop(e, item.id)}
+                                className={`${!searchQuery ? 'cursor-grab' : ''} ${draggedItemId === item.id ? 'opacity-30' : ''} hover:bg-slate-50 dark:hover:bg-slate-700/40`}>
                                 <td className="px-3 py-4 text-center text-slate-400"><GripVertical size={16}/></td>
                                 <td className="px-6 py-4 text-sm">{index + 1}</td>
-                                <td className="px-6 py-4 font-medium">{item.MARITAL_STATUS}</td>
-                                <td className="px-6 py-4"><ToggleSwitch enabled={item.STATUS === 1} onChange={() => handleToggle(item)} disabled={!canModify} /></td>
+                                <td className="px-6 py-4 font-medium">{item.marital_status}</td>
+                                <td className="px-6 py-4"><ToggleSwitch enabled={item.status === 1} onChange={() => handleToggle(item)} disabled={!canModify} /></td>
                                 <td className="px-6 py-4">
                                     <Button size="small" variant="light" className="!p-1.5" onClick={() => openModal(item)} disabled={!canModify}><Edit2 size={14}/></Button>
                                 </td>
@@ -191,8 +184,8 @@ const MaritalStatusPage: React.FC = () => {
             <Modal isOpen={isModalOpen} onClose={closeModal} contentClassName="bg-white dark:bg-slate-800 rounded-lg shadow-xl w-full max-w-md">
                 <form onSubmit={(e) => { e.preventDefault(); handleSave(); }}>
                     <div className="p-6">
-                        <h2 className="text-xl font-bold mb-4">{editingItem?.ID ? 'Edit' : 'Add'} {noun}</h2>
-                        <Input label={`${noun} Name`} value={editingItem?.MARITAL_STATUS || ''} onChange={e => setEditingItem(p => p ? {...p, MARITAL_STATUS: e.target.value} : null)} required autoFocus />
+                        <h2 className="text-xl font-bold mb-4">{editingItem?.id ? 'Edit' : 'Add'} {noun}</h2>
+                        <Input label={`${noun} Name`} value={editingItem?.marital_status || ''} onChange={e => setEditingItem(p => p ? {...p, marital_status: e.target.value} : null)} required autoFocus />
                     </div>
                     <footer className="flex justify-end gap-4 px-6 py-4 bg-slate-50 dark:bg-slate-800/50 rounded-b-lg">
                         <Button type="button" variant="secondary" onClick={closeModal}>Cancel</Button>
@@ -207,12 +200,12 @@ const MaritalStatusPage: React.FC = () => {
                         <AlertTriangle className="h-6 w-6 text-red-600" />
                     </div>
                     <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-                        <h3 className="text-lg font-medium">Deactivate "{itemToAction?.MARITAL_STATUS}"?</h3>
+                        <h3 className="text-lg font-medium">Deactivate "{itemToAction?.marital_status}"?</h3>
                         <p className="text-sm text-slate-500 mt-2">This item is used by {dependentItems.length} record(s) and deactivating it may cause issues.</p>
                     </div>
                 </div>
                 <div className="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse gap-3">
-                    <Button variant="danger" onClick={() => { if(itemToAction) performToggle(itemToAction.ID); setIsWarningModalOpen(false); }}>Deactivate Anyway</Button>
+                    <Button variant="danger" onClick={() => { if(itemToAction) performToggle(itemToAction.id); setIsWarningModalOpen(false); }}>Deactivate Anyway</Button>
                     <Button variant="secondary" onClick={() => setIsWarningModalOpen(false)}>Cancel</Button>
                 </div>
             </Modal>

@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import * as api from '../services/api';
 import { CustomerTier, Gift, CustomerType, Company } from '../types';
@@ -26,7 +27,7 @@ const TierRuleModal: React.FC<{
 
     useEffect(() => {
         if (isOpen) {
-            setFormData(initialData || { CUST_TYPE_ID: undefined, MINIMUM_SUM_ASSURED: 0, MINIMUM_PREMIUM: 0, ASSIGNED_GIFT_ID: undefined, STATUS: 1 });
+            setFormData(initialData || { cust_type_id: undefined, minimum_sum_assured: 0, minimum_premium: 0, assigned_gift_id: undefined, status: 1 });
         }
     }, [isOpen, initialData]);
 
@@ -34,13 +35,13 @@ const TierRuleModal: React.FC<{
         setFormData(prev => ({ ...prev, [field]: value }));
     };
 
-    const handleNumericChange = (field: 'MINIMUM_SUM_ASSURED' | 'MINIMUM_PREMIUM', value: string) => {
+    const handleNumericChange = (field: 'minimum_sum_assured' | 'minimum_premium', value: string) => {
         const numericValue = value.replace(/[^0-9]/g, '');
         handleChange(field, numericValue === '' ? 0 : Number(numericValue));
     };
 
     const handleSaveClick = () => {
-        if (!formData.CUST_TYPE_ID) {
+        if (!formData.cust_type_id) {
             alert('A Customer Type must be selected.');
             return;
         }
@@ -53,37 +54,37 @@ const TierRuleModal: React.FC<{
         <Modal isOpen={isOpen} onClose={onClose} contentClassName="bg-white dark:bg-slate-800 rounded-lg shadow-xl w-full max-w-lg">
             <form onSubmit={(e) => { e.preventDefault(); handleSaveClick(); }}>
                 <div className="p-6">
-                    <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-6">{initialData?.ID ? 'Edit' : 'Add'} Tier Rule</h2>
+                    <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-6">{initialData?.id ? 'Edit' : 'Add'} Tier Rule</h2>
                     <div className="space-y-4">
                         <Select
                             label="Customer Type"
-                            value={formData.CUST_TYPE_ID || ''}
-                            onChange={e => handleChange('CUST_TYPE_ID', Number(e.target.value))}
-                            disabled={!canModify || !!initialData?.ID}
+                            value={formData.cust_type_id || ''}
+                            onChange={e => handleChange('cust_type_id', Number(e.target.value))}
+                            disabled={!canModify || !!initialData?.id}
                             required
                         >
                             <option value="">-- Select a Type --</option>
-                            {customerTypes.filter(ct => ct.STATUS === 1).map(type => {
-                                const isUsed = tiers.some(t => t.CUST_TYPE_ID === type.ID && t.ID !== initialData?.ID);
+                            {customerTypes.filter(ct => ct.status === 1).map(type => {
+                                const isUsed = tiers.some(t => t.cust_type_id === type.id && t.id !== initialData?.id);
                                 return (
-                                    <option key={type.ID} value={type.ID} disabled={isUsed} className={isUsed ? 'text-slate-400 dark:text-slate-500' : ''}>
-                                        {type.CUST_TYPE} {isUsed ? '(In Use)' : ''}
+                                    <option key={type.id} value={type.id} disabled={isUsed} className={isUsed ? 'text-slate-400 dark:text-slate-500' : ''}>
+                                        {type.cust_type} {isUsed ? '(In Use)' : ''}
                                     </option>
                                 );
                             })}
                         </Select>
 
                         {(mode === 'sumAssured' || mode === 'edit') && (
-                            <Input label="Minimum Sum Assured (₹)" type="text" inputMode="numeric" value={formData.MINIMUM_SUM_ASSURED === 0 ? '' : String(formData.MINIMUM_SUM_ASSURED || '')} onChange={e => handleNumericChange('MINIMUM_SUM_ASSURED', e.target.value)} placeholder="e.g., 50000" disabled={!canModify} />
+                            <Input label="Minimum Sum Assured (₹)" type="text" inputMode="numeric" value={formData.minimum_sum_assured === 0 ? '' : String(formData.minimum_sum_assured || '')} onChange={e => handleNumericChange('minimum_sum_assured', e.target.value)} placeholder="e.g., 50000" disabled={!canModify} />
                         )}
 
                         {(mode === 'premium' || mode === 'edit') && (
-                            <Input label="Minimum Premium (₹)" type="text" inputMode="numeric" value={formData.MINIMUM_PREMIUM === 0 ? '' : String(formData.MINIMUM_PREMIUM || '')} onChange={e => handleNumericChange('MINIMUM_PREMIUM', e.target.value)} placeholder="e.g., 5000" disabled={!canModify} />
+                            <Input label="Minimum Premium (₹)" type="text" inputMode="numeric" value={formData.minimum_premium === 0 ? '' : String(formData.minimum_premium || '')} onChange={e => handleNumericChange('minimum_premium', e.target.value)} placeholder="e.g., 5000" disabled={!canModify} />
                         )}
 
-                        <Select label="Assign Gift" value={formData.ASSIGNED_GIFT_ID || ''} onChange={e => handleChange('ASSIGNED_GIFT_ID', e.target.value ? Number(e.target.value) : null)} disabled={!canModify}>
+                        <Select label="Assign Gift" value={formData.assigned_gift_id || ''} onChange={e => handleChange('assigned_gift_id', e.target.value ? Number(e.target.value) : null)} disabled={!canModify}>
                             <option value="">-- No Gift --</option>
-                            {gifts.filter(g => g.STATUS === 1).map(gift => <option key={gift.ID} value={gift.ID}>{gift.GIFT_NAME}</option>)}
+                            {gifts.filter(g => g.status === 1).map(gift => <option key={gift.id} value={gift.id}>{gift.gift_name}</option>)}
                         </Select>
                     </div>
                 </div>
@@ -115,55 +116,56 @@ const TierAndGiftPage: React.FC = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [giftSearchQuery, setGiftSearchQuery] = useState('');
 
-    const canCreate = companyData?.STATUS === 1;
-    const canModify = companyData?.STATUS === 1;
+    const canCreate = companyData?.status === 1;
+    const canModify = companyData?.status === 1;
+
+    const loadData = useCallback(async () => {
+        setIsLoading(true);
+        try {
+            const user = await api.fetchCurrentUser();
+            const companies = await api.fetchCompanies();
+            const currentCompany = companies.find(c => c.comp_id === user.comp_id) || null;
+            setCompanyData(currentCompany);
+
+            if (currentCompany) {
+                const [tiersData, giftsData, customerTypesData] = await Promise.all([
+                    api.fetchCustomerTiers(currentCompany.comp_id),
+                    api.fetchGifts(currentCompany.comp_id),
+                    api.fetchCustomerTypes(currentCompany.comp_id)
+                ]);
+                setTiers(tiersData.data);
+                setGifts(giftsData.data);
+                setCustomerTypes(customerTypesData.data);
+            }
+        } catch (error) {
+            addToast("Failed to load data.", "error");
+        } finally {
+            setIsLoading(false);
+        }
+    }, [addToast]);
+
 
     useEffect(() => {
-        const loadData = async () => {
-            setIsLoading(true);
-            try {
-                const user = await api.fetchCurrentUser();
-                const companies = await api.fetchCompanies();
-                const currentCompany = companies.find(c => c.COMP_ID === user.comp_id) || null;
-                setCompanyData(currentCompany);
-
-                if (currentCompany) {
-                    const [tiersData, giftsData, customerTypesData] = await Promise.all([
-                        api.fetchCustomerTiers(),
-                        api.fetchGifts(),
-                        api.fetchCustomerTypes()
-                    ]);
-                    const filterByComp = (item: any) => item.COMP_ID === currentCompany.COMP_ID;
-                    setTiers(tiersData.filter(filterByComp));
-                    setGifts(giftsData.filter(filterByComp));
-                    setCustomerTypes(customerTypesData.filter(filterByComp));
-                }
-            } catch (error) {
-                addToast("Failed to load data.", "error");
-            } finally {
-                setIsLoading(false);
-            }
-        };
         loadData();
-    }, [addToast]);
+    }, [loadData]);
     
-    const customerTypeMap = useMemo(() => new Map(customerTypes.map(ct => [ct.ID, ct.CUST_TYPE])), [customerTypes]);
+    const customerTypeMap = useMemo(() => new Map(customerTypes.map(ct => [ct.id, ct.cust_type])), [customerTypes]);
 
     const sortedTiers = useMemo(() => {
         const filtered = tiers.filter(tier => {
-            const typeName = customerTypeMap.get(tier.CUST_TYPE_ID) || '';
+            const typeName = customerTypeMap.get(tier.cust_type_id) || '';
             return typeName.toLowerCase().includes(searchQuery.toLowerCase());
         });
-        return [...filtered].sort((a, b) => (a.SEQ_NO ?? 0) - (b.SEQ_NO ?? 0))
+        return [...filtered].sort((a, b) => (a.seq_no ?? 0) - (b.seq_no ?? 0))
     }, [tiers, searchQuery, customerTypeMap]);
 
     const sortedGifts = useMemo(() => {
-        const filtered = gifts.filter(gift => gift.GIFT_NAME.toLowerCase().includes(giftSearchQuery.toLowerCase()));
-        return [...filtered].sort((a, b) => (a.SEQ_NO ?? 0) - (b.SEQ_NO ?? 0));
+        const filtered = gifts.filter(gift => gift.gift_name.toLowerCase().includes(giftSearchQuery.toLowerCase()));
+        return [...filtered].sort((a, b) => (a.seq_no ?? 0) - (b.seq_no ?? 0));
     }, [gifts, giftSearchQuery]);
     
     const openTierModal = (tier: CustomerTier | null, mode: 'sumAssured' | 'premium' | 'edit') => {
-        setEditingTier(tier ? { ...tier } : { MINIMUM_SUM_ASSURED: 0, MINIMUM_PREMIUM: 0, ASSIGNED_GIFT_ID: null, STATUS: 1 });
+        setEditingTier(tier ? { ...tier } : { minimum_sum_assured: 0, minimum_premium: 0, assigned_gift_id: null, status: 1 });
         setTierModalMode(mode);
         setIsTierModalOpen(true);
     };
@@ -177,8 +179,8 @@ const TierAndGiftPage: React.FC = () => {
         if (!canModify || !companyData) return;
         
         try {
-            const savedTier = await api.saveCustomerTier({ ...tierData, COMP_ID: companyData.COMP_ID });
-            setTiers(prev => tierData.ID ? prev.map(t => t.ID === savedTier.ID ? savedTier : t) : [...prev, savedTier]);
+            const savedTier = await api.saveCustomerTier({ ...tierData, comp_id: companyData.comp_id });
+            setTiers(prev => tierData.id ? prev.map(t => t.id === savedTier.id ? savedTier : t) : [...prev, savedTier]);
             addToast("Tier rule saved successfully.", "success");
             closeTierModal();
         } catch(e) {
@@ -188,27 +190,27 @@ const TierAndGiftPage: React.FC = () => {
 
     const handleToggleTier = async (tier: CustomerTier) => {
         if (!canModify) return;
-        const updatedTier = {...tier, STATUS: tier.STATUS === 1 ? 0 : 1};
+        const updatedTier = {...tier, status: tier.status === 1 ? 0 : 1};
         const savedTier = await api.saveCustomerTier(updatedTier);
-        setTiers(tiers.map(t => t.ID === savedTier.ID ? savedTier : t));
+        setTiers(tiers.map(t => t.id === savedTier.id ? savedTier : t));
     };
 
     const openGiftModal = (gift: Gift | null) => {
-        setEditingGift(gift ? { ...gift } : { GIFT_NAME: '', STATUS: 1 });
+        setEditingGift(gift ? { ...gift } : { gift_name: '', status: 1 });
         setIsGiftModalOpen(true);
     };
 
     const closeGiftModal = () => setIsGiftModalOpen(false);
 
     const handleSaveGift = async () => {
-        if (!canModify || !editingGift?.GIFT_NAME?.trim() || !companyData) {
+        if (!canModify || !editingGift?.gift_name?.trim() || !companyData) {
             addToast('Gift name is required.', 'error');
             return;
         }
 
         try {
-            const savedGift = await api.saveGift({ ...editingGift, COMP_ID: companyData.COMP_ID });
-            setGifts(prev => editingGift.ID ? prev.map(g => g.ID === savedGift.ID ? savedGift : g) : [...prev, savedGift]);
+            const savedGift = await api.saveGift({ ...editingGift, comp_id: companyData.comp_id });
+            setGifts(prev => editingGift.id ? prev.map(g => g.id === savedGift.id ? savedGift : g) : [...prev, savedGift]);
             addToast("Gift saved successfully.", "success");
             closeGiftModal();
         } catch(e) {
@@ -218,33 +220,43 @@ const TierAndGiftPage: React.FC = () => {
 
     const handleToggleGift = async (gift: Gift) => {
         if (!canModify) return;
-        const updatedGift = {...gift, STATUS: gift.STATUS === 1 ? 0 : 1};
+        const updatedGift = {...gift, status: gift.status === 1 ? 0 : 1};
         const savedGift = await api.saveGift(updatedGift);
-        setGifts(gifts.map(g => g.ID === savedGift.ID ? savedGift : g));
+        setGifts(gifts.map(g => g.id === savedGift.id ? savedGift : g));
     };
 
-    const handleTierDrop = (e: React.DragEvent<HTMLTableRowElement>, dropTargetId: number) => {
+    const handleTierDrop = async (e: React.DragEvent<HTMLTableRowElement>, dropTargetId: number) => {
         e.preventDefault();
-        if (!draggedTierId) return;
+        const currentDraggedId = draggedTierId;
+        if (!currentDraggedId) return;
+
+        setDraggedTierId(null);
+        if (currentDraggedId === dropTargetId) return;
 
         const currentItems = [...sortedTiers];
-        const draggedIndex = currentItems.findIndex(item => item.ID === draggedTierId);
-        const targetIndex = currentItems.findIndex(item => item.ID === dropTargetId);
+        const draggedIndex = currentItems.findIndex(item => item.id === currentDraggedId);
+        const targetIndex = currentItems.findIndex(item => item.id === dropTargetId);
 
         const [draggedItem] = currentItems.splice(draggedIndex, 1);
         currentItems.splice(targetIndex, 0, draggedItem);
 
-        const reordered = currentItems.map((item, index) => ({ ...item, SEQ_NO: index }));
-        api.onUpdateCustomerTiers(reordered);
-        setTiers(reordered);
-        setDraggedTierId(null);
+        const reordered = currentItems.map((item, index) => ({ ...item, seq_no: index }));
+        
+        try {
+            await Promise.all(reordered.map(tier => api.saveCustomerTier(tier)));
+            setTiers(reordered);
+            addToast("Tier order saved.");
+        } catch (error) {
+            addToast("Failed to save tier order.", "error");
+            loadData();
+        }
     };
 
     if (isLoading) return <div className="p-8 text-center text-slate-500 dark:text-slate-400">Loading...</div>;
 
     const renderTierTable = (mode: 'sumAssured' | 'premium') => {
         const title = mode === 'sumAssured' ? "Customer Type (by Sum Assured)" : "Customer Type (by Premium)";
-        const valueField = mode === 'sumAssured' ? 'MINIMUM_SUM_ASSURED' : 'MINIMUM_PREMIUM';
+        const valueField = mode === 'sumAssured' ? 'minimum_sum_assured' : 'minimum_premium';
         const valueHeader = mode === 'sumAssured' ? 'Min. Sum Assured (₹)' : 'Min. Premium (₹)';
         
         return (
@@ -265,12 +277,12 @@ const TierAndGiftPage: React.FC = () => {
                         </tr></thead>
                         <tbody onDragEnd={() => setDraggedTierId(null)}>
                             {sortedTiers.map(tier => (
-                                <tr key={tier.ID} draggable={canModify} onDragStart={e => setDraggedTierId(tier.ID)} onDragOver={e => e.preventDefault()} onDrop={e => handleTierDrop(e, tier.ID)} className={`border-b border-slate-200 dark:border-slate-700 ${canModify ? 'cursor-grab' : ''} ${draggedTierId === tier.ID ? 'opacity-50' : ''}`}>
+                                <tr key={tier.id} draggable={canModify} onDragStart={() => setDraggedTierId(tier.id)} onDragOver={e => e.preventDefault()} onDrop={e => handleTierDrop(e, tier.id)} className={`border-b border-slate-200 dark:border-slate-700 ${canModify ? 'cursor-grab' : ''} ${draggedTierId === tier.id ? 'opacity-50' : ''}`}>
                                     <td className="py-3 px-2"><GripVertical size={16} className="text-slate-400"/></td>
-                                    <td className="py-3 px-2 font-medium">{customerTypeMap.get(tier.CUST_TYPE_ID)}</td>
+                                    <td className="py-3 px-2 font-medium">{customerTypeMap.get(tier.cust_type_id)}</td>
                                     <td className="py-3 px-2 text-right">{tier[valueField]?.toLocaleString('en-IN') || '-'}</td>
-                                    <td className="py-3 px-2">{gifts.find(g => g.ID === tier.ASSIGNED_GIFT_ID)?.GIFT_NAME || <span className="text-slate-500 italic">None</span>}</td>
-                                    <td className="py-3 px-2 text-center"><ToggleSwitch enabled={tier.STATUS === 1} onChange={() => handleToggleTier(tier)} disabled={!canModify}/></td>
+                                    <td className="py-3 px-2">{gifts.find(g => g.id === tier.assigned_gift_id)?.gift_name || <span className="text-slate-500 italic">None</span>}</td>
+                                    <td className="py-3 px-2 text-center"><ToggleSwitch enabled={tier.status === 1} onChange={() => handleToggleTier(tier)} disabled={!canModify}/></td>
                                     <td className="py-3 px-2 text-center"><Button size="small" variant="light" className="!p-1.5" onClick={() => openTierModal(tier, 'edit')} disabled={!canModify}><Edit2 size={14}/></Button></td>
                                 </tr>
                             ))}
@@ -305,10 +317,10 @@ const TierAndGiftPage: React.FC = () => {
                     <div className="overflow-y-auto max-h-80 pr-2">
                         <div className="space-y-2">
                             {sortedGifts.map(gift => (
-                                <div key={gift.ID} className="flex justify-between items-center p-2 rounded-md hover:bg-slate-50 dark:hover:bg-slate-700/50">
-                                    <span className={`text-sm ${gift.STATUS === 0 ? 'line-through text-slate-500' : ''}`}>{gift.GIFT_NAME}</span>
+                                <div key={gift.id} className="flex justify-between items-center p-2 rounded-md hover:bg-slate-50 dark:hover:bg-slate-700/50">
+                                    <span className={`text-sm ${gift.status === 0 ? 'line-through text-slate-500' : ''}`}>{gift.gift_name}</span>
                                     <div className="flex items-center justify-end gap-3">
-                                        <ToggleSwitch enabled={gift.STATUS === 1} onChange={() => handleToggleGift(gift)} disabled={!canModify}/>
+                                        <ToggleSwitch enabled={gift.status === 1} onChange={() => handleToggleGift(gift)} disabled={!canModify}/>
                                         <Button size="small" variant="light" className="!p-1.5" onClick={() => openGiftModal(gift)} disabled={!canModify}><Edit2 size={14}/></Button>
                                     </div>
                                 </div>
@@ -324,8 +336,8 @@ const TierAndGiftPage: React.FC = () => {
                 <Modal isOpen={isGiftModalOpen} onClose={closeGiftModal} contentClassName="bg-white dark:bg-slate-800 rounded-lg shadow-xl w-full max-w-md">
                     <form onSubmit={(e) => { e.preventDefault(); handleSaveGift()}}>
                         <div className="p-6 space-y-4">
-                            <h2 className="text-xl font-bold text-slate-900 dark:text-white">{editingGift?.ID ? 'Edit' : 'Add'} Gift</h2>
-                            <Input label="Gift Name" value={editingGift?.GIFT_NAME || ''} onChange={e => setEditingGift(p => p ? {...p, GIFT_NAME: e.target.value} : null)} disabled={!canModify} autoFocus/>
+                            <h2 className="text-xl font-bold text-slate-900 dark:text-white">{editingGift?.id ? 'Edit' : 'Add'} Gift</h2>
+                            <Input label="Gift Name" value={editingGift?.gift_name || ''} onChange={e => setEditingGift(p => p ? {...p, gift_name: e.target.value} : null)} disabled={!canModify} autoFocus/>
                         </div>
                         <footer className="flex justify-end gap-4 px-6 py-4 bg-slate-50 dark:bg-slate-800/50 rounded-b-lg">
                             <Button type="button" variant="secondary" onClick={closeGiftModal}>Cancel</Button>

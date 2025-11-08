@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import * as api from '../services/api';
 import { IncomeCategory, IncomeHead, Company } from '../types';
@@ -33,14 +34,14 @@ const IncomeManagementModal: React.FC<IncomeModalProps> = ({ isOpen, onClose, on
         if (isOpen && item) {
             setFormData({ ...item });
         } else if (isOpen) {
-            setFormData({ STATUS: 1 });
+            setFormData({ status: 1 });
         }
     }, [isOpen, item]);
     
     const categoryOptions = useMemo(() => 
         categories
-            .filter(c => c.STATUS === 1)
-            .map(c => ({ value: String(c.ID), label: c.INCOME_CATE })), 
+            .filter(c => c.status === 1)
+            .map(c => ({ value: String(c.id), label: c.income_cate })), 
         [categories]
     );
 
@@ -55,13 +56,13 @@ const IncomeManagementModal: React.FC<IncomeModalProps> = ({ isOpen, onClose, on
     const handleSaveClick = () => {
         if (!type) return;
 
-        const nameField = { category: 'INCOME_CATE', head: 'INCOME_HEAD' }[type];
+        const nameField = { category: 'income_cate', head: 'income_head' }[type];
 
         if (!formData[nameField]?.trim()) {
             addToast("Name is required.", "error");
             return;
         }
-        if (type === 'head' && !formData.INCOME_CATE_ID) {
+        if (type === 'head' && !formData.income_cate_id) {
             addToast("Income Category is required.", "error");
             return;
         }
@@ -69,15 +70,16 @@ const IncomeManagementModal: React.FC<IncomeModalProps> = ({ isOpen, onClose, on
         onSave(type, formData);
     };
 
-    const nameField = { category: 'INCOME_CATE', head: 'INCOME_HEAD' }[type];
-    const isNameDisabled = type === 'head' && !formData.INCOME_CATE_ID;
+    const nameField = { category: 'income_cate', head: 'income_head' }[type];
+    const isNameDisabled = type === 'head' && !formData.income_cate_id;
 
     return (
         <Modal isOpen={isOpen} onClose={onClose} contentClassName="bg-white dark:bg-slate-800 rounded-lg shadow-xl w-full max-w-md">
             <form onSubmit={e => { e.preventDefault(); handleSaveClick(); }}>
                 <div className="p-6">
                     <h2 className="text-xl font-bold mb-4">
-                        {item?.ID ? 'Edit' : 'Add'}{' '}
+                        {}
+                        {item?.id ? 'Edit' : 'Add'}{' '}
                         {({
                             category: 'Income Category',
                             head: 'Income Head Category',
@@ -85,7 +87,7 @@ const IncomeManagementModal: React.FC<IncomeModalProps> = ({ isOpen, onClose, on
                     </h2>
                     <div className="space-y-4">
                         {type === 'head' && (
-                            <Select label="Income Category" value={formData.INCOME_CATE_ID || ''} onChange={e => handleChange('INCOME_CATE_ID', e.target.value ? Number(e.target.value) : null)} required>
+                            <Select label="Income Category" value={formData.income_cate_id || ''} onChange={e => handleChange('income_cate_id', e.target.value ? Number(e.target.value) : null)} required>
                                 <option value="">Select Category...</option>
                                 {categoryOptions.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
                             </Select>
@@ -125,24 +127,24 @@ const IncomeCategoryPage: React.FC = () => {
         item: Partial<IncomeCategory | IncomeHead> | null;
     }>({ isOpen: false, type: null, item: null });
 
-    const canCreate = companyData?.STATUS === 1;
-    const canModify = companyData?.STATUS === 1;
+    const canCreate = companyData?.status === 1;
+    const canModify = companyData?.status === 1;
 
     const loadData = useCallback(async () => {
         setIsLoading(true);
         try {
             const user = await api.fetchCurrentUser();
             const companies = await api.fetchCompanies();
-            const currentCompany = companies.find(c => c.COMP_ID === user.comp_id) || null;
+            const currentCompany = companies.find(c => c.comp_id === user.comp_id) || null;
             setCompanyData(currentCompany);
 
             if (currentCompany) {
                 const [cats, heads] = await Promise.all([
-                    api.fetchIncomeCategories(),
-                    api.fetchIncomeHeads(),
+                    api.fetchIncomeCategories(currentCompany.comp_id),
+                    api.fetchIncomeHeads(currentCompany.comp_id),
                 ]);
-                setIncomeCategories(cats.filter(c => c.COMP_ID === currentCompany.COMP_ID));
-                setIncomeHeads(heads.filter(h => h.COMP_ID === currentCompany.COMP_ID));
+                setIncomeCategories(cats.data);
+                setIncomeHeads(heads.data);
             }
         } catch (error) {
             console.error("Failed to load income data:", error);
@@ -156,8 +158,8 @@ const IncomeCategoryPage: React.FC = () => {
         loadData();
     }, [loadData]);
 
-    const filteredCategories = useMemo(() => incomeCategories.filter(c => c.INCOME_CATE.toLowerCase().includes(searchQuery.toLowerCase())), [incomeCategories, searchQuery]);
-    const filteredHeads = useMemo(() => incomeHeads.filter(h => h.INCOME_HEAD.toLowerCase().includes(searchQuery.toLowerCase())), [incomeHeads, searchQuery]);
+    const filteredCategories = useMemo(() => incomeCategories.filter(c => c.income_cate.toLowerCase().includes(searchQuery.toLowerCase())), [incomeCategories, searchQuery]);
+    const filteredHeads = useMemo(() => incomeHeads.filter(h => h.income_head.toLowerCase().includes(searchQuery.toLowerCase())), [incomeHeads, searchQuery]);
     
     const openModal = (type: ModalType, item: any | null = null) => {
         setModalConfig({ isOpen: true, type, item });
@@ -170,15 +172,15 @@ const IncomeCategoryPage: React.FC = () => {
     const handleSave = async (type: ModalType, data: any) => {
         if (!canModify || !companyData) return;
         try {
-            const payload = { ...data, COMP_ID: companyData.COMP_ID };
+            const payload = { ...data, comp_id: companyData.comp_id };
             switch (type) {
                 case 'category':
                     const savedCat = await api.saveIncomeCategory(payload);
-                    setIncomeCategories(prev => data.ID ? prev.map(c => c.ID === savedCat.ID ? savedCat : c) : [...prev, savedCat]);
+                    setIncomeCategories(prev => data.id ? prev.map(c => c.id === savedCat.id ? savedCat : c) : [...prev, savedCat]);
                     break;
                 case 'head':
                     const savedHead = await api.saveIncomeHead(payload);
-                    setIncomeHeads(prev => data.ID ? prev.map(h => h.ID === savedHead.ID ? savedHead : h) : [...prev, savedHead]);
+                    setIncomeHeads(prev => data.id ? prev.map(h => h.id === savedHead.id ? savedHead : h) : [...prev, savedHead]);
                     break;
             }
             addToast("Saved successfully.", "success");
@@ -191,30 +193,30 @@ const IncomeCategoryPage: React.FC = () => {
     
     const handleToggle = async (type: ModalType, item: any) => {
         if (!canModify) return;
-        const newStatus = item.STATUS === 1 ? 0 : 1;
-        const updatedItem = { ...item, STATUS: newStatus };
+        const newStatus = item.status === 1 ? 0 : 1;
+        const updatedItem = { ...item, status: newStatus };
     
         try {
             if (type === 'category') {
                 const category = item as IncomeCategory;
                 const updatedHeads = incomeHeads
-                    .filter(h => h.INCOME_CATE_ID === category.ID)
-                    .map(h => ({ ...h, STATUS: newStatus }));
+                    .filter(h => h.income_cate_id === category.id)
+                    .map(h => ({ ...h, status: newStatus }));
                 
                 await Promise.all([
                     api.saveIncomeCategory(updatedItem),
                     ...updatedHeads.map(h => api.saveIncomeHead(h))
                 ]);
     
-                setIncomeCategories(prev => prev.map(c => c.ID === category.ID ? updatedItem : c));
+                setIncomeCategories(prev => prev.map(c => c.id === category.id ? updatedItem : c));
                 setIncomeHeads(prev => {
-                    const updatedHeadIds = new Set(updatedHeads.map(uh => uh.ID));
-                    return prev.map(h => updatedHeadIds.has(h.ID) ? { ...h, STATUS: newStatus } : h);
+                    const updatedHeadIds = new Set(updatedHeads.map(uh => uh.id));
+                    return prev.map(h => updatedHeadIds.has(h.id) ? { ...h, status: newStatus } : h);
                 });
     
             } else if (type === 'head') {
                 const savedHead = await api.saveIncomeHead(updatedItem);
-                setIncomeHeads(prev => prev.map(h => h.ID === savedHead.ID ? savedHead : h));
+                setIncomeHeads(prev => prev.map(h => h.id === savedHead.id ? savedHead : h));
             }
             
             addToast(newStatus === 0 && type === 'category' ? 'Category and associated heads deactivated.' : 'Status updated.');
@@ -247,10 +249,10 @@ const IncomeCategoryPage: React.FC = () => {
                             </tr>
                         ) : (
                             data.map((item, index) => (
-                                <tr key={item.ID} className="hover:bg-slate-50 dark:hover:bg-slate-700/40">
+                                <tr key={item.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/40">
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">{index + 1}</td>
                                     <td className="px-6 py-4 whitespace-nowrap font-medium text-slate-900 dark:text-slate-100">{item[nameField]}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap"><ToggleSwitch enabled={item.STATUS === 1} onChange={() => handleToggle(type, item)} disabled={!canModify}/></td>
+                                    <td className="px-6 py-4 whitespace-nowrap"><ToggleSwitch enabled={item.status === 1} onChange={() => handleToggle(type, item)} disabled={!canModify}/></td>
                                     <td className="px-6 py-4 whitespace-nowrap">
                                         <Button size="small" variant="light" className="!p-1.5" onClick={() => openModal(type, item)} disabled={!canModify}><Edit2 size={14}/></Button>
                                     </td>
@@ -281,8 +283,8 @@ const IncomeCategoryPage: React.FC = () => {
                     className="max-w-md" 
                 />
                 
-                {renderTable('category', 'Manage Income Category', filteredCategories, 'INCOME_CATE')}
-                {renderTable('head', 'Manage Income Head Category', filteredHeads, 'INCOME_HEAD')}
+                {renderTable('category', 'Manage Income Category', filteredCategories, 'income_cate')}
+                {renderTable('head', 'Manage Income Head Category', filteredHeads, 'income_head')}
             </main>
             
             <IncomeManagementModal

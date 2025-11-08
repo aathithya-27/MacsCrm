@@ -38,7 +38,7 @@ interface MainSidebarProps {
 }
 
 const MainSidebar: React.FC<MainSidebarProps> = ({ isOpen, setIsOpen, company, isLoading }) => {
-    const companyName = company ? company.COMP_NAME : 'Finroots';
+    const companyName = company ? company.comp_name : 'Finroots';
 
     return (
         <>

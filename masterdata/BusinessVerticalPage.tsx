@@ -1,5 +1,6 @@
+
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
-import type { BusinessVertical, InsuranceType, InsuranceSubType, Company } from '../types';
+import type { BusinessVertical, InsuranceType, InsuranceSubType, Company, PaginatedResponse } from '../types';
 import * as api from '../services/api';
 import { useToast } from '../context/ToastContext';
 
@@ -10,22 +11,24 @@ import { Search, GripVertical, AlertTriangle } from 'lucide-react';
 
 const BusinessVerticalPage: React.FC = () => {
     const { addToast } = useToast();
-    const [verticals, setVerticals] = useState<BusinessVertical[]>([]);
+    const [verticalsResponse, setVerticalsResponse] = useState<PaginatedResponse<BusinessVertical> | null>(null);
     const [insuranceTypes, setInsuranceTypes] = useState<InsuranceType[]>([]);
     const [insuranceSubTypes, setInsuranceSubTypes] = useState<InsuranceSubType[]>([]);
     const [companyData, setCompanyData] = useState<Company | null>(null);
 
     const [isLoading, setIsLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
+    const [page, setPage] = useState(1);
+    const [refreshKey, setRefreshKey] = useState(0);
     
-    const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+    const [draggedItemId, setDraggedItemId] = useState<number | null>(null);
     
     const [isWarningModalOpen, setIsWarningModalOpen] = useState(false);
     const [itemToAction, setItemToAction] = useState<BusinessVertical | null>(null);
     const [dependentItems, setDependentItems] = useState<{ name: string; type: string }[]>([]);
 
-    const canModify = companyData?.STATUS === 1;
-    const canDrag = searchQuery === '' && canModify;
+    const canModify = companyData?.status === 1;
+    const canDrag = searchQuery === '' && (!verticalsResponse || verticalsResponse.meta.pages <= 1) && canModify;
 
     useEffect(() => {
         const loadData = async () => {
@@ -33,25 +36,21 @@ const BusinessVerticalPage: React.FC = () => {
             try {
                 const user = await api.fetchCurrentUser();
                 const companies = await api.fetchCompanies();
-                const currentCompany = companies.find(c => c.COMP_ID === user.comp_id) || null;
+                const currentCompany = companies.find(c => c.comp_id === user.comp_id) || null;
                 setCompanyData(currentCompany);
 
                 if (currentCompany) {
                     const [verticalData, typesData, subTypesData] = await Promise.all([
-                        api.fetchBusinessVerticals(),
-                        api.fetchInsuranceTypes(),
-                        api.fetchInsuranceSubTypes(),
+                        api.fetchBusinessVerticals(currentCompany.comp_id, { page, search: searchQuery, limit: 10 }),
+                        api.fetchInsuranceTypes(currentCompany.comp_id, { limit: 10000 }),
+                        api.fetchInsuranceSubTypes(currentCompany.comp_id, { limit: 10000 }),
                     ]);
 
-                    const companyVerticals = verticalData
-                        .filter(v => v.COMP_ID === currentCompany.COMP_ID)
-                        .sort((a, b) => a.ID - b.ID); 
-                    
-                    setVerticals(companyVerticals);
-                    setInsuranceTypes(typesData);
-                    setInsuranceSubTypes(subTypesData);
+                    setVerticalsResponse(verticalData);
+                    setInsuranceTypes(typesData.data);
+                    setInsuranceSubTypes(subTypesData.data);
                 } else {
-                    setVerticals([]);
+                    setVerticalsResponse(null);
                 }
             } catch (error) {
                 console.error("Failed to load business verticals data", error);
@@ -60,44 +59,47 @@ const BusinessVerticalPage: React.FC = () => {
                 setIsLoading(false);
             }
         };
-        loadData();
-    }, [addToast]);
+        const debounceTimer = setTimeout(() => {
+            loadData();
+        }, 300);
 
-    const filteredVerticals = useMemo(() => {
-        return verticals
-            .filter(vertical => vertical.BUSINESS_VERTICAL_NAME.toLowerCase().includes(searchQuery.toLowerCase()));
-    }, [verticals, searchQuery]);
+        return () => clearTimeout(debounceTimer);
+    }, [addToast, page, searchQuery, refreshKey]);
+
+    const verticals = useMemo(() => verticalsResponse?.data || [], [verticalsResponse]);
 
     const checkDependencies = useCallback((verticalId: number) => {
         return insuranceTypes
-            .filter(it => it.BUSINESS_VERTICAL_ID === verticalId)
-            .map(it => ({ name: `Insurance Type: ${it.INSURANCE_TYPE}`, type: 'insurance_type' as const }));
+            .filter(it => it.business_vertical_id === verticalId)
+            .map(it => ({ name: `Insurance Type: ${it.insurance_type}`, type: 'insurance_type' as const }));
     }, [insuranceTypes]);
 
     const performToggle = async (vertical: BusinessVertical) => {
         if (!canModify) return;
-        const newStatus = vertical.STATUS === 1 ? 0 : 1;
+        const newStatus = vertical.status === 1 ? 0 : 1;
         
         try {
-            const updatedVertical = { ...vertical, STATUS: newStatus };
+            const updatedVertical = { ...vertical, status: newStatus };
 
-            const childInsuranceTypes = insuranceTypes.filter(it => it.BUSINESS_VERTICAL_ID === vertical.ID);
-            const childInsuranceTypeIds = new Set(childInsuranceTypes.map(it => it.ID));
-            
-            const updatedInsuranceTypes = insuranceTypes.map(it => childInsuranceTypeIds.has(it.ID) ? { ...it, STATUS: newStatus } : it);
-            const updatedInsuranceSubTypes = insuranceSubTypes.map(st => childInsuranceTypeIds.has(st.INSURANCE_TYPE_ID) ? { ...st, STATUS: newStatus } : st);
+            const childInsuranceTypesToUpdate = insuranceTypes
+                .filter(it => it.business_vertical_id === vertical.id)
+                .map(it => ({ ...it, status: newStatus }));
+
+            const childInsuranceTypeIds = new Set(childInsuranceTypesToUpdate.map(it => it.id));
+
+            const childInsuranceSubTypesToUpdate = insuranceSubTypes
+                .filter(st => childInsuranceTypeIds.has(st.insurance_type_id))
+                .map(st => ({ ...st, status: newStatus }));
             
             await Promise.all([
                 api.saveBusinessVertical(updatedVertical),
-                api.onUpdateInsuranceTypes(updatedInsuranceTypes),
-                api.onUpdateInsuranceSubTypes(updatedInsuranceSubTypes)
+                ...childInsuranceTypesToUpdate.map(it => api.saveInsuranceType(it)),
+                ...childInsuranceSubTypesToUpdate.map(st => api.saveInsuranceSubType(st))
             ]);
+            
+            setRefreshKey(k => k + 1);
 
-            setVerticals(verticals.map(v => v.ID === vertical.ID ? updatedVertical : v));
-            setInsuranceTypes(updatedInsuranceTypes);
-            setInsuranceSubTypes(updatedInsuranceSubTypes);
-
-            addToast(`"${vertical.BUSINESS_VERTICAL_NAME}" and its associated types have been ${newStatus ? 'activated' : 'deactivated'}.`);
+            addToast(`"${vertical.business_vertical_name}" and its associated types have been ${newStatus ? 'activated' : 'deactivated'}.`);
             
         } catch (error) {
             console.error("Failed to update vertical status", error);
@@ -112,8 +114,8 @@ const BusinessVerticalPage: React.FC = () => {
     const handleToggleStatus = async (vertical: BusinessVertical) => {
         if (!canModify) return;
 
-        if (vertical.STATUS === 1) { 
-            const dependents = checkDependencies(vertical.ID);
+        if (vertical.status === 1) { 
+            const dependents = checkDependencies(vertical.id);
             if (dependents.length > 0) {
                 setItemToAction(vertical);
                 setDependentItems(dependents);
@@ -130,27 +132,30 @@ const BusinessVerticalPage: React.FC = () => {
         }
     };
 
-    const handleDragStart = (index: number) => {
+    const handleDragStart = (e: React.DragEvent<HTMLDivElement>, id: number) => {
         if (!canDrag) return;
-        setDraggedIndex(index);
+        setDraggedItemId(id);
     };
 
-    const handleDrop = (dropIndex: number) => {
-        if (draggedIndex === null || draggedIndex === dropIndex || !canDrag) return;
+    const handleDrop = (dropTargetId: number) => {
+        if (draggedItemId === null || draggedItemId === dropTargetId || !canDrag) return;
 
         const reorderedVerticals = [...verticals];
+        const draggedIndex = reorderedVerticals.findIndex(v => v.id === draggedItemId);
+        const targetIndex = reorderedVerticals.findIndex(v => v.id === dropTargetId);
+        
         const [draggedItem] = reorderedVerticals.splice(draggedIndex, 1);
-        reorderedVerticals.splice(dropIndex, 0, draggedItem);
+        reorderedVerticals.splice(targetIndex, 0, draggedItem);
 
-        setVerticals(reorderedVerticals);
+        setVerticalsResponse(prev => prev ? ({ ...prev, data: reorderedVerticals }) : null);
         addToast("Order updated. Note: Order is not saved in this demo.", "info");
     };
 
     const handleDragEnd = () => {
-        setDraggedIndex(null);
+        setDraggedItemId(null);
     };
 
-    if (isLoading) return <div className="p-8 text-center text-slate-500 dark:text-slate-400">Loading business verticals...</div>;
+    if (isLoading && !verticalsResponse) return <div className="p-8 text-center text-slate-500 dark:text-slate-400">Loading business verticals...</div>;
     
     const gridCols = "grid-cols-[40px_80px_1fr_100px]";
 
@@ -181,15 +186,16 @@ const BusinessVerticalPage: React.FC = () => {
                         <div className="text-left text-xs font-bold text-slate-500 dark:text-slate-300 uppercase tracking-wider">Status</div>
                     </div>
                     <div>
-                        {filteredVerticals.length > 0 ? filteredVerticals.map((vertical, index) => {
-                            const isDragging = draggedIndex === index;
+                        {isLoading && <div className="p-8 text-center text-slate-500">Searching...</div>}
+                        {!isLoading && verticals.length > 0 ? verticals.map((vertical) => {
+                            const isDragging = draggedItemId === vertical.id;
                             
                             return (
                             <div 
-                                key={vertical.ID} 
+                                key={vertical.id} 
                                 draggable={canDrag}
-                                onDragStart={() => handleDragStart(index)}
-                                onDrop={() => handleDrop(index)}
+                                onDragStart={(e) => handleDragStart(e, vertical.id)}
+                                onDrop={() => handleDrop(vertical.id)}
                                 onDragEnd={handleDragEnd}
                                 onDragOver={(e) => { if (canDrag) e.preventDefault(); }}
                                 className={`grid ${gridCols} gap-x-6 items-center px-6 py-4 border-b border-slate-200 dark:border-slate-700 last:border-b-0 transition-opacity ${isDragging ? 'opacity-30' : 'hover:bg-slate-50 dark:hover:bg-slate-700/40'}`}
@@ -197,20 +203,33 @@ const BusinessVerticalPage: React.FC = () => {
                                 <div className={`flex justify-center items-center text-slate-400 ${canDrag ? 'cursor-grab' : 'cursor-not-allowed text-slate-300 dark:text-slate-600'}`}>
                                     <GripVertical size={18} />
                                 </div>
-                                <div className="whitespace-nowrap text-sm text-slate-600 dark:text-slate-400">{vertical.ID}</div>
-                                <div className="whitespace-nowrap text-sm font-medium text-slate-900 dark:text-slate-100">{vertical.BUSINESS_VERTICAL_NAME}</div>
+                                <div className="whitespace-nowrap text-sm text-slate-600 dark:text-slate-400">{vertical.id}</div>
+                                <div className="whitespace-nowrap text-sm font-medium text-slate-900 dark:text-slate-100">{vertical.business_vertical_name}</div>
                                 <div className="whitespace-nowrap">
-                                    <ToggleSwitch enabled={vertical.STATUS === 1} onChange={() => handleToggleStatus(vertical)} disabled={!canModify}/>
+                                    <ToggleSwitch enabled={vertical.status === 1} onChange={() => handleToggleStatus(vertical)} disabled={!canModify}/>
                                 </div>
                             </div>
                         )}) : (
-                            <div className="p-8 text-center text-slate-500">
+                            !isLoading && <div className="p-8 text-center text-slate-500">
                                 No business verticals found matching your search.
                             </div>
                         )}
                     </div>
                 </div>
             </div>
+            
+            {verticalsResponse && verticalsResponse.meta.pages > 1 && (
+                <div className="flex justify-between items-center mt-4">
+                    <span className="text-sm text-slate-500 dark:text-slate-400">
+                        Page {verticalsResponse.meta.page} of {verticalsResponse.meta.pages}
+                    </span>
+                    <div className="flex gap-2">
+                        <Button onClick={() => setPage(p => p - 1)} disabled={!verticalsResponse.meta.has_prev_page} size="small">Previous</Button>
+                        <Button onClick={() => setPage(p => p + 1)} disabled={!verticalsResponse.meta.has_next_page} size="small">Next</Button>
+                    </div>
+                </div>
+            )}
+
 
             <Modal isOpen={isWarningModalOpen} onClose={() => setIsWarningModalOpen(false)} contentClassName="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-xl w-full max-w-lg">
                  <div className="sm:flex sm:items-start">
@@ -218,7 +237,7 @@ const BusinessVerticalPage: React.FC = () => {
                         <AlertTriangle className="h-6 w-6 text-red-600" />
                     </div>
                     <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-                        <h3 className="text-lg font-medium text-slate-800 dark:text-slate-100">Deactivate "{itemToAction?.BUSINESS_VERTICAL_NAME}"?</h3>
+                        <h3 className="text-lg font-medium text-slate-800 dark:text-slate-100">Deactivate "{itemToAction?.business_vertical_name}"?</h3>
                         <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">This Business Vertical has {dependentItems.length} associated Insurance Type(s). Deactivating it will also deactivate all associated types and sub-types.</p>
                         <ul className="text-xs text-slate-400 dark:text-slate-500 mt-2 list-disc list-inside max-h-24 overflow-y-auto bg-slate-50 dark:bg-slate-700/50 p-2 rounded">
                             {dependentItems.slice(0, 5).map((item, index) => <li key={index}>{item.name}</li>)}

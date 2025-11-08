@@ -17,9 +17,12 @@ const App: React.FC = () => {
         setIsLoading(true);
         try {
             const user = await api.fetchCurrentUser();
-            const companies = await api.fetchCompanies();
-            const currentCompany = companies.find(c => c.COMP_ID === user.comp_id) || null;
-            setCompany(currentCompany);
+            if (user && user.comp_id) {
+                const currentCompany = await api.fetchCompanyById(user.comp_id);
+                setCompany(currentCompany);
+            } else {
+                setCompany(null);
+            }
         } catch (error) {
             console.error("Failed to load company data", error);
             setCompany(null);

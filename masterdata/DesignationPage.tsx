@@ -1,5 +1,6 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import type { Designation, Company } from '../types';
+
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import type { Designation, Company, PaginatedResponse } from '../types';
 import * as api from '../services/api';
 import { useToast } from '../context/ToastContext';
 import Button from '../components/ui/Button';
@@ -11,51 +12,57 @@ import { Plus, Edit2, Search } from 'lucide-react';
 const DesignationPage: React.FC = () => {
     const { addToast } = useToast();
     const [companyData, setCompanyData] = useState<Company | null>(null);
-    const [designations, setDesignations] = useState<Designation[]>([]);
+    const [designationsResponse, setDesignationsResponse] = useState<PaginatedResponse<Designation> | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
+    const [page, setPage] = useState(1);
     
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingItem, setEditingItem] = useState<Partial<Designation> | null>(null);
 
-    const canCreate = companyData?.STATUS === 1;
-    const canModify = companyData?.STATUS === 1;
+    const canCreate = companyData?.status === 1;
+    const canModify = companyData?.status === 1;
+
+    const loadData = useCallback(async () => {
+        if (!companyData) return;
+        setIsLoading(true);
+        try {
+            const data = await api.fetchDesignations(companyData.comp_id, { page, search: searchQuery });
+            setDesignationsResponse(data);
+        } catch (error) {
+            console.error("Failed to load data", error);
+            addToast("Failed to load designations.", "error");
+        } finally {
+            setIsLoading(false);
+        }
+    }, [companyData, page, searchQuery, addToast]);
 
     useEffect(() => {
-        const loadData = async () => {
-            setIsLoading(true);
+        const loadInitialCompany = async () => {
             try {
                 const user = await api.fetchCurrentUser();
                 const companies = await api.fetchCompanies();
-                const currentCompany = companies.find(c => c.COMP_ID === user.comp_id) || null;
+                const currentCompany = companies.find(c => c.comp_id === user.comp_id) || null;
                 setCompanyData(currentCompany);
-
-                if (currentCompany) {
-                    const data = await api.fetchDesignations();
-                    const companyItems = data.filter(d => d.COMP_ID === currentCompany.COMP_ID);
-                    setDesignations(companyItems);
-                } else {
-                    setDesignations([]);
-                }
             } catch (error) {
-                console.error("Failed to load data", error);
-                addToast("Failed to load designations.", "error");
-            } finally {
-                setIsLoading(false);
+                console.error("Failed to load company", error);
+                addToast("Failed to load company data.", "error");
             }
         };
-        loadData();
+        loadInitialCompany();
     }, [addToast]);
+    
+    useEffect(() => {
+        const debounceTimer = setTimeout(() => {
+            loadData();
+        }, 300);
+        return () => clearTimeout(debounceTimer);
+    }, [loadData]);
 
-    const filteredItems = useMemo(() => {
-        const query = searchQuery.toLowerCase();
-        return designations.filter(item =>
-            item.DESIGNATION_NAME.toLowerCase().includes(query)
-        ).sort((a,b) => (a.RANK ?? Infinity) - (b.RANK ?? Infinity));
-    }, [designations, searchQuery]);
 
     const openModal = (item: Designation | null) => {
-        setEditingItem(item ? { ...item } : { COMP_ID: companyData!.COMP_ID, STATUS: 1, DESIGNATION_NAME: '', RANK: undefined });
+        if (!companyData) return;
+        setEditingItem(item ? { ...item } : { comp_id: companyData.comp_id, status: 1, designation_name: '', rank: undefined });
         setIsModalOpen(true);
     };
 
@@ -65,21 +72,16 @@ const DesignationPage: React.FC = () => {
     };
 
     const handleSave = async () => {
-        if (!editingItem || !editingItem.DESIGNATION_NAME?.trim()) {
+        if (!editingItem || !editingItem.designation_name?.trim()) {
             addToast("Designation name is required.", "error");
             return;
         }
 
         try {
-            const saved = await api.saveDesignation(editingItem);
-            if (editingItem.ID) {
-                setDesignations(designations.map(d => d.ID === saved.ID ? saved : d));
-                addToast("Designation updated successfully.");
-            } else {
-                setDesignations([...designations, saved]);
-                addToast("Designation created successfully.");
-            }
+            await api.saveDesignation(editingItem);
+            addToast(`Designation ${editingItem.id ? 'updated' : 'created'} successfully.`);
             closeModal();
+            loadData();
         } catch (error) {
             console.error("Failed to save designation", error);
             addToast("Failed to save designation.", "error");
@@ -87,18 +89,22 @@ const DesignationPage: React.FC = () => {
     };
     
     const handleToggleStatus = async (item: Designation) => {
-        const updatedItem = { ...item, STATUS: item.STATUS === 1 ? 0 : 1 };
+        const updatedItem = { ...item, status: item.status === 1 ? 0 : 1 };
          try {
-            const saved = await api.saveDesignation(updatedItem);
-            setDesignations(designations.map(d => d.ID === saved.ID ? saved : d));
+            await api.saveDesignation(updatedItem);
             addToast("Status updated.");
+            loadData();
         } catch (error) {
             console.error("Failed to update status", error);
             addToast("Failed to update status.", "error");
         }
     };
 
-    if (isLoading) return <div className="p-8 text-center">Loading designations...</div>;
+    const designations = designationsResponse?.data || [];
+
+    if (!companyData && !isLoading) {
+        return <div className="p-8 text-center">Could not load company information.</div>
+    }
 
     return (
         <div className="w-full h-full flex flex-col">
@@ -137,13 +143,15 @@ const DesignationPage: React.FC = () => {
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
-                        {filteredItems.length > 0 ? filteredItems.map((item, index) => (
-                            <tr key={item.ID} className="hover:bg-slate-50 dark:hover:bg-slate-700/40">
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">{index + 1}</td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900 dark:text-slate-100">{item.DESIGNATION_NAME}</td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">{item.RANK ?? 'N/A'}</td>
+                        {isLoading ? (
+                             <tr><td colSpan={5} className="p-8 text-center text-slate-500">Loading...</td></tr>
+                        ) : designations.length > 0 ? designations.map((item, index) => (
+                            <tr key={item.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/40">
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">{((page-1) * 25) + index + 1}</td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900 dark:text-slate-100">{item.designation_name}</td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">{item.rank ?? 'N/A'}</td>
                                 <td className="px-6 py-4 whitespace-nowrap">
-                                    <ToggleSwitch enabled={item.STATUS === 1} onChange={() => handleToggleStatus(item)} disabled={!canModify}/>
+                                    <ToggleSwitch enabled={item.status === 1} onChange={() => handleToggleStatus(item)} disabled={!canModify}/>
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                     <div className="flex items-center gap-2">
@@ -162,13 +170,15 @@ const DesignationPage: React.FC = () => {
                 </table>
             </div>
 
+            {}
+
             <Modal isOpen={isModalOpen} onClose={closeModal} contentClassName="bg-white dark:bg-slate-800 rounded-lg shadow-xl w-full max-w-md">
                 <form onSubmit={(e) => { e.preventDefault(); handleSave(); }}>
                     <div className="p-6">
-                        <h2 className="text-xl font-bold mb-4">{editingItem?.ID ? 'Edit' : 'Add'} Designation</h2>
+                        <h2 className="text-xl font-bold mb-4">{editingItem?.id ? 'Edit' : 'Add'} Designation</h2>
                         <div className="space-y-4">
-                            <Input label="Designation Name" value={editingItem?.DESIGNATION_NAME || ''} onChange={e => setEditingItem(p => p ? {...p, DESIGNATION_NAME: e.target.value} : null)} required autoFocus />
-                            <Input label="Rank" type="number" placeholder="e.g., 1 (lower is higher rank)" value={editingItem?.RANK?.toString() || ''} onChange={e => setEditingItem(p => p ? {...p, RANK: e.target.value ? Number(e.target.value) : undefined} : null)} />
+                            <Input label="Designation Name" value={editingItem?.designation_name || ''} onChange={e => setEditingItem(p => p ? {...p, designation_name: e.target.value} : null)} required autoFocus />
+                            <Input label="Rank" type="number" placeholder="e.g., 1 (lower is higher rank)" value={editingItem?.rank?.toString() || ''} onChange={e => setEditingItem(p => p ? {...p, rank: e.target.value ? Number(e.target.value) : undefined} : null)} />
                         </div>
                     </div>
                     <footer className="flex justify-end gap-4 px-6 py-4 bg-slate-50 dark:bg-slate-800/50 rounded-b-lg">

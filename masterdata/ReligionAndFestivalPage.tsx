@@ -1,6 +1,7 @@
+
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import * as api from '../services/api';
-import type { Religion, Festival, FestivalDate, Company } from '../types';
+import type { Religion, Festival, FestivalDate, Company, PaginatedResponse } from '../types';
 import { useToast } from '../context/ToastContext';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
@@ -15,11 +16,15 @@ const ReligionAndFestivalPage: React.FC = () => {
     const [companyData, setCompanyData] = useState<Company | null>(null);
     const [isLoading, setIsLoading] = useState(true);
 
-    const [religions, setReligions] = useState<Religion[]>([]);
-    const [festivals, setFestivals] = useState<Festival[]>([]);
+    const [religionsResponse, setReligionsResponse] = useState<PaginatedResponse<Religion> | null>(null);
+    const [festivalsResponse, setFestivalsResponse] = useState<PaginatedResponse<Festival> | null>(null);
+    const [allFestivals, setAllFestivals] = useState<Festival[]>([]);
     const [festivalDates, setFestivalDates] = useState<FestivalDate[]>([]);
 
     const [searchQuery, setSearchQuery] = useState('');
+    const [religionPage, setReligionPage] = useState(1);
+    const [festivalPage, setFestivalPage] = useState(1);
+    
     const [yearFilter, setYearFilter] = useState(new Date().getFullYear());
     const [monthFilter, setMonthFilter] = useState<string>('all');
 
@@ -29,42 +34,68 @@ const ReligionAndFestivalPage: React.FC = () => {
         item: Partial<Religion | Festival | FestivalDate> | null;
     }>({ isOpen: false, type: null, item: null });
 
-    const canCreate = companyData?.STATUS === 1;
-    const canModify = companyData?.STATUS === 1;
-
-    const loadData = useCallback(async () => {
+    const canCreate = companyData?.status === 1;
+    const canModify = companyData?.status === 1;
+    
+    const loadData = useCallback(async (isInitial = false) => {
+        if (!companyData) return;
         setIsLoading(true);
         try {
-            const user = await api.fetchCurrentUser();
-            const companies = await api.fetchCompanies();
-            const currentCompany = companies.find(c => c.COMP_ID === user.comp_id) || null;
-            setCompanyData(currentCompany);
-
-            if (currentCompany) {
-                const [rels, fests, dates] = await Promise.all([
-                    api.fetchReligions(),
-                    api.fetchFestivals(),
-                    api.fetchFestivalDates(),
-                ]);
-                const filterByComp = (item: any) => item.COMP_ID === currentCompany.COMP_ID;
-                setReligions(rels.filter(filterByComp));
-                setFestivals(fests.filter(filterByComp));
-                setFestivalDates(dates.filter(filterByComp));
+            const [rels, fests, dates, allFestsData] = await Promise.all([
+                api.fetchReligions(companyData.comp_id, { page: religionPage, search: searchQuery }),
+                api.fetchFestivals(companyData.comp_id, { page: festivalPage, search: searchQuery }),
+                api.fetchFestivalDates(),
+                isInitial ? api.fetchFestivals(companyData.comp_id, { limit: 10000 }) : Promise.resolve(null)
+            ]);
+            setReligionsResponse(rels);
+            setFestivalsResponse(fests);
+            setFestivalDates(dates);
+            if (allFestsData) {
+                setAllFestivals(allFestsData.data);
             }
         } catch (error) {
-            console.error(error);
             addToast("Failed to load page data.", "error");
         } finally {
             setIsLoading(false);
         }
+    }, [addToast, companyData, religionPage, festivalPage, searchQuery]);
+    
+    useEffect(() => {
+        const loadCompany = async () => {
+            try {
+                const user = await api.fetchCurrentUser();
+                const companies = await api.fetchCompanies();
+                const currentCompany = companies.find(c => c.comp_id === user.comp_id) || null;
+                setCompanyData(currentCompany);
+            } catch (e) {
+                 addToast("Failed to load company data.", "error");
+            }
+        }
+        loadCompany();
     }, [addToast]);
+    
+    useEffect(() => {
+        if (companyData) {
+            loadData(true);
+        }
+    }, [companyData]);
 
-    useEffect(() => { loadData(); }, [loadData]);
+    useEffect(() => {
+        const debounceTimer = setTimeout(() => {
+            if (companyData) {
+                loadData(false);
+            }
+        }, 300);
+        return () => clearTimeout(debounceTimer);
+    }, [searchQuery, religionPage, festivalPage, companyData, loadData]);
 
-    const religionMap = useMemo(() => new Map(religions.map(r => [r.ID, r.RELIGION])), [religions]);
+
+    const religions = useMemo(() => religionsResponse?.data || [], [religionsResponse]);
+    const festivals = useMemo(() => festivalsResponse?.data || [], [festivalsResponse]);
+    const religionMap = useMemo(() => new Map(religions.map(r => [r.id, r.religion])), [religions]);
     
     const yearOptions = useMemo(() => {
-        const yearsFromDates = festivalDates.map(d => new Date(d.FESTVEL_DATE).getFullYear());
+        const yearsFromDates = festivalDates.map(d => new Date(d.festvel_date).getFullYear());
         const currentYear = new Date().getFullYear();
         const surroundingYears = Array.from({ length: 11 }, (_, i) => currentYear - 5 + i); 
         const allYears = new Set([...yearsFromDates, ...surroundingYears]);
@@ -72,170 +103,81 @@ const ReligionAndFestivalPage: React.FC = () => {
     }, [festivalDates]);
 
     const dateCountMap = useMemo(() => festivalDates.reduce((acc, curr) => {
-        acc.set(curr.FEST_ID, (acc.get(curr.FEST_ID) || 0) + 1);
+        acc.set(curr.fest_id, (acc.get(curr.fest_id) || 0) + 1);
         return acc;
     }, new Map<number, number>()), [festivalDates]);
 
-    const filteredReligions = useMemo(() => searchQuery ? religions.filter(r => r.RELIGION.toLowerCase().includes(searchQuery.toLowerCase())) : religions, [religions, searchQuery]);
-    const filteredFestivals = useMemo(() => searchQuery ? festivals.filter(f => f.FEST_DESC.toLowerCase().includes(searchQuery.toLowerCase())) : festivals, [festivals, searchQuery]);
-
     const festivalDateDisplayItems = useMemo(() => {
-        let festivalsToShow = filteredFestivals;
+        let festivalsToShow = allFestivals.filter(f => f.fest_desc.toLowerCase().includes(searchQuery.toLowerCase()));
 
         if (monthFilter !== 'all') {
             const festivalIdsInMonth = new Set<number>();
             festivalDates.forEach(d => {
-                const date = new Date(d.FESTVEL_DATE);
+                const date = new Date(d.festvel_date);
                 if (date.getFullYear() === yearFilter && date.getMonth() === Number(monthFilter)) {
-                    festivalIdsInMonth.add(d.FEST_ID);
+                    festivalIdsInMonth.add(d.fest_id);
                 }
             });
-            festivalsToShow = festivalsToShow.filter(f => festivalIdsInMonth.has(f.ID));
+            festivalsToShow = festivalsToShow.filter(f => festivalIdsInMonth.has(f.id));
         }
 
         return festivalsToShow.map(festival => {
             const dateForYear = festivalDates.find(d => 
-                d.FEST_ID === festival.ID && 
-                new Date(d.FESTVEL_DATE).getFullYear() === yearFilter
+                d.fest_id === festival.id && 
+                new Date(d.festvel_date).getFullYear() === yearFilter
             );
-            return {
-                ...festival,
-                dateObject: dateForYear || null
-            };
+            return { ...festival, dateObject: dateForYear || null };
         });
-    }, [filteredFestivals, festivalDates, yearFilter, monthFilter]);
+    }, [allFestivals, festivalDates, yearFilter, monthFilter, searchQuery]);
 
     const openModal = (type: 'religion' | 'festival' | 'date', item: any | null) => {
-        setModalState({ isOpen: true, type, item: item ? { ...item } : { STATUS: 1 } });
+        setModalState({ isOpen: true, type, item: item ? { ...item } : { status: 1 } });
     };
     const closeModal = () => setModalState({ isOpen: false, type: null, item: null });
 
     const handleSave = async () => {
         if (!modalState.type || !modalState.item || !companyData) return;
         const { type, item } = modalState;
-        const now = new Date().toISOString();
-        const commonFields = { COMP_ID: companyData.COMP_ID, MODIFIED_ON: now, MODIFIED_BY: 1 };
         
         try {
             if (type === 'religion') {
                 const typedItem = item as Partial<Religion>;
-                if (!typedItem.RELIGION?.trim()) { addToast("Religion Name is required.", "error"); return; }
-                const payload = item.ID ? { ...typedItem, ...commonFields } : { ...typedItem, ...commonFields, ID: Date.now(), SEQ_NO: religions.length, CREATED_ON: now, CREATED_BY: 1 };
-                const updated = item.ID ? religions.map(i => i.ID === payload.ID ? payload as Religion : i) : [...religions, payload as Religion];
-                await api.onUpdateReligions(updated);
-                setReligions(updated);
+                if (!typedItem.religion?.trim()) { addToast("Religion Name is required.", "error"); return; }
+                await api.saveReligion({ ...typedItem, comp_id: companyData.comp_id });
             } else if (type === 'festival') {
                 const typedItem = item as Partial<Festival>;
-                if (!typedItem.FEST_DESC?.trim()) { addToast("Festival Name is required.", "error"); return; }
-                const payload = item.ID ? { ...typedItem, ...commonFields } : { ...typedItem, ...commonFields, ID: Date.now(), CREATED_ON: now, CREATED_BY: 1 };
-                const updated = item.ID ? festivals.map(i => i.ID === payload.ID ? payload as Festival : i) : [...festivals, payload as Festival];
-                await api.onUpdateFestivals(updated);
-                setFestivals(updated);
+                if (!typedItem.fest_desc?.trim()) { addToast("Festival Name is required.", "error"); return; }
+                await api.saveFestival({ ...typedItem, comp_id: companyData.comp_id });
             } else if (type === 'date') {
                 const typedItem = item as Partial<FestivalDate>;
-                if (!typedItem.FEST_ID || !typedItem.FESTVEL_DATE) { addToast("Festival and Date are required.", "error"); return; }
-                
-                let updated = [...festivalDates];
-                let message = '';
-                
-                if (typedItem.ID) { 
-                    const originalDate = festivalDates.find(d => d.ID === typedItem.ID);
-                    const originalYear = originalDate ? new Date(originalDate.FESTVEL_DATE).getFullYear() : null;
-                    const newYear = new Date(typedItem.FESTVEL_DATE).getFullYear();
-
-                    if (originalYear === newYear) {
-                        updated = festivalDates.map(d => d.ID === typedItem.ID ? { ...d, ...typedItem, ...commonFields } as FestivalDate : d);
-                        message = 'Festival date updated successfully.';
-                    } else {
-                        const newDatePayload: FestivalDate = {
-                            ...(typedItem as FestivalDate),
-                            ...commonFields,
-                            ID: Date.now(),
-                            CREATED_ON: now,
-                            CREATED_BY: 1,
-                        };
-                        updated.push(newDatePayload);
-                        message = `New festival date for ${newYear} created successfully.`;
-                    }
-                } else { 
-                    const newDatePayload: FestivalDate = {
-                        ...(typedItem as FestivalDate),
-                        ...commonFields,
-                        ID: Date.now(),
-                        CREATED_ON: now,
-                        CREATED_BY: 1,
-                    };
-                    updated.push(newDatePayload);
-                    message = 'Festival date created successfully.';
-                }
-
-                await api.onUpdateFestivalDates(updated);
-                setFestivalDates(updated);
-                addToast(message);
-                closeModal();
-                return;
+                if (!typedItem.fest_id || !typedItem.festvel_date) { addToast("Festival and Date are required.", "error"); return; }
+                await api.saveFestivalDate({ ...typedItem, comp_id: companyData.comp_id });
             }
             addToast(`${type.charAt(0).toUpperCase() + type.slice(1)} saved successfully.`);
+            loadData(true);
             closeModal();
         } catch (e) {
-            console.error(e);
             addToast("Failed to save.", "error");
         }
     };
     
-    const handleToggleFestivalStatus = async (festival: Festival) => {
-        const newStatus = festival.STATUS === 1 ? 0 : 1;
-        try {
-            const updatedFestivals = festivals.map(f => f.ID === festival.ID ? { ...f, STATUS: newStatus } : f);
-            await api.onUpdateFestivals(updatedFestivals);
-            setFestivals(updatedFestivals);
-            addToast(`Festival status updated.`);
-        } catch(e) {
-            addToast("Failed to update festival status.", "error");
-        }
-    }
-    
     const handleToggle = async (type: 'religion' | 'festival', item: Religion | Festival) => {
-        const newStatus = item.STATUS === 1 ? 0 : 1;
+        const newStatus = item.status === 1 ? 0 : 1;
         try {
-            let updatedReligions = [...religions];
-            let updatedFestivals = [...festivals];
-            let message = '';
-
             if (type === 'religion') {
-                const religion = item as Religion;
-                updatedReligions = religions.map(r => r.ID === religion.ID ? { ...r, STATUS: newStatus } : r);
-                
-                const affectedFestivalIds = festivals.filter(f => f.RELIGION_ID === religion.ID).map(f => f.ID);
-                updatedFestivals = festivals.map(f => affectedFestivalIds.includes(f.ID) ? { ...f, STATUS: newStatus } : f);
-                message = `Religion and associated items ${newStatus ? 'activated' : 'deactivated'}.`;
-
-                await Promise.all([
-                    api.onUpdateReligions(updatedReligions),
-                    api.onUpdateFestivals(updatedFestivals),
-                ]);
-                setReligions(updatedReligions);
-                setFestivals(updatedFestivals);
+                await api.saveReligion({ ...item, status: newStatus });
             } else if (type === 'festival') {
-                const festival = item as Festival;
-                updatedFestivals = festivals.map(f => f.ID === festival.ID ? { ...f, STATUS: newStatus } : f);
-                message = `Festival status ${newStatus ? 'activated' : 'deactivated'}.`;
-                
-                await api.onUpdateFestivals(updatedFestivals);
-                setFestivals(updatedFestivals);
+                await api.saveFestival({ ...item, status: newStatus });
             }
-            
-            addToast(message);
+            addToast(`Status updated.`);
+            loadData(true);
         } catch (e) {
-            console.error(e);
             addToast("Failed to update status.", "error");
         }
     };
 
-    if (isLoading) return <div className="p-8 text-center text-slate-500 dark:text-slate-400">Loading...</div>;
-
     const renderTable = (
-        title: string, type: 'religion' | 'festival', data: any[], columns: { header: string, accessor: (item: any) => React.ReactNode }[]
+        title: string, type: 'religion' | 'festival', response: PaginatedResponse<any> | null, setPage: React.Dispatch<React.SetStateAction<number>>, columns: { header: string, accessor: (item: any) => React.ReactNode }[]
     ) => (
         <div className="bg-white dark:bg-slate-800 shadow-md rounded-lg p-4">
             <div className="flex items-center justify-between mb-4">
@@ -253,28 +195,41 @@ const ReligionAndFestivalPage: React.FC = () => {
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
-                        {data.map((item, index) => (
-                            <tr key={item.ID} className="hover:bg-slate-50 dark:hover:bg-slate-700/50">
-                                <td className="px-4 py-2 text-sm">{index + 1}</td>
+                        {response?.data.map((item, index) => (
+                            <tr key={item.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/50">
+                                <td className="px-4 py-2 text-sm">{((response.meta.page - 1) * response.meta.limit) + index + 1}</td>
                                 {columns.map(c => <td key={c.header} className="px-4 py-2 text-sm font-medium">{c.accessor(item)}</td>)}
-                                <td className="px-4 py-2"><ToggleSwitch enabled={item.STATUS === 1} onChange={() => handleToggle(type, item)} disabled={!canModify}/></td>
+                                <td className="px-4 py-2"><ToggleSwitch enabled={item.status === 1} onChange={() => handleToggle(type, item)} disabled={!canModify}/></td>
                                 <td className="px-4 py-2"><Button size="small" variant="light" className="!p-1.5" onClick={() => openModal(type, item)} disabled={!canModify}><Edit2 size={14}/></Button></td>
                             </tr>
                         ))}
                     </tbody>
                 </table>
             </div>
+            {response && response.meta.pages > 1 && (
+                 <div className="flex justify-between items-center mt-4">
+                    <span className="text-sm text-slate-500 dark:text-slate-400">
+                        Page {response.meta.page} of {response.meta.pages}
+                    </span>
+                    <div className="flex gap-2">
+                        <Button onClick={() => setPage(p => p - 1)} disabled={!response.meta.has_prev_page} size="small">Previous</Button>
+                        <Button onClick={() => setPage(p => p + 1)} disabled={!response.meta.has_next_page} size="small">Next</Button>
+                    </div>
+                </div>
+            )}
         </div>
     );
+
+    if (isLoading && !companyData) return <div className="p-8 text-center text-slate-500 dark:text-slate-400">Loading...</div>;
 
     return (
         <div className="space-y-6">
             <h2 className="text-3xl font-bold text-slate-800 dark:text-slate-200">Religion & Festival Management</h2>
-            <SearchBar searchQuery={searchQuery} onSearchChange={setSearchQuery} placeholder="Search religions and festivals..." className="max-w-md"/>
-            {renderTable('Religions', 'religion', filteredReligions, [{ header: 'Name', accessor: item => item.RELIGION }])}
-            {renderTable('Festivals', 'festival', filteredFestivals, [
-                { header: 'Name', accessor: item => item.FEST_DESC },
-                { header: 'Religion', accessor: item => religionMap.get(item.RELIGION_ID) || <span className="italic text-slate-500">General</span> }
+            <SearchBar searchQuery={searchQuery} onSearchChange={(q) => { setSearchQuery(q); setReligionPage(1); setFestivalPage(1); }} placeholder="Search religions and festivals..." className="max-w-md"/>
+            {renderTable('Religions', 'religion', religionsResponse, setReligionPage, [{ header: 'Name', accessor: item => item.religion }])}
+            {renderTable('Festivals', 'festival', festivalsResponse, setFestivalPage, [
+                { header: 'Name', accessor: item => item.fest_desc },
+                { header: 'Religion', accessor: item => religionMap.get(item.religion_id) || <span className="italic text-slate-500">General</span> }
             ])}
             
             <div className="bg-white dark:bg-slate-800 shadow-md rounded-lg p-4">
@@ -297,43 +252,33 @@ const ReligionAndFestivalPage: React.FC = () => {
                                 <th className="px-4 py-2 text-left text-xs font-bold w-12">ID</th>
                                 <th className="px-4 py-2 text-left text-xs font-bold">Festival</th>
                                 <th className="px-4 py-2 text-left text-xs font-bold">Date</th>
-                                <th className="px-4 py-2 text-left text-xs font-bold">Status</th>
                                 <th className="px-4 py-2 text-left text-xs font-bold">Actions</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
                             {festivalDateDisplayItems.length > 0 ? festivalDateDisplayItems.map((item, index) => {
-                                const religion = item.RELIGION_ID ? religions.find(r => r.ID === item.RELIGION_ID) : null;
-                                const isParentActive = (!religion || religion.STATUS === 1) && item.STATUS === 1;
-
+                                const religion = item.religion_id ? allFestivals.find(r => r.id === item.religion_id) : null;
                                 return (
-                                <tr key={item.ID} className="hover:bg-slate-50 dark:hover:bg-slate-700/50">
+                                <tr key={item.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/50">
                                     <td className="px-4 py-2 text-sm">{index + 1}</td>
                                     <td className="px-4 py-2 text-sm font-medium">
-                                        {item.FEST_DESC} <span className="text-xs text-slate-400">({dateCountMap.get(item.ID) || 0} Dates)</span>
+                                        {item.fest_desc} <span className="text-xs text-slate-400">({dateCountMap.get(item.id) || 0} Dates)</span>
                                     </td>
                                     <td className="px-4 py-2 text-sm font-medium">
                                         <div className="flex items-center justify-between">
                                             {item.dateObject ? (
-                                                <span>{new Date(item.dateObject.FESTVEL_DATE).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' })}</span>
+                                                <span>{new Date(item.dateObject.festvel_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' })}</span>
                                             ) : (
                                                 <span className="italic text-slate-400">No date set for {yearFilter}</span>
                                             )}
                                         </div>
                                     </td>
                                     <td className="px-4 py-2">
-                                        <ToggleSwitch 
-                                            enabled={isParentActive}
-                                            onChange={() => handleToggleFestivalStatus(item)}
-                                            disabled={!canModify}
-                                        />
-                                    </td>
-                                    <td className="px-4 py-2">
                                         <Button 
                                             size="small" 
                                             variant="light" 
                                             className="!p-1.5" 
-                                            onClick={() => openModal('date', item.dateObject || { FEST_ID: item.ID, FESTVEL_DATE: `${yearFilter}-01-01`, STATUS: 1 })}
+                                            onClick={() => openModal('date', item.dateObject || { fest_id: item.id, festvel_date: `${yearFilter}-01-01`, status: 1 })}
                                             disabled={!canCreate && !item.dateObject}
                                         >
                                             {item.dateObject ? <Edit2 size={14}/> : <CalendarIcon size={14}/>}
@@ -343,7 +288,7 @@ const ReligionAndFestivalPage: React.FC = () => {
                             )
                             }) : (
                                 <tr>
-                                    <td colSpan={5} className="text-center py-8 text-slate-500 dark:text-slate-400">
+                                    <td colSpan={4} className="text-center py-8 text-slate-500 dark:text-slate-400">
                                         No festivals found for the selected period.
                                     </td>
                                 </tr>
@@ -356,22 +301,22 @@ const ReligionAndFestivalPage: React.FC = () => {
             <Modal isOpen={modalState.isOpen} onClose={closeModal} contentClassName="bg-white dark:bg-slate-800 rounded-lg shadow-xl w-full max-w-md">
                 <form onSubmit={e => { e.preventDefault(); handleSave(); }}>
                     <div className="p-6">
-                        <h2 className="text-xl font-bold mb-4">{modalState.item?.ID ? 'Edit' : 'Add'} {modalState.type?.charAt(0).toUpperCase() + modalState.type?.slice(1)}</h2>
+                        <h2 className="text-xl font-bold mb-4">{modalState.item?.id ? 'Edit' : 'Add'} {modalState.type?.charAt(0).toUpperCase() + modalState.type?.slice(1)}</h2>
                         <div className="space-y-4">
-                            {modalState.type === 'religion' && <Input label="Religion Name" value={(modalState.item as Religion)?.RELIGION || ''} onChange={e => setModalState(s => ({...s, item: {...s.item, RELIGION: e.target.value}}))} autoFocus required disabled={!canModify}/>}
+                            {modalState.type === 'religion' && <Input label="Religion Name" value={(modalState.item as Religion)?.religion || ''} onChange={e => setModalState(s => ({...s, item: {...s.item, religion: e.target.value}}))} autoFocus required disabled={!canModify}/>}
                             {modalState.type === 'festival' && <>
-                                <Input label="Festival Name" value={(modalState.item as Festival)?.FEST_DESC || ''} onChange={e => setModalState(s => ({...s, item: {...s.item, FEST_DESC: e.target.value}}))} autoFocus required disabled={!canModify} />
-                                <Select label="Religion" value={(modalState.item as Festival)?.RELIGION_ID || ''} onChange={e => setModalState(s => ({...s, item: {...s.item, RELIGION_ID: e.target.value ? Number(e.target.value) : null}}))} disabled={!canModify}>
+                                <Input label="Festival Name" value={(modalState.item as Festival)?.fest_desc || ''} onChange={e => setModalState(s => ({...s, item: {...s.item, fest_desc: e.target.value}}))} autoFocus required disabled={!canModify} />
+                                <Select label="Religion" value={(modalState.item as Festival)?.religion_id || ''} onChange={e => setModalState(s => ({...s, item: {...s.item, religion_id: e.target.value ? Number(e.target.value) : null}}))} disabled={!canModify}>
                                     <option value="">-- General --</option>
-                                    {religions.filter(r => r.STATUS === 1).map(r => <option key={r.ID} value={r.ID}>{r.RELIGION}</option>)}
+                                    {religions.filter(r => r.status === 1).map(r => <option key={r.id} value={r.id}>{r.religion}</option>)}
                                 </Select>
                             </>}
                             {modalState.type === 'date' && <>
-                                <Select label="Festival" value={(modalState.item as FestivalDate)?.FEST_ID || ''} onChange={e => setModalState(s => ({...s, item: {...s.item, FEST_ID: Number(e.target.value)}}))} disabled={!!modalState.item?.ID || !canModify} required>
+                                <Select label="Festival" value={(modalState.item as FestivalDate)?.fest_id || ''} onChange={e => setModalState(s => ({...s, item: {...s.item, fest_id: Number(e.target.value)}}))} disabled={!!modalState.item?.id || !canModify} required>
                                     <option value="">-- Select Festival --</option>
-                                    {festivals.filter(f => f.STATUS === 1).map(f => <option key={f.ID} value={f.ID}>{f.FEST_DESC}</option>)}
+                                    {allFestivals.filter(f => f.status === 1).map(f => <option key={f.id} value={f.id}>{f.fest_desc}</option>)}
                                 </Select>
-                                <Input label="Date" type="date" value={(modalState.item as FestivalDate)?.FESTVEL_DATE || ''} onChange={e => setModalState(s => ({...s, item: {...s.item, FESTVEL_DATE: e.target.value}}))} required disabled={!canModify} />
+                                <Input label="Date" type="date" value={(modalState.item as FestivalDate)?.festvel_date || ''} onChange={e => setModalState(s => ({...s, item: {...s.item, festvel_date: e.target.value}}))} required disabled={!canModify} />
                             </>}
                         </div>
                     </div>
