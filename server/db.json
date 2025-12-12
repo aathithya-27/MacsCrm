@@ -1,0 +1,1336 @@
+{
+  "companyMaster": [
+    {
+      "id": "1",
+      "comp_id": 1001,
+      "client_id": 1,
+      "comp_code": "FIN01",
+      "comp_name": "Finroots",
+      "registered_name": "Finroots Financial Services Pvt. Ltd.",
+      "date_of_creation": "2020-01-01",
+      "address_1": "123 Financial Street",
+      "address_2": "Bandstand",
+      "address_3": "",
+      "country": "India",
+      "state": "Maharashtra",
+      "district": "Mumbai City",
+      "city": "Mumbai",
+      "area": "Bandra West",
+      "pin_code": "400050",
+      "phone_no": "+91 22 12345678",
+      "email": "info@finroots.com",
+      "fax_no": "",
+      "gst_no": "27ABCDE1234F1Z5",
+      "pan_no": "ABCDE1234F",
+      "tan_no": "MUMF12345G",
+      "status": 1
+    }
+  ],
+  "branches": [
+    {
+      "id": "1",
+      "branch_id": "FIN01-CBE",
+      "comp_id": 1001,
+      "branch_name": "Coimbatore Hub",
+      "date_of_creation": "2021-06-15",
+      "address_1": "12 Cross Street",
+      "address_2": "Gandhipuram",
+      "address_3": "Near Bus Stand",
+      "country": "India",
+      "state": "Tamil Nadu",
+      "state_id": 3,
+      "district": "Coimbatore",
+      "city": "Coimbatore",
+      "city_id": 3,
+      "area": "Gandhipuram",
+      "area_id": 3,
+      "pincode": "641012",
+      "phone_no": "0422-2456789",
+      "fax_no": "0422-2456790",
+      "gst_no": "33AAAAA0000A1Z5",
+      "pan_no": "AAAAA0000A",
+      "tan_no": "CBRE00000A",
+      "status": 1
+    }
+  ],
+  "businessVerticals": [
+    {
+      "id": "1",
+      "client_id": 1,
+      "comp_id": 1001,
+      "business_vertical_name": "Insurance",
+      "status": 1
+    },
+    {
+      "id": "2",
+      "client_id": 1,
+      "comp_id": 1001,
+      "business_vertical_name": "Mutual Funds",
+      "status": 1
+    }
+  ],
+  "insuranceTypes": [
+    {
+      "id": "1",
+      "client_id": 1,
+      "comp_id": 1001,
+      "business_vertical_id": 1,
+      "insurance_type": "Life Insurance",
+      "status": 1
+    },
+    {
+      "id": "2",
+      "client_id": 1,
+      "comp_id": 1001,
+      "business_vertical_id": 1,
+      "insurance_type": "Health Insurance",
+      "status": 1
+    },
+    {
+      "id": "3",
+      "client_id": 1,
+      "comp_id": 1001,
+      "business_vertical_id": 1,
+      "insurance_type": "General Insurance",
+      "status": 1
+    }
+  ],
+  "insuranceSubTypes": [
+    {
+      "id": "1",
+      "client_id": 1,
+      "comp_id": 1001,
+      "insurance_type_id": 1,
+      "insurance_sub_type": "Whole Life Insurance",
+      "status": 1
+    },
+    {
+      "id": "2",
+      "client_id": 1,
+      "comp_id": 1001,
+      "insurance_type_id": 1,
+      "insurance_sub_type": "Term Life Insurance",
+      "status": 1
+    },
+    {
+      "id": "3",
+      "client_id": 1,
+      "comp_id": 1001,
+      "insurance_type_id": 1,
+      "insurance_sub_type": "Endowment Plans",
+      "status": 1
+    },
+    {
+      "id": "4",
+      "client_id": 1,
+      "comp_id": 1001,
+      "insurance_type_id": 1,
+      "insurance_sub_type": "Unit-linked Insurance Plan",
+      "status": 1
+    },
+    {
+      "id": "5",
+      "client_id": 1,
+      "comp_id": 1001,
+      "insurance_type_id": 2,
+      "insurance_sub_type": "Individual Health",
+      "status": 1
+    },
+    {
+      "id": "6",
+      "client_id": 1,
+      "comp_id": 1001,
+      "insurance_type_id": 2,
+      "insurance_sub_type": "Family Floater",
+      "status": 1
+    },
+    {
+      "id": "7",
+      "client_id": 1,
+      "comp_id": 1001,
+      "insurance_type_id": 3,
+      "insurance_sub_type": "Motor Insurance",
+      "status": 1
+    },
+    {
+      "id": "8",
+      "client_id": 1,
+      "comp_id": 1001,
+      "insurance_type_id": 3,
+      "insurance_sub_type": "Travel Insurance",
+      "status": 1
+    }
+  ],
+  "processFlows": [
+    {
+      "id": "1",
+      "comp_id": 1001,
+      "client_id": 1,
+      "insurance_type_id": 1,
+      "process_desc": "Initial Contact",
+      "seq_no": 1,
+      "repeat": false,
+      "status": 1
+    },
+    {
+      "id": "2",
+      "comp_id": 1001,
+      "client_id": 1,
+      "insurance_type_id": 1,
+      "process_desc": "Needs Analysis",
+      "seq_no": 2,
+      "repeat": false,
+      "status": 1
+    },
+    {
+      "id": "3",
+      "comp_id": 1001,
+      "client_id": 1,
+      "insurance_type_id": 1,
+      "process_desc": "Application Form",
+      "seq_no": 3,
+      "repeat": false,
+      "status": 1
+    }
+  ],
+  "policyFields": [
+    {
+      "id": "1",
+      "insurance_type_id": 1,
+      "field_label": "Father's Name",
+      "group_name": "Personal Information",
+      "column_span": 1,
+      "field_type": "Text Input",
+      "status": 1
+    },
+    {
+      "id": "2",
+      "insurance_type_id": 1,
+      "field_label": "Nominee Name",
+      "group_name": "Nominee Information",
+      "column_span": 1,
+      "field_type": "Text Input",
+      "status": 1
+    }
+  ],
+  "documentMasters": [
+    {
+      "id": "1",
+      "doc_name": "PAN Card",
+      "status": 0
+    },
+    {
+      "id": "2",
+      "doc_name": "Aadhaar Card",
+      "status": 1
+    },
+    {
+      "id": "3",
+      "doc_name": "Passport",
+      "status": 1
+    },
+    {
+      "id": "4",
+      "doc_name": "Voter ID",
+      "status": 1
+    },
+    {
+      "id": "5",
+      "doc_name": "Driving License",
+      "status": 1
+    }
+  ],
+  "policyDocuments": [
+    {
+      "id": "1",
+      "insurance_type_id": 1,
+      "insurance_sub_type_id": null,
+      "doc_master_id": 1,
+      "is_mandatory": true
+    },
+    {
+      "id": "2",
+      "insurance_type_id": 1,
+      "insurance_sub_type_id": null,
+      "doc_master_id": 2,
+      "is_mandatory": true
+    }
+  ],
+  "agencies": [
+    {
+      "id": "1",
+      "comp_id": 1001,
+      "agency_name": "Max Life Insurance",
+      "status": 1
+    },
+    {
+      "id": "2",
+      "comp_id": 1001,
+      "agency_name": "LIC",
+      "status": 1
+    },
+    {
+      "id": "3",
+      "comp_id": 1001,
+      "agency_name": "HDFC Life",
+      "status": 1
+    }
+  ],
+  "schemes": [
+    {
+      "id": "1",
+      "comp_id": 1001,
+      "scheme_name": "Jeevan Anand",
+      "insurance_type_id": 1,
+      "insurance_sub_type_id": 3,
+      "agency_id": 2,
+      "status": 1
+    },
+    {
+      "id": "2",
+      "comp_id": 1001,
+      "scheme_name": "Smart Secure Plus Plan",
+      "insurance_type_id": 1,
+      "insurance_sub_type_id": 2,
+      "agency_id": 1,
+      "status": 1
+    }
+  ],
+  "countries": [
+    {
+      "id": "1",
+      "country_name": "India",
+      "status": 1
+    },
+    {
+      "id": "2",
+      "country_name": "USA",
+      "status": 0
+    }
+  ],
+  "states": [
+    {
+      "id": "1",
+      "country_id": 1,
+      "state": "Maharashtra",
+      "status": 1
+    },
+    {
+      "id": "2",
+      "country_id": 1,
+      "state": "Karnataka",
+      "status": 1
+    },
+    {
+      "id": "3",
+      "country_id": 1,
+      "state": "Tamil Nadu",
+      "status": 0
+    },
+    {
+      "id": "4",
+      "country_id": 2,
+      "state": "California",
+      "status": 0
+    }
+  ],
+  "districts": [
+    {
+      "id": "1",
+      "country_id": 1,
+      "state_id": 1,
+      "district_name": "Mumbai City",
+      "status": 1
+    },
+    {
+      "id": "2",
+      "country_id": 1,
+      "state_id": 1,
+      "district_name": "Pune",
+      "status": 1
+    },
+    {
+      "id": "3",
+      "country_id": 1,
+      "state_id": 3,
+      "district_name": "Coimbatore",
+      "status": 0
+    },
+    {
+      "id": "4",
+      "country_id": 1,
+      "state_id": 3,
+      "district_name": "Erode",
+      "status": 0
+    },
+    {
+      "id": "5",
+      "country_id": 1,
+      "state_id": 3,
+      "district_name": "Chennai",
+      "status": 0
+    }
+  ],
+  "cities": [
+    {
+      "id": "1",
+      "country_id": 1,
+      "state_id": 1,
+      "district_id": 1,
+      "city": "Mumbai",
+      "status": 1
+    },
+    {
+      "id": "2",
+      "country_id": 1,
+      "state_id": 1,
+      "district_id": 2,
+      "city": "Pune",
+      "status": 1
+    },
+    {
+      "id": "3",
+      "country_id": 1,
+      "state_id": 3,
+      "district_id": 3,
+      "city": "Coimbatore",
+      "status": 0
+    },
+    {
+      "id": "4",
+      "country_id": 1,
+      "state_id": 3,
+      "district_id": 5,
+      "city": "Chennai",
+      "status": 0
+    },
+    {
+      "id": "5",
+      "country_id": 1,
+      "state_id": 3,
+      "district_id": 4,
+      "city": "Erode",
+      "status": 0
+    }
+  ],
+  "areas": [
+    {
+      "id": "1",
+      "country_id": 1,
+      "state_id": 1,
+      "district_id": 1,
+      "city_id": 1,
+      "area": "Bandra West",
+      "status": 1
+    },
+    {
+      "id": "2",
+      "country_id": 1,
+      "state_id": 1,
+      "district_id": 1,
+      "city_id": 1,
+      "area": "Andheri East",
+      "status": 1
+    },
+    {
+      "id": "3",
+      "country_id": 1,
+      "state_id": 3,
+      "district_id": 3,
+      "city_id": 3,
+      "area": "Gandhipuram",
+      "status": 0
+    },
+    {
+      "id": "4",
+      "country_id": 1,
+      "state_id": 3,
+      "district_id": 5,
+      "city_id": 4,
+      "area": "Anna Nagar",
+      "status": 0
+    }
+  ],
+  "designations": [
+    {
+      "id": "1",
+      "comp_id": 1001,
+      "designation_name": "Admin",
+      "designation_rank": "N/A",
+      "status": 1
+    },
+    {
+      "id": "2",
+      "comp_id": 1001,
+      "designation_name": "Advisor",
+      "designation_rank": "N/A",
+      "status": 1
+    },
+    {
+      "id": "3",
+      "comp_id": 1001,
+      "designation_name": "Secretary",
+      "designation_rank": "N/A",
+      "status": 1
+    },
+    {
+      "id": "4",
+      "comp_id": 1001,
+      "designation_name": "Support",
+      "designation_rank": "N/A",
+      "status": 1
+    },
+    {
+      "id": "5",
+      "comp_id": 1001,
+      "designation_name": "Security",
+      "designation_rank": "N/A",
+      "status": 1
+    }
+  ],
+  "roles": [
+    {
+      "id": "1",
+      "comp_id": 1001,
+      "role_desc": "System Administrator",
+      "is_advisor_role": 0,
+      "status": 1
+    },
+    {
+      "id": "2",
+      "comp_id": 1001,
+      "role_desc": "Sales Advisor",
+      "is_advisor_role": 1,
+      "status": 1
+    },
+    {
+      "id": "3",
+      "comp_id": 1001,
+      "role_desc": "Office Secretary",
+      "is_advisor_role": 0,
+      "status": 1
+    },
+    {
+      "id": "4",
+      "comp_id": 1001,
+      "role_desc": "Support Staff",
+      "is_advisor_role": 0,
+      "status": 1
+    }
+  ],
+  "rolePermissions": [
+    {
+      "id": "1",
+      "role_id": 1,
+      "module_name": "Company Master",
+      "access_level": "Full"
+    },
+    {
+      "id": "2",
+      "role_id": 1,
+      "module_name": "Branch",
+      "access_level": "Full"
+    },
+    {
+      "id": "3",
+      "role_id": 2,
+      "module_name": "Company Master",
+      "access_level": "View"
+    }
+  ],
+  "financialYears": [
+    {
+      "id": "1",
+      "comp_id": 1001,
+      "fin_year": "2024-2025",
+      "from_date": "2024-04-01",
+      "to_date": "2025-03-31",
+      "status": 1
+    },
+    {
+      "id": "2",
+      "comp_id": 1001,
+      "fin_year": "2025-2026",
+      "from_date": "2025-04-01",
+      "to_date": "2026-03-31",
+      "status": 1
+    }
+  ],
+  "numberingRules": [
+    {
+      "id": "1",
+      "comp_id": 1001,
+      "fin_year_id": 1,
+      "type": "VOUCHER",
+      "prefix": "VCH/24-25/",
+      "suffix": "N/A",
+      "start_no": 1,
+      "status": 1
+    },
+    {
+      "id": "2",
+      "comp_id": 1001,
+      "fin_year_id": 1,
+      "type": "RECEIPT",
+      "prefix": "RECPT/24-25/",
+      "suffix": "N/A",
+      "start_no": 1,
+      "status": 1
+    }
+  ],
+  "religions": [
+    {
+      "id": "1",
+      "comp_id": 1001,
+      "religion_name": "Hinduism",
+      "status": 1
+    },
+    {
+      "id": "2",
+      "comp_id": 1001,
+      "religion_name": "Christianity",
+      "status": 1
+    },
+    {
+      "id": "3",
+      "comp_id": 1001,
+      "religion_name": "Islam",
+      "status": 1
+    },
+    {
+      "id": "4",
+      "comp_id": 1001,
+      "religion_name": "Sikhism",
+      "status": 1
+    },
+    {
+      "id": "5",
+      "comp_id": 1001,
+      "religion_name": "General",
+      "status": 1
+    }
+  ],
+  "festivals": [
+    {
+      "id": "1",
+      "comp_id": 1001,
+      "religion_id": 1,
+      "festival_name": "Diwali",
+      "status": 1
+    },
+    {
+      "id": "2",
+      "comp_id": 1001,
+      "religion_id": 3,
+      "festival_name": "Eid al-Fitr",
+      "status": 1
+    },
+    {
+      "id": "3",
+      "comp_id": 1001,
+      "religion_id": 1,
+      "festival_name": "Holi",
+      "status": 1
+    },
+    {
+      "id": "4",
+      "comp_id": 1001,
+      "religion_id": 2,
+      "festival_name": "Good Friday",
+      "status": 1
+    },
+    {
+      "id": "5",
+      "comp_id": 1001,
+      "religion_id": 2,
+      "festival_name": "Christmas",
+      "status": 1
+    },
+    {
+      "id": "6",
+      "comp_id": 1001,
+      "religion_id": 5,
+      "festival_name": "New Year's Day",
+      "status": 1
+    }
+  ],
+  "festivalDates": [
+    {
+      "id": "1",
+      "festival_id": 5,
+      "event_date": "2025-12-25",
+      "year": "2025",
+      "status": 1
+    },
+    {
+      "id": "2",
+      "festival_id": 1,
+      "event_date": "2025-10-21",
+      "year": "2025",
+      "status": 1
+    },
+    {
+      "id": "3",
+      "festival_id": 2,
+      "event_date": "2025-03-30",
+      "year": "2025",
+      "status": 1
+    },
+    {
+      "id": "4",
+      "festival_id": 4,
+      "event_date": "2025-04-18",
+      "year": "2025",
+      "status": 1
+    },
+    {
+      "id": "5",
+      "festival_id": 3,
+      "event_date": "2025-03-14",
+      "year": "2025",
+      "status": 1
+    },
+    {
+      "id": "6",
+      "festival_id": 6,
+      "event_date": "2025-01-01",
+      "year": "2025",
+      "status": 1
+    },
+    {
+      "id": "7",
+      "festival_id": 2,
+      "event_date": "2026-03-20",
+      "year": "2026",
+      "status": 1
+    },
+    {
+      "id": "8",
+      "festival_id": 4,
+      "event_date": "2026-04-03",
+      "year": "2026",
+      "status": 1
+    },
+    {
+      "id": "9",
+      "festival_id": 3,
+      "event_date": "2026-03-04",
+      "year": "2026",
+      "status": 1
+    },
+    {
+      "id": "10",
+      "festival_id": 6,
+      "event_date": "2026-01-01",
+      "year": "2026",
+      "status": 1
+    }
+  ],
+  "leadStages": [
+    {
+      "id": "1",
+      "comp_id": 1001,
+      "lead_name": "Lead",
+      "status": 1
+    },
+    {
+      "id": "2",
+      "comp_id": 1001,
+      "lead_name": "Contacted",
+      "status": 1
+    },
+    {
+      "id": "3",
+      "comp_id": 1001,
+      "lead_name": "Meeting Scheduled",
+      "status": 1
+    },
+    {
+      "id": "4",
+      "comp_id": 1001,
+      "lead_name": "Proposal Sent",
+      "status": 1
+    },
+    {
+      "id": "5",
+      "comp_id": 1001,
+      "lead_name": "Closed",
+      "status": 1
+    }
+  ],
+  "relationships": [
+    {
+      "id": "1",
+      "comp_id": 1001,
+      "relationship_name": "Self",
+      "status": 1
+    },
+    {
+      "id": "2",
+      "comp_id": 1001,
+      "relationship_name": "Spouse",
+      "status": 1
+    },
+    {
+      "id": "3",
+      "comp_id": 1001,
+      "relationship_name": "Son",
+      "status": 1
+    },
+    {
+      "id": "4",
+      "comp_id": 1001,
+      "relationship_name": "Daughter",
+      "status": 1
+    },
+    {
+      "id": "5",
+      "comp_id": 1001,
+      "relationship_name": "Father",
+      "status": 1
+    },
+    {
+      "id": "6",
+      "comp_id": 1001,
+      "relationship_name": "Mother",
+      "status": 1
+    }
+  ],
+  "leadSources": [
+    {
+      "id": "1",
+      "comp_id": 1001,
+      "client_id": 1,
+      "ref_desc": "Advertisement",
+      "parent_id": 0,
+      "individual": false,
+      "status": 1
+    },
+    {
+      "id": "2",
+      "comp_id": 1001,
+      "client_id": 1,
+      "ref_desc": "Digital Media",
+      "parent_id": 1,
+      "individual": false,
+      "status": 1
+    },
+    {
+      "id": "3",
+      "comp_id": 1001,
+      "client_id": 1,
+      "ref_desc": "Facebook",
+      "parent_id": 2,
+      "individual": false,
+      "status": 1
+    },
+    {
+      "id": "4",
+      "comp_id": 1001,
+      "client_id": 1,
+      "ref_desc": "Instagram",
+      "parent_id": 2,
+      "individual": false,
+      "status": 1
+    },
+    {
+      "id": "5",
+      "comp_id": 1001,
+      "client_id": 1,
+      "ref_desc": "Print Media",
+      "parent_id": 1,
+      "individual": false,
+      "status": 1
+    },
+    {
+      "id": "6",
+      "comp_id": 1001,
+      "client_id": 1,
+      "ref_desc": "Cold Call",
+      "parent_id": 0,
+      "individual": false,
+      "status": 1
+    },
+    {
+      "id": "7",
+      "comp_id": 1001,
+      "client_id": 1,
+      "ref_desc": "Referral",
+      "parent_id": 0,
+      "individual": true,
+      "status": 1
+    },
+    {
+      "id": "8",
+      "comp_id": 1001,
+      "client_id": 1,
+      "ref_desc": "Friend",
+      "parent_id": 7,
+      "individual": true,
+      "status": 1
+    },
+    {
+      "id": "9",
+      "comp_id": 1001,
+      "client_id": 1,
+      "ref_desc": "Institution",
+      "parent_id": 0,
+      "individual": false,
+      "status": 1
+    },
+    {
+      "id": "10",
+      "comp_id": 1001,
+      "client_id": 1,
+      "ref_desc": "BNI",
+      "parent_id": 9,
+      "individual": false,
+      "status": 1
+    },
+    {
+      "id": "11",
+      "comp_id": 1001,
+      "client_id": 1,
+      "ref_desc": "Rotary",
+      "parent_id": 9,
+      "individual": true,
+      "status": 1,
+      "children": []
+    }
+  ],
+  "banks": [
+    {
+      "id": "1",
+      "comp_id": 1001,
+      "bank_name": "State Bank of India",
+      "status": 1
+    },
+    {
+      "id": "2",
+      "comp_id": 1001,
+      "bank_name": "HDFC Bank",
+      "status": 1
+    },
+    {
+      "id": "3",
+      "comp_id": 1001,
+      "bank_name": "ICICI Bank",
+      "status": 1
+    }
+  ],
+  "accountTypes": [
+    {
+      "id": "1",
+      "comp_id": 1001,
+      "account_type_name": "Savings Account",
+      "status": 1
+    },
+    {
+      "id": "2",
+      "comp_id": 1001,
+      "account_type_name": "Current Account",
+      "status": 1
+    },
+    {
+      "id": "3",
+      "comp_id": 1001,
+      "account_type_name": "Overdraft Account",
+      "status": 1
+    }
+  ],
+  "genders": [
+    {
+      "id": "1",
+      "comp_id": 1001,
+      "gender_name": "Male",
+      "status": 1
+    },
+    {
+      "id": "2",
+      "comp_id": 1001,
+      "gender_name": "Female",
+      "status": 1
+    },
+    {
+      "id": "3",
+      "comp_id": 1001,
+      "gender_name": "Transgender",
+      "status": 1
+    },
+    {
+      "id": "4",
+      "comp_id": 1001,
+      "gender_name": "Other",
+      "status": 1
+    }
+  ],
+  "customerCategories": [
+    {
+      "id": "1",
+      "comp_id": 1001,
+      "customer_category": "Salaried",
+      "status": 1
+    },
+    {
+      "id": "2",
+      "comp_id": 1001,
+      "customer_category": "Business",
+      "status": 1
+    },
+    {
+      "id": "3",
+      "comp_id": 1001,
+      "customer_category": "Professional",
+      "status": 1
+    }
+  ],
+  "customerSubCategories": [
+    {
+      "id": "1",
+      "comp_id": 1001,
+      "cust_sub_cate": "IT/Software",
+      "cust_cate_id": 1,
+      "status": 1
+    },
+    {
+      "id": "2",
+      "comp_id": 1001,
+      "cust_sub_cate": "Manufacturing",
+      "cust_cate_id": 2,
+      "status": 1
+    },
+    {
+      "id": "3",
+      "comp_id": 1001,
+      "cust_sub_cate": "Doctor",
+      "cust_cate_id": 3,
+      "status": 1
+    },
+    {
+      "id": "4",
+      "comp_id": 1001,
+      "cust_sub_cate": "Government",
+      "cust_cate_id": 1,
+      "status": 1
+    },
+    {
+      "id": "5",
+      "comp_id": 1001,
+      "cust_sub_cate": "Trading",
+      "cust_cate_id": 2,
+      "status": 1
+    },
+    {
+      "id": "6",
+      "comp_id": 1001,
+      "cust_sub_cate": "Lawyer",
+      "cust_cate_id": 3,
+      "status": 1
+    }
+  ],
+  "customerGroups": [
+    {
+      "id": "1",
+      "comp_id": 1001,
+      "customer_group": "HNI",
+      "status": 1
+    },
+    {
+      "id": "2",
+      "comp_id": 1001,
+      "customer_group": "Mid-Income",
+      "status": 1
+    },
+    {
+      "id": "3",
+      "comp_id": 1001,
+      "customer_group": "Affluent",
+      "status": 1
+    }
+  ],
+  "customerTypes": [
+    {
+      "id": "1",
+      "comp_id": 1001,
+      "cust_type": "Silver",
+      "status": 1
+    },
+    {
+      "id": "2",
+      "comp_id": 1001,
+      "cust_type": "Gold",
+      "status": 1
+    },
+    {
+      "id": "3",
+      "comp_id": 1001,
+      "cust_type": "Diamond",
+      "status": 1
+    },
+    {
+      "id": "4",
+      "comp_id": 1001,
+      "cust_type": "Platinum",
+      "status": 1
+    }
+  ],
+  "gifts": [
+    {
+      "id": "1",
+      "gift_name": "Premium Pen Set",
+      "status": 1
+    },
+    {
+      "id": "2",
+      "gift_name": "Leather Wallet",
+      "status": 1
+    },
+    {
+      "id": "3",
+      "gift_name": "Amazon Gift Card ₹500",
+      "status": 1
+    },
+    {
+      "id": "4",
+      "gift_name": "Custom Diary 2024",
+      "status": 1
+    }
+  ],
+  "sumAssuredTiers": [
+    {
+      "id": "1",
+      "comp_id": 1001,
+      "tier_name": "Silver",
+      "minimum_sum_assured": 0,
+      "assigned_gift": "Premium Pen Set",
+      "status": 1
+    },
+    {
+      "id": "2",
+      "comp_id": 1001,
+      "tier_name": "Gold",
+      "minimum_sum_assured": 500000,
+      "assigned_gift": "Leather Wallet",
+      "status": 1
+    },
+    {
+      "id": "3",
+      "comp_id": 1001,
+      "tier_name": "Diamond",
+      "minimum_sum_assured": 1500000,
+      "assigned_gift": "Amazon Gift Card ₹500",
+      "status": 1
+    },
+    {
+      "id": "4",
+      "comp_id": 1001,
+      "tier_name": "Platinum",
+      "minimum_sum_assured": 3000000,
+      "assigned_gift": "Custom Diary 2024",
+      "status": 1
+    }
+  ],
+  "premiumTiers": [
+    {
+      "id": "1",
+      "comp_id": 1001,
+      "tier_name": "Silver",
+      "minimum_premium": 0,
+      "assigned_gift": "Premium Pen Set",
+      "status": 1
+    },
+    {
+      "id": "2",
+      "comp_id": 1001,
+      "tier_name": "Gold",
+      "minimum_premium": 25000,
+      "assigned_gift": "Leather Wallet",
+      "status": 1
+    },
+    {
+      "id": "3",
+      "comp_id": 1001,
+      "tier_name": "Diamond",
+      "minimum_premium": 75000,
+      "assigned_gift": "Amazon Gift Card ₹500",
+      "status": 1
+    },
+    {
+      "id": "4",
+      "comp_id": 1001,
+      "tier_name": "Platinum",
+      "minimum_premium": 150000,
+      "assigned_gift": "Custom Diary 2024",
+      "status": 1
+    }
+  ],
+  "expenseCategories": [
+    {
+      "id": "1",
+      "comp_id": 1001,
+      "expense_cate_name": "Administrative Expenses",
+      "status": 1
+    },
+    {
+      "id": "2",
+      "comp_id": 1001,
+      "expense_cate_name": "Marketing Expenses",
+      "status": 1
+    }
+  ],
+  "expenseHeads": [
+    {
+      "id": "1",
+      "comp_id": 1001,
+      "expense_head_name": "Salary",
+      "expense_cate_id": 1,
+      "get_individual": 0,
+      "status": 1
+    },
+    {
+      "id": "2",
+      "comp_id": 1001,
+      "expense_head_name": "Rent",
+      "expense_cate_id": 1,
+      "get_individual": 0,
+      "status": 1
+    },
+    {
+      "id": "3",
+      "comp_id": 1001,
+      "expense_head_name": "MD's Travel",
+      "expense_cate_id": 1,
+      "get_individual": 1,
+      "status": 1
+    },
+    {
+      "id": "4",
+      "comp_id": 1001,
+      "expense_head_name": "Print Media Ad",
+      "expense_cate_id": 2,
+      "get_individual": 0,
+      "status": 1
+    },
+    {
+      "id": "5",
+      "comp_id": 1001,
+      "expense_head_name": "Digital Media",
+      "expense_cate_id": 2,
+      "get_individual": 1,
+      "status": 1
+    }
+  ],
+  "expenseIndividuals": [
+    {
+      "id": "1",
+      "comp_id": 1001,
+      "individual_name": "Staff Incentive",
+      "expense_head_id": 1,
+      "expense_category_id": 1,
+      "status": 1
+    },
+    {
+      "id": "2",
+      "comp_id": 1001,
+      "individual_name": "Google Ads",
+      "expense_head_id": 5,
+      "expense_category_id": 2,
+      "status": 1
+    }
+  ],
+  "incomeCategories": [
+    {
+      "id": "1",
+      "comp_id": 1001,
+      "income_cate": "Direct Income",
+      "status": 1
+    },
+    {
+      "id": "2",
+      "comp_id": 1001,
+      "income_cate": "Indirect Income",
+      "status": 1
+    }
+  ],
+  "incomeHeads": [
+    {
+      "id": "1",
+      "comp_id": 1001,
+      "income_head": "Commission",
+      "income_cate_id": 1,
+      "status": 1
+    },
+    {
+      "id": "2",
+      "comp_id": 1001,
+      "income_head": "Consultancy Fees",
+      "income_cate_id": 1,
+      "status": 1
+    },
+    {
+      "id": "3",
+      "comp_id": 1001,
+      "income_head": "Interest Received",
+      "income_cate_id": 2,
+      "status": 1
+    }
+  ],
+  "routes": [
+    {
+      "id": "1",
+      "comp_id": 1001,
+      "route_name": "Erode Route",
+      "status": 1
+    },
+    {
+      "id": "2",
+      "comp_id": 1001,
+      "route_name": "Coimbatore Route",
+      "status": 1
+    },
+    {
+      "id": "3",
+      "comp_id": 1001,
+      "route_name": "Salem Route",
+      "status": 1
+    },
+    {
+      "id": "4",
+      "comp_id": 1001,
+      "route_name": "Chennai Route",
+      "status": 1
+    }
+  ],
+  "maritalStatuses": [
+    {
+      "id": "1",
+      "comp_id": 1001,
+      "marital_status": "Single",
+      "status": 1
+    },
+    {
+      "id": "2",
+      "comp_id": 1001,
+      "marital_status": "Married",
+      "status": 1
+    },
+    {
+      "id": "3",
+      "comp_id": 1001,
+      "marital_status": "Divorced",
+      "status": 1
+    },
+    {
+      "id": "4",
+      "comp_id": 1001,
+      "marital_status": "Widowed",
+      "status": 1
+    },
+    {
+      "id": "9e00",
+      "comp_id": 1001,
+      "status": 1,
+      "marital_status": "widowed"
+    }
+  ]
+}

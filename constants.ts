@@ -1,0 +1,6 @@
+export const DEFAULTS = {
+  COMP_ID: 1001,
+  CLIENT_ID: 1,
+  STATUS_ACTIVE: 1,
+  STATUS_INACTIVE: 0,
+};

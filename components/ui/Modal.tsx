@@ -1,103 +1,66 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect } from 'react';
+import { X } from 'lucide-react';
 
 interface ModalProps {
-    isOpen: boolean;
-    onClose: () => void;
-    children: React.ReactNode;
-    contentClassName?: string;
-    initialFocusRef?: React.RefObject<HTMLElement>;
+  isOpen: boolean;
+  onClose: () => void;
+  title: string;
+  children: React.ReactNode;
+  footer?: React.ReactNode;
+  size?: 'sm' | 'md' | 'lg' | 'xl' | 'full';
 }
 
-const Modal: React.FC<ModalProps> = ({ isOpen, onClose, children, contentClassName, initialFocusRef }) => {
-    const modalContentRef = useRef<HTMLDivElement>(null);
-    const lastFocusedElementRef = useRef<HTMLElement | null>(null);
+export const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, footer, size = 'md' }) => {
+  useEffect(() => {
+    if (isOpen) document.body.style.overflow = 'hidden';
+    else document.body.style.overflow = 'unset';
+    return () => { document.body.style.overflow = 'unset'; };
+  }, [isOpen]);
 
-    useEffect(() => {
-        if (!isOpen) return;
+  if (!isOpen) return null;
 
-        lastFocusedElementRef.current = document.activeElement as HTMLElement;
+  const maxWidth = {
+    sm: 'max-w-sm',
+    md: 'max-w-md',
+    lg: 'max-w-2xl',
+    xl: 'max-w-4xl',
+    full: 'max-w-[95vw]'
+  };
 
-        const modalElement = modalContentRef.current;
-        if (!modalElement) return;
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6" role="dialog" aria-modal="true">
+      <div 
+        className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm transition-opacity duration-300 animate-in fade-in" 
+        onClick={onClose} 
+      />
 
-        const focusableElements = Array.from(
-            modalElement.querySelectorAll<HTMLElement>(
-                'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-            )
-        ).filter(el => !el.hasAttribute('disabled'));
-        
-        const firstElement = focusableElements[0];
-        const lastElement = focusableElements[focusableElements.length - 1];
-
-        const timer = setTimeout(() => {
-            if (initialFocusRef?.current) {
-                initialFocusRef.current.focus();
-            } else {
-                const autoFocusElement = modalElement.querySelector<HTMLElement>('[autofocus]');
-                if (autoFocusElement) {
-                    autoFocusElement.focus();
-                } else if (firstElement) {
-                    firstElement.focus();
-                } else {
-                    modalElement.focus();
-                }
-            }
-        }, 50);
-
-        const handleKeyDown = (event: KeyboardEvent) => {
-            if (event.key === 'Escape') {
-                onClose();
-                return;
-            }
-
-            if (event.key === 'Tab') {
-                if (focusableElements.length === 0) {
-                    event.preventDefault();
-                    return;
-                }
-                
-                if (event.shiftKey) { 
-                    if (document.activeElement === firstElement) {
-                        lastElement?.focus();
-                        event.preventDefault();
-                    }
-                } else { 
-                    if (document.activeElement === lastElement) {
-                        firstElement?.focus();
-                        event.preventDefault();
-                    }
-                }
-            }
-        };
-
-        document.addEventListener('keydown', handleKeyDown);
-
-        return () => {
-            clearTimeout(timer);
-            document.removeEventListener('keydown', handleKeyDown);
-            lastFocusedElementRef.current?.focus();
-        };
-    }, [isOpen, onClose, initialFocusRef]);
-
-    if (!isOpen) return null;
-
-    return (
-        <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 transition-opacity duration-300 ease-in-out"
-            onClick={onClose}
-            role="dialog"
-            aria-modal="true"
-        >
-            <div
-                ref={modalContentRef}
-                className={contentClassName || "bg-white dark:bg-slate-800 rounded-lg shadow-xl w-full max-w-3xl"}
-                onClick={(e) => e.stopPropagation()}
-                tabIndex={-1}
-            >
-                {children}
-            </div>
+      <div 
+        className={`
+          relative w-full ${maxWidth[size]} bg-white dark:bg-slate-800 rounded-xl shadow-2xl flex flex-col max-h-[90vh] 
+          transform transition-all duration-300 animate-in zoom-in-95 slide-in-from-bottom-4
+        `}
+        onClick={e => e.stopPropagation()}
+      >
+        <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center bg-white dark:bg-slate-800 rounded-t-xl shrink-0">
+          <h3 className="text-lg font-bold text-slate-800 dark:text-white leading-6">{title}</h3>
+          <button 
+            onClick={onClose} 
+            className="rounded-full p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700 dark:hover:text-slate-200 transition-colors"
+          >
+            <X size={20} />
+          </button>
         </div>
-    );
-};
+        
+        <div className="p-6 overflow-y-auto custom-scrollbar grow">
+          {children}
+        </div>
 
-export default Modal;
+        {footer && (
+          <div className="px-6 py-4 border-t border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 rounded-b-xl flex justify-end gap-3 shrink-0">
+            {footer}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
