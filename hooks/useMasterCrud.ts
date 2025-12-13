@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import toast from 'react-hot-toast';
 import { DEFAULTS } from '../constants';
@@ -71,7 +70,7 @@ export function useMasterCrud<T extends { id?: number | string; status?: number 
       refetch();
     } catch (error: any) {
       console.error(error);
-      const msg = error?.response?.data?.message || 'Operation failed';
+      const msg = error?.response?.data?.message || error?.message || 'Operation failed';
       toast.error(msg);
     } finally {
       setSaving(false);
@@ -80,17 +79,25 @@ export function useMasterCrud<T extends { id?: number | string; status?: number 
 
   const handleToggleStatus = async (item: T) => {
     if (!api.patch) return;
-    const newStatus = item.status === 1 ? 0 : 1;
+    if (!item.id) return;
+
+    const oldStatus = item.status;
+    const newStatus = oldStatus === 1 ? 0 : 1;
     
     if (updateLocalData) {
         updateLocalData((prev) => prev?.map((i) => i.id === item.id ? { ...i, status: newStatus } : i) || []);
     }
 
     try {
-      await api.patch(item.id!, { status: newStatus } as unknown as Partial<T>);
+      await api.patch(item.id, { status: newStatus } as unknown as Partial<T>);
       toast.success(newStatus === 1 ? 'Activated' : 'Deactivated');
     } catch (error) {
+      console.error(error);
       toast.error('Failed to update status');
+      
+      if (updateLocalData && oldStatus !== undefined) {
+          updateLocalData((prev) => prev?.map((i) => i.id === item.id ? { ...i, status: oldStatus } : i) || []);
+      }
       refetch();
     }
   };

@@ -93,6 +93,22 @@
       "business_vertical_id": 1,
       "insurance_type": "General Insurance",
       "status": 1
+    },
+    {
+      "id": "0f11",
+      "status": 1,
+      "comp_id": 1001,
+      "client_id": 1,
+      "insurance_type": "asdasd",
+      "business_vertical_id": "1"
+    },
+    {
+      "id": "15af",
+      "status": 1,
+      "comp_id": 1001,
+      "client_id": 1,
+      "insurance_type": "asdasd",
+      "business_vertical_id": "1"
     }
   ],
   "insuranceSubTypes": [
@@ -159,6 +175,35 @@
       "insurance_type_id": 3,
       "insurance_sub_type": "Travel Insurance",
       "status": 1
+    },
+    {
+      "id": "7748",
+      "insurance_type_id": "2",
+      "insurance_sub_type": "sdasdasd",
+      "status": 1
+    },
+    {
+      "id": "b641",
+      "insurance_type_id": "3",
+      "insurance_sub_type": "sdasd",
+      "status": 1
+    },
+    {
+      "id": "3f12",
+      "insurance_type_id": "0f11",
+      "insurance_sub_type": "dasdas",
+      "status": 1
+    },
+    {
+      "id": "ae04",
+      "insurance_type_id": "15af",
+      "insurance_sub_type": "dsasdfeqw"
+    },
+    {
+      "id": "78f0",
+      "insurance_type_id": "0f11",
+      "insurance_sub_type": "dadsa",
+      "status": 1
     }
   ],
   "processFlows": [
@@ -191,6 +236,25 @@
       "seq_no": 3,
       "repeat": false,
       "status": 1
+    },
+    {
+      "id": "1ba5",
+      "insurance_type_id": "15af",
+      "seq_no": 1,
+      "process_desc": "sdasddasd"
+    },
+    {
+      "id": "d793",
+      "insurance_type_id": "15af",
+      "seq_no": 2,
+      "process_desc": "dasdasd"
+    },
+    {
+      "id": "889c",
+      "insurance_type_id": "15af",
+      "seq_no": 3,
+      "status": 1,
+      "process_desc": "dasdsad"
     }
   ],
   "policyFields": [
@@ -211,13 +275,27 @@
       "column_span": 1,
       "field_type": "Text Input",
       "status": 1
+    },
+    {
+      "id": "458d",
+      "insurance_type_id": "15af",
+      "field_label": "sada",
+      "group_name": "sdas",
+      "column_span": 2
+    },
+    {
+      "id": "29b5",
+      "insurance_type_id": "15af",
+      "status": 1,
+      "group_name": "sdas",
+      "field_label": "dsadas"
     }
   ],
   "documentMasters": [
     {
       "id": "1",
       "doc_name": "PAN Card",
-      "status": 0
+      "status": 1
     },
     {
       "id": "2",
@@ -253,6 +331,12 @@
       "insurance_type_id": 1,
       "insurance_sub_type_id": null,
       "doc_master_id": 2,
+      "is_mandatory": true
+    },
+    {
+      "id": "4929",
+      "insurance_type_id": "15af",
+      "doc_master_id": "2",
       "is_mandatory": true
     }
   ],
@@ -325,7 +409,7 @@
       "id": "3",
       "country_id": 1,
       "state": "Tamil Nadu",
-      "status": 0
+      "status": 1
     },
     {
       "id": "4",
@@ -354,21 +438,21 @@
       "country_id": 1,
       "state_id": 3,
       "district_name": "Coimbatore",
-      "status": 0
+      "status": 1
     },
     {
       "id": "4",
       "country_id": 1,
       "state_id": 3,
       "district_name": "Erode",
-      "status": 0
+      "status": 1
     },
     {
       "id": "5",
       "country_id": 1,
       "state_id": 3,
       "district_name": "Chennai",
-      "status": 0
+      "status": 1
     }
   ],
   "cities": [
@@ -394,7 +478,7 @@
       "state_id": 3,
       "district_id": 3,
       "city": "Coimbatore",
-      "status": 0
+      "status": 1
     },
     {
       "id": "4",
@@ -402,7 +486,7 @@
       "state_id": 3,
       "district_id": 5,
       "city": "Chennai",
-      "status": 0
+      "status": 1
     },
     {
       "id": "5",
@@ -410,7 +494,7 @@
       "state_id": 3,
       "district_id": 4,
       "city": "Erode",
-      "status": 0
+      "status": 1
     }
   ],
   "areas": [
@@ -439,7 +523,7 @@
       "district_id": 3,
       "city_id": 3,
       "area": "Gandhipuram",
-      "status": 0
+      "status": 1
     },
     {
       "id": "4",
@@ -448,7 +532,7 @@
       "district_id": 5,
       "city_id": 4,
       "area": "Anna Nagar",
-      "status": 0
+      "status": 1
     }
   ],
   "designations": [
@@ -516,6 +600,14 @@
       "role_desc": "Support Staff",
       "is_advisor_role": 0,
       "status": 1
+    },
+    {
+      "id": "410f",
+      "comp_id": 1001,
+      "is_advisor_role": 0,
+      "status": 1,
+      "client_id": 1,
+      "role_desc": "asdsad"
     }
   ],
   "rolePermissions": [
@@ -893,9 +985,8 @@
       "client_id": 1,
       "ref_desc": "Rotary",
       "parent_id": 9,
-      "individual": true,
-      "status": 1,
-      "children": []
+      "individual": false,
+      "status": 1
     }
   ],
   "banks": [
@@ -962,6 +1053,12 @@
       "comp_id": 1001,
       "gender_name": "Other",
       "status": 1
+    },
+    {
+      "id": "47cf",
+      "comp_id": 1001,
+      "status": 1,
+      "gender_name": "Binary"
     }
   ],
   "customerCategories": [
@@ -1327,10 +1424,10 @@
       "status": 1
     },
     {
-      "id": "9e00",
+      "id": "1d41",
       "comp_id": 1001,
       "status": 1,
-      "marital_status": "widowed"
+      "marital_status": "Aa"
     }
   ]
 }

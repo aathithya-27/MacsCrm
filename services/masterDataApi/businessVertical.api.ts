@@ -11,7 +11,6 @@ export const businessVerticalApi = {
   patch: (id: number | string, data: Partial<BusinessVertical>) => apiClient.patch<BusinessVertical>(`${ENDPOINT}/${id}`, data),
   delete: (id: number | string) => apiClient.delete<any>(`${ENDPOINT}/${id}`),
   
-  // Helper to find by company (simulated query)
   getByCompanyId: async (compId: number) => {
     const all = await apiClient.get<BusinessVertical[]>(ENDPOINT);
     if (all.status && Array.isArray(all.data)) {

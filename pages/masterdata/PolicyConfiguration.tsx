@@ -22,12 +22,21 @@ const PolicyConfigurationPage: React.FC = () => {
   const [documents, setDocuments] = useState<PolicyDocument[]>([]);
 
   const typeCrud = useMasterCrud({ api: { create: policyApi.createType, update: policyApi.updateType, patch: policyApi.patchType }, refetch: refetchTypes, updateLocalData: setTypes, validate: i => !i.insurance_type ? "Name required" : null, defaults: { client_id: 1, comp_id: 1001 } });
-  const subTypeCrud = useMasterCrud({ api: { create: policyApi.createSubType, update: policyApi.updateSubType, patch: policyApi.patchSubType }, refetch: refetchSubTypes, updateLocalData: setSubTypes, validate: i => !i.insurance_sub_type ? "Name required" : null, defaults: { client_id: 1, comp_id: 1001 } });
+  const subTypeCrud = useMasterCrud({ 
+    api: { create: policyApi.createSubType, update: policyApi.updateSubType, patch: policyApi.patchSubType }, 
+    refetch: () => {
+      refetchSubTypes();
+      window.dispatchEvent(new CustomEvent('insuranceSubTypesUpdated'));
+    }, 
+    updateLocalData: setSubTypes, 
+    validate: i => !i.insurance_sub_type ? "Name required" : null, 
+    defaults: { client_id: 1, comp_id: 1001, status: 1 } 
+  });
   
   const fetchConfigsWrapper = () => fetchConfigurationData();
 
-  const processCrud = useMasterCrud({ api: { create: policyApi.createProcess, update: policyApi.updateProcess, patch: policyApi.patchProcess }, refetch: fetchConfigsWrapper, validate: i => !i.process_desc ? "Name required" : null, defaults: { client_id: 1, comp_id: 1001, repeat: false } });
-  const fieldCrud = useMasterCrud({ api: { create: policyApi.createField, update: policyApi.updateField, patch: policyApi.patchField }, refetch: fetchConfigsWrapper, validate: i => !i.field_label ? "Label required" : null, defaults: { column_span: 1, field_type: 'Text Input' } });
+  const processCrud = useMasterCrud({ api: { create: policyApi.createProcess, update: policyApi.updateProcess, patch: policyApi.patchProcess }, refetch: fetchConfigsWrapper, validate: i => !i.process_desc ? "Name required" : null, defaults: { client_id: 1, comp_id: 1001, repeat: false, status: 1 } });
+  const fieldCrud = useMasterCrud({ api: { create: policyApi.createField, update: policyApi.updateField, patch: policyApi.patchField }, refetch: fetchConfigsWrapper, validate: i => !i.field_label ? "Label required" : null, defaults: { column_span: 1, field_type: 'Text Input', status: 1 } });
 
   const [selectedDocId, setSelectedDocId] = useState<string | number>('');
   
@@ -80,7 +89,6 @@ const PolicyConfigurationPage: React.FC = () => {
       }
   };
 
-  // --- CASCADE TOGGLE HANDLERS ---
 
   const handleToggleType = async (item: InsuranceType) => {
     const newStatus = item.status === 1 ? 0 : 1;
@@ -89,7 +97,6 @@ const PolicyConfigurationPage: React.FC = () => {
     const promises: Promise<any>[] = [policyApi.patchType(item.id!, { status: newStatus })];
     let updateCount = 0;
 
-    // Cascade to SubTypes
     const childSubTypes = subTypes?.filter(st => st.insurance_type_id == item.id) || [];
     childSubTypes.forEach(st => {
         if (st.status !== newStatus) {
@@ -99,7 +106,6 @@ const PolicyConfigurationPage: React.FC = () => {
         }
     });
 
-    // Cascade to Flows and Fields (Fetch all to ensure we get children linked to Type)
     try {
         const [flowsRes, fieldsRes] = await Promise.all([policyApi.getProcessFlows(), policyApi.getFields()]);
         const allFlows = flowsRes.data || [];
@@ -118,7 +124,6 @@ const PolicyConfigurationPage: React.FC = () => {
              updateCount++;
         });
         
-        // Update View State if currently viewing this type
         if (activeParent?.id === item.id) {
             setProcessFlows(prev => prev.map(p => ({...p, status: newStatus})));
             setFields(prev => prev.map(f => ({...f, status: newStatus})));
@@ -128,7 +133,7 @@ const PolicyConfigurationPage: React.FC = () => {
         toast.success(newStatus === 1 ? `Activated Type and ${updateCount} related items` : `Deactivated Type and ${updateCount} related items`);
 
     } catch(e) {
-        refetchTypes(); // Revert
+        refetchTypes();
         toast.error("Failed to update status");
     }
   };
@@ -149,7 +154,6 @@ const PolicyConfigurationPage: React.FC = () => {
              updateCount++;
         });
 
-        // Update View State if currently viewing this subtype
         if (activeChild?.id === item.id) {
             setFields(prev => prev.map(f => ({...f, status: newStatus})));
         }
@@ -170,32 +174,32 @@ const PolicyConfigurationPage: React.FC = () => {
     g.toLowerCase().includes(groupSearch.toLowerCase())
   );
 
-  const openProcessModal = (item?: ProcessFlow) => processCrud.handleOpenModal(item || { insurance_type_id: activeParent?.id, seq_no: processFlows.length + 1 } as any);
+  const openProcessModal = (item?: ProcessFlow) => processCrud.handleOpenModal(item || { insurance_type_id: activeParent?.id, seq_no: processFlows.length + 1, status: 1 } as any);
   const openFieldModal = (item?: PolicyField) => {
       setGroupSearch(item?.group_name || '');
-      fieldCrud.handleOpenModal(item || { insurance_type_id: activeParent?.id, insurance_sub_type_id: activeChild?.id } as any);
+      fieldCrud.handleOpenModal(item || { insurance_type_id: activeParent?.id, insurance_sub_type_id: activeChild?.id, status: 1 } as any);
   };
 
   return (
     <MasterDataLayout title="Policy Configuration">
       <div className="space-y-6">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* PARENT: INSURANCE TYPE */}
+            {}
             <Section title="Manage Insurance Type" crud={typeCrud}>
                 <DataTable data={types || []} columns={[{ header: 'Name', accessor: 'insurance_type', className: 'font-bold' }]}
                     onEdit={typeCrud.handleOpenModal} 
-                    onToggleStatus={handleToggleType} // Custom cascade handler
+                    onToggleStatus={handleToggleType}
                     onRowClick={(item) => { setActiveParent(item); setActiveChild(null); }}
                     selectedId={activeParent?.id}
                 />
             </Section>
 
-            {/* CHILD: INSURANCE SUB-TYPE */}
-            <Section title="Manage Insurance Sub-Type" crud={subTypeCrud} onAdd={() => subTypeCrud.handleOpenModal({ insurance_type_id: activeParent?.id } as any)} disableAdd={!activeParent}>
+            {}
+            <Section title="Manage Insurance Sub-Type" crud={subTypeCrud} onAdd={() => subTypeCrud.handleOpenModal({ insurance_type_id: activeParent?.id, status: 1 } as any)} disableAdd={!activeParent}>
                 {activeParent ? (
                     <DataTable data={subTypes?.filter(st => st.insurance_type_id == activeParent.id) || []} columns={[{ header: 'Name', accessor: 'insurance_sub_type', className: 'font-bold' }]}
                         onEdit={subTypeCrud.handleOpenModal} 
-                        onToggleStatus={handleToggleSubType} // Custom cascade handler
+                        onToggleStatus={handleToggleSubType}
                         emptyMessage={`No Sub-Types for ${activeParent.insurance_type}`}
                         onRowClick={(item) => setActiveChild(item)}
                         selectedId={activeChild?.id}
@@ -218,7 +222,7 @@ const PolicyConfigurationPage: React.FC = () => {
                 )}
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    {/* FIELDS */}
+                    {}
                     <div className="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-gray-200 dark:border-slate-700 flex flex-col h-[400px]">
                         <div className="px-6 py-4 border-b flex justify-between items-center"><h3 className="font-bold flex items-center gap-2"><CheckSquare size={18} /> Fields</h3><Button size="sm" onClick={() => openFieldModal()} icon={<Plus size={14} />}>Add Field</Button></div>
                         <DataTable data={fields} columns={[{ header: 'Label', accessor: 'field_label', className: 'font-medium' }, { header: 'Group', accessor: (item) => item.group_name ? <span className="bg-blue-50 text-blue-700 px-2 py-0.5 rounded text-xs">{item.group_name}</span> : '-' }, { header: 'Type', accessor: 'field_type', className: 'text-xs font-mono' }]}
@@ -226,7 +230,7 @@ const PolicyConfigurationPage: React.FC = () => {
                         />
                     </div>
 
-                    {/* DOCUMENTS */}
+                    {}
                     <div className="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-gray-200 dark:border-slate-700 flex flex-col h-[400px]">
                         <div className="px-6 py-4 border-b"><h3 className="font-bold flex items-center gap-2 mb-3"><FileText size={18} /> Documents</h3><div className="flex gap-2"><Select options={docMasters?.filter(dm => dm.status === 1 && !documents.some(d => d.doc_master_id == dm.id)).map(d => ({ label: d.doc_name, value: d.id! })) || []} value={selectedDocId} onChange={(e) => setSelectedDocId(e.target.value)} placeholder="Select doc" /><Button onClick={handleAddDocument} disabled={!selectedDocId} size="sm">Add</Button></div></div>
                         <div className="flex-1 overflow-auto p-4 space-y-2">
@@ -244,7 +248,7 @@ const PolicyConfigurationPage: React.FC = () => {
         )}
       </div>
 
-      {/* MODALS */}
+      {}
       <Modal isOpen={typeCrud.isModalOpen} onClose={typeCrud.handleCloseModal} title={typeCrud.currentItem.id ? "Edit Type" : "Add Type"} footer={<Footer crud={typeCrud} />}>
           <div className="space-y-4">
               <Select label="Business Vertical" options={verticals?.filter(v => v.status === 1).map(v => ({label: v.business_vertical_name, value: v.id!})) || []} value={typeCrud.currentItem.business_vertical_id || ''} onChange={(e) => typeCrud.setCurrentItem({...typeCrud.currentItem, business_vertical_id: e.target.value})} />

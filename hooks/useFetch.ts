@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { apiClient } from '../services/apiClient';
 
@@ -15,6 +14,7 @@ export function useFetch<T>(endpoint: string | null, options: UseFetchOptions<T>
   const [loading, setLoading] = useState<boolean>(enabled && !!endpoint && !initialData);
   const [error, setError] = useState<string | null>(null);
   
+  // Use ref to keep latest options without triggering re-renders
   const optionsRef = useRef(options);
   useEffect(() => { optionsRef.current = options; }, [options]);
 
@@ -22,7 +22,8 @@ export function useFetch<T>(endpoint: string | null, options: UseFetchOptions<T>
     setLoading(true);
     setError(null);
     try {
-      const res = await apiClient.get<T>(url);
+      // Pass signal to axios config if supported in future, currently handled via logic check
+      const res = await apiClient.get<T>(url, { signal });
       
       if (signal?.aborted) return;
 
@@ -36,7 +37,8 @@ export function useFetch<T>(endpoint: string | null, options: UseFetchOptions<T>
       }
     } catch (err: any) {
       if (signal?.aborted) return;
-      
+      if (err.name === 'CanceledError') return; // Axios specific
+
       const msg = err.message || 'Network error';
       setError(msg);
       optionsRef.current.onError?.(msg);
@@ -53,17 +55,18 @@ export function useFetch<T>(endpoint: string | null, options: UseFetchOptions<T>
     if (endpoint && enabled) {
       fetchData(endpoint, controller.signal);
     } else {
-        if (!enabled) setLoading(false);
+        if (!enabled && !initialData) setLoading(false);
     }
 
     return () => {
       controller.abort();
     };
-  }, [endpoint, enabled, fetchData]);
+  }, [endpoint, enabled, fetchData, initialData]);
 
-  const refetch = () => {
-    if (endpoint) fetchData(endpoint);
-  };
+  const refetch = useCallback(() => {
+    if (endpoint) return fetchData(endpoint);
+    return Promise.resolve();
+  }, [endpoint, fetchData]);
 
   return { data, loading, error, refetch, setData };
 }

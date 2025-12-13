@@ -4,6 +4,7 @@ import { Button, Input, Modal, DataTable } from '../ui';
 import { SmartForm, FormField } from './SmartForm';
 import { useFetch } from '../../hooks/useFetch';
 import { createGenericApi } from '../../services/genericApi';
+import { useDebounce } from '../../hooks/useDebounce';
 import toast from 'react-hot-toast';
 
 interface ColumnDef<T> {
@@ -49,6 +50,7 @@ export function GenericTableCrud<T extends { id?: number | string; status?: numb
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<Partial<T> | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const debouncedSearch = useDebounce(searchQuery, 300);
   const [saving, setSaving] = useState(false);
 
   const api = useMemo(() => createGenericApi<T>(endpoint), [endpoint]);
@@ -57,16 +59,16 @@ export function GenericTableCrud<T extends { id?: number | string; status?: numb
     let d = rawData || [];
     if (transformRawData) d = transformRawData(d);
     
-    if (!searchQuery || searchKeys.length === 0) return d;
+    if (!debouncedSearch || searchKeys.length === 0) return d;
     
-    const lowerQuery = searchQuery.toLowerCase();
+    const lowerQuery = debouncedSearch.toLowerCase();
     return d.filter(item => 
       searchKeys.some(key => {
         const val = item[key];
         return String(val).toLowerCase().includes(lowerQuery);
       })
     );
-  }, [rawData, transformRawData, searchQuery, searchKeys]);
+  }, [rawData, transformRawData, debouncedSearch, searchKeys]);
 
   const handleCreate = () => {
     setEditingItem({ status: 1, ...defaults } as Partial<T>);
@@ -108,7 +110,9 @@ export function GenericTableCrud<T extends { id?: number | string; status?: numb
       return;
     }
     
-    const newStatus = item.status === 1 ? 0 : 1;
+    // Optimistic Update
+    const oldStatus = item.status;
+    const newStatus = oldStatus === 1 ? 0 : 1;
     setData(prev => prev?.map(i => i.id === item.id ? { ...i, status: newStatus } : i) || []);
     
     try {
@@ -116,6 +120,8 @@ export function GenericTableCrud<T extends { id?: number | string; status?: numb
       toast.success(newStatus === 1 ? 'Activated' : 'Deactivated');
     } catch (error) {
       toast.error('Failed to update status');
+      // Rollback
+      setData(prev => prev?.map(i => i.id === item.id ? { ...i, status: oldStatus } : i) || []);
       refetch();
     }
   };

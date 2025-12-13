@@ -1,7 +1,8 @@
 import React from 'react';
-import { Edit2, Loader2, Trash2 } from 'lucide-react';
+import { Edit2, Trash2, Database } from 'lucide-react';
 import { Toggle } from './Toggle';
 import { Button } from './Button';
+import { Skeleton } from './Skeleton';
 
 export interface Column<T> {
   header: string;
@@ -39,8 +40,22 @@ export function DataTable<T extends { status?: number }>({
   selectedId
 }: DataTableProps<T>) {
   
+  const SkeletonRow = () => (
+    <tr className="border-b border-slate-50 dark:border-slate-800">
+      <td className="px-6 py-4"><Skeleton className="h-4 w-8 mx-auto" /></td>
+      {columns.map((_, idx) => (
+        <td key={idx} className="px-6 py-4">
+          <Skeleton className="h-4 w-3/4" />
+        </td>
+      ))}
+      {(onToggleStatus || onEdit || onDelete || actions) && (
+         <td className="px-6 py-4"><Skeleton className="h-8 w-16 mx-auto" /></td>
+      )}
+    </tr>
+  );
+
   return (
-    <div className="flex-1 overflow-auto bg-white dark:bg-slate-800 rounded-b-lg border-t border-slate-200 dark:border-slate-700">
+    <div className="flex-1 overflow-auto bg-white dark:bg-slate-800 rounded-b-lg border-t border-slate-200 dark:border-slate-700 relative">
       <table className="w-full text-left border-collapse">
         <thead className="bg-slate-50 dark:bg-slate-800/80 backdrop-blur text-xs font-bold text-slate-500 dark:text-slate-400 uppercase sticky top-0 z-10 shadow-sm">
           <tr>
@@ -56,18 +71,16 @@ export function DataTable<T extends { status?: number }>({
         </thead>
         <tbody className="divide-y divide-slate-100 dark:divide-slate-700/50">
           {loading ? (
-            <tr>
-              <td colSpan={columns.length + 4} className="py-16 text-center text-slate-500">
-                <div className="flex flex-col items-center justify-center gap-3">
-                  <Loader2 className="animate-spin text-blue-600" size={32} />
-                  <span className="text-sm font-medium">Loading data...</span>
-                </div>
-              </td>
-            </tr>
+            Array.from({ length: 5 }).map((_, i) => <SkeletonRow key={i} />)
           ) : data.length === 0 ? (
             <tr>
-              <td colSpan={columns.length + 4} className="py-16 text-center">
-                <p className="text-slate-400 text-sm italic">{emptyMessage}</p>
+              <td colSpan={columns.length + 4} className="py-20 text-center">
+                <div className="flex flex-col items-center justify-center text-slate-400">
+                  <div className="bg-slate-50 dark:bg-slate-800 p-4 rounded-full mb-3">
+                    <Database size={32} className="opacity-50" />
+                  </div>
+                  <p className="text-sm font-medium">{emptyMessage}</p>
+                </div>
               </td>
             </tr>
           ) : (
