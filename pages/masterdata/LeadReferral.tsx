@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState, useMemo } from 'react';
 import MasterDataLayout from './MasterDataLayout';
 import { leadSourceApi } from '../../services/masterDataApi/leadSource.api';
@@ -8,9 +9,11 @@ import { useFetch } from '../../hooks/useFetch';
 import { useMasterCrud } from '../../hooks/useMasterCrud';
 import { transformToTree, TreeItem as TreeItemType } from '../../utils/dataUtils';
 import toast from 'react-hot-toast';
+import { API_ENDPOINTS } from '../../config/api.config';
 
 const LeadReferralPage: React.FC = () => {
-  const { data: sourceData, loading, refetch, setData } = useFetch<LeadSource[]>('/leadSources');
+  const { LEAD_SOURCE } = API_ENDPOINTS.MASTER_DATA;
+  const { data: sourceData, loading, refetch, setData } = useFetch<LeadSource[]>(LEAD_SOURCE);
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedNodes, setExpandedNodes] = useState<Set<number | string>>(new Set());
 
@@ -81,19 +84,19 @@ const LeadReferralPage: React.FC = () => {
      return (
         <>
             <div className={`flex items-center justify-between px-4 py-3 border-b border-gray-50 dark:border-slate-700/50 hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors ${level > 0 ? 'bg-slate-50/30 dark:bg-slate-800/50' : ''}`} style={{ paddingLeft: `${level * 24 + 16}px` }}>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 overflow-hidden">
                     {hasChildren ? (
-                      <button onClick={() => toggleExpand(node.id!)} className="text-slate-400 hover:text-blue-500">
+                      <button onClick={() => toggleExpand(node.id!)} className="text-slate-400 hover:text-blue-500 shrink-0">
                         {expandedNodes.has(node.id!) ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
                       </button>
                     ) : (
-                      <span className="w-4 h-4 block"></span>
+                      <span className="w-4 h-4 block shrink-0"></span>
                     )}
-                    {level > 0 && <CornerDownRight size={14} className="text-slate-300" />}
-                    <span className={`text-sm font-medium ${node.status === 1 ? 'text-slate-800 dark:text-white' : 'text-slate-400 line-through'}`}>{node.ref_desc}</span>
-                    {node.individual && <span className="ml-2 text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">Referrer Selection</span>}
+                    {level > 0 && <CornerDownRight size={14} className="text-slate-300 shrink-0" />}
+                    <span className={`text-sm font-medium truncate ${node.status === 1 ? 'text-slate-800 dark:text-white' : 'text-slate-400 line-through'}`}>{node.ref_desc}</span>
+                    {node.individual && <span className="ml-2 text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full whitespace-nowrap hidden sm:inline-block">Referrer Selection</span>}
                 </div>
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-4 shrink-0">
                      <Toggle checked={node.status === 1} onChange={() => handleToggleStatus(node)} size="sm" />
                      <div className="flex items-center gap-1">
                          <Button variant="ghost" size="icon" onClick={() => handleAddChild(node.id!)}><Plus size={14} /></Button>
@@ -113,9 +116,9 @@ const LeadReferralPage: React.FC = () => {
   return (
     <MasterDataLayout title="Lead/Referral Management">
       <div className="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-gray-200 dark:border-slate-700 flex flex-col h-[calc(100vh-12rem)]">
-         <div className="p-4 border-b flex justify-between items-center gap-4">
-            <Input className="w-96" placeholder="Search tree..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
-            <Button onClick={() => crud.handleOpenModal({ parent_id: 0 } as unknown as LeadSource)} icon={<Plus size={16} />}>Add Root Source</Button>
+         <div className="p-4 border-b flex flex-col sm:flex-row justify-between items-center gap-4">
+            <Input className="w-full sm:w-64 md:w-96" placeholder="Search tree..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
+            <Button className="w-full sm:w-auto" onClick={() => crud.handleOpenModal({ parent_id: 0 } as unknown as LeadSource)} icon={<Plus size={16} />}>Add Root Source</Button>
          </div>
          <div className="flex-1 overflow-auto bg-white dark:bg-slate-800">
              {loading ? <div className="p-8 text-center">Loading...</div> : treeData.map((node: any) => <TreeItem key={node.id} node={node} level={0} />)}

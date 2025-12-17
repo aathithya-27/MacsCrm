@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import MasterDataLayout from './MasterDataLayout';
 import { geographyApi } from '../../services/masterDataApi/geography.api';
@@ -7,15 +8,18 @@ import { Button, Input, Select, Modal, DataTable } from '../../components/ui';
 import { useFetch } from '../../hooks/useFetch';
 import { useMasterCrud } from '../../hooks/useMasterCrud';
 import toast from 'react-hot-toast';
+import { API_ENDPOINTS } from '../../config/api.config';
 
 const GeographyPage: React.FC = () => {
+  const { COUNTRY, STATE, DISTRICT, CITY, AREA } = API_ENDPOINTS.MASTER_DATA;
+
   const [searchQuery, setSearchQuery] = useState('');
   
-  const { data: countries, refetch: refetchC, setData: setC } = useFetch<Country[]>('/countries');
-  const { data: states, refetch: refetchS, setData: setS } = useFetch<State[]>('/states');
-  const { data: districts, refetch: refetchD, setData: setD } = useFetch<District[]>('/districts');
-  const { data: cities, refetch: refetchCt, setData: setCt } = useFetch<City[]>('/cities');
-  const { data: areas, refetch: refetchA, setData: setA } = useFetch<Area[]>('/areas');
+  const { data: countries, refetch: refetchC, setData: setC } = useFetch<Country[]>(COUNTRY);
+  const { data: states, refetch: refetchS, setData: setS } = useFetch<State[]>(STATE);
+  const { data: districts, refetch: refetchD, setData: setD } = useFetch<District[]>(DISTRICT);
+  const { data: cities, refetch: refetchCt, setData: setCt } = useFetch<City[]>(CITY);
+  const { data: areas, refetch: refetchA, setData: setA } = useFetch<Area[]>(AREA);
 
   const cCrud = useMasterCrud({ api: { create: geographyApi.createCountry, update: geographyApi.updateCountry, patch: geographyApi.patchCountry }, refetch: refetchC, updateLocalData: setC, validate: i => !i.country_name ? "Name required" : null });
   const sCrud = useMasterCrud({ api: { create: geographyApi.createState, update: geographyApi.updateState, patch: geographyApi.patchState }, refetch: refetchS, updateLocalData: setS, validate: i => !i.state ? "Name required" : null });

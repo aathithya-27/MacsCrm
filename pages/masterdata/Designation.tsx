@@ -1,14 +1,17 @@
+
 import React from 'react';
 import MasterDataLayout from './MasterDataLayout';
 import { GenericTableCrud } from '../../components/generic/GenericTableCrud';
 import { Designation } from '../../types';
+import { API_ENDPOINTS } from '../../config/api.config';
 
 const DesignationPage: React.FC = () => {
+  const { DESIGNATION } = API_ENDPOINTS.MASTER_DATA;
   return (
     <MasterDataLayout title="Designation Master">
       <GenericTableCrud<Designation>
         title="Designation"
-        endpoint="/designations"
+        endpoint={DESIGNATION}
         columns={[
           { header: 'Designation Name', accessor: 'designation_name', className: 'font-bold' },
           { header: 'Rank', accessor: 'designation_rank', align: 'center' }

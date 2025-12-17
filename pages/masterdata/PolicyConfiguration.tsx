@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState, useRef } from 'react';
 import MasterDataLayout from './MasterDataLayout';
 import { policyApi } from '../../services/masterDataApi/policy.api';
@@ -7,15 +8,18 @@ import { Button, Input, Select, Modal, Toggle, DataTable } from '../../component
 import { useFetch } from '../../hooks/useFetch';
 import { useMasterCrud } from '../../hooks/useMasterCrud';
 import toast from 'react-hot-toast';
+import { API_ENDPOINTS } from '../../config/api.config';
 
 const PolicyConfigurationPage: React.FC = () => {
+  const { BUSINESS_VERTICAL, INSURANCE_TYPE, INSURANCE_SUB_TYPE, DOCUMENT_MASTER } = API_ENDPOINTS.MASTER_DATA;
+
   const [activeParent, setActiveParent] = useState<InsuranceType | null>(null);
   const [activeChild, setActiveChild] = useState<InsuranceSubType | null>(null);
   
-  const { data: verticals } = useFetch<BusinessVertical[]>('/businessVerticals');
-  const { data: types, refetch: refetchTypes, setData: setTypes } = useFetch<InsuranceType[]>('/insuranceTypes');
-  const { data: subTypes, refetch: refetchSubTypes, setData: setSubTypes } = useFetch<InsuranceSubType[]>('/insuranceSubTypes');
-  const { data: docMasters } = useFetch<DocumentMaster[]>('/documentMasters');
+  const { data: verticals } = useFetch<BusinessVertical[]>(BUSINESS_VERTICAL);
+  const { data: types, refetch: refetchTypes, setData: setTypes } = useFetch<InsuranceType[]>(INSURANCE_TYPE);
+  const { data: subTypes, refetch: refetchSubTypes, setData: setSubTypes } = useFetch<InsuranceSubType[]>(INSURANCE_SUB_TYPE);
+  const { data: docMasters } = useFetch<DocumentMaster[]>(DOCUMENT_MASTER);
   
   const [processFlows, setProcessFlows] = useState<ProcessFlow[]>([]);
   const [fields, setFields] = useState<PolicyField[]>([]);

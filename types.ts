@@ -258,44 +258,28 @@ export interface PremiumTier {
   status: number;
 }
 
-export interface ExpenseCategory {
+export interface AccountCategory {
   id?: number | string;
   comp_id: number;
-  expense_cate_name: string;
+  category_name: string;
   status: number;
 }
 
-export interface ExpenseHead {
+export interface AccountSubCategory {
   id?: number | string;
   comp_id: number;
-  expense_head_name: string;
-  expense_cate_id: number | string;
-  get_individual: number;
+  sub_category_name: string;
+  category_id: number | string;
   status: number;
 }
 
-export interface ExpenseIndividual {
+export interface AccountHead {
   id?: number | string;
   comp_id: number;
-  individual_name: string;
-  expense_head_id: number | string;
-  expense_category_id: number | string;
-  status: number;
-}
-
-export interface IncomeCategory {
-  id?: number | string;
-  comp_id: number;
-  income_cate: string;
-  business_ty_id?: number;
-  status: number;
-}
-
-export interface IncomeHead {
-  id?: number | string;
-  comp_id: number;
-  income_head: string;
-  income_cate_id: number | string;
+  head_name: string;
+  sub_category_id: number | string;
+  posting_bank: boolean;
+  is_cash: boolean;
   status: number;
 }
 

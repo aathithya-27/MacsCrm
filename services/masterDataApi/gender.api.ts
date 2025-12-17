@@ -1,7 +1,9 @@
+
 import { apiClient } from '../apiClient';
 import { Gender } from '../../types';
+import { API_ENDPOINTS } from '../../config/api.config';
 
-const ENDPOINT = '/genders';
+const ENDPOINT = API_ENDPOINTS.MASTER_DATA.GENDER;
 
 export const genderApi = {
   getAll: () => apiClient.get<Gender[]>(ENDPOINT),

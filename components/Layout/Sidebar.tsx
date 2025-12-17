@@ -1,4 +1,5 @@
-import React, { useContext, useEffect, useState } from 'react';
+
+import React, { useContext } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { 
   LayoutDashboard, 
@@ -17,27 +18,12 @@ import {
   X
 } from 'lucide-react';
 import { SidebarContext } from './MainLayout';
-import { companyMasterApi } from '../../services/masterDataApi/companyMaster.api';
+import { useCompany } from '../../context/CompanyContext';
 
 const Sidebar: React.FC = () => {
   const location = useLocation();
   const { isMobileOpen, toggleMobileSidebar } = useContext(SidebarContext);
-  const [companyName, setCompanyName] = useState('Finroots');
-
-  useEffect(() => {
-    const fetchCompanyName = async () => {
-      try {
-        // Fetching Company ID 1 as the default active company
-        const response = await companyMasterApi.getById(1);
-        if (response && response.data && response.data.comp_name) {
-          setCompanyName(response.data.comp_name);
-        }
-      } catch (error) {
-        console.error('Failed to fetch company name', error);
-      }
-    };
-    fetchCompanyName();
-  }, []);
+  const { company } = useCompany();
 
   const menuItems = [
     { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
@@ -69,8 +55,8 @@ const Sidebar: React.FC = () => {
         lg:translate-x-0 flex flex-col shadow-sm
       `}>
         <div className="h-16 flex items-center justify-between px-6 border-b border-gray-100 dark:border-slate-700 bg-white dark:bg-slate-800">
-          <span className="text-xl font-bold text-slate-800 dark:text-white truncate" title={companyName}>
-            {companyName}
+          <span className="text-xl font-bold text-slate-800 dark:text-white truncate" title={company?.comp_name || 'Finroots'}>
+            {company?.comp_name || 'Finroots'}
           </span>
           <button onClick={toggleMobileSidebar} className="lg:hidden text-slate-500 hover:bg-gray-100 dark:hover:bg-slate-700 p-1 rounded">
             <X size={20} />

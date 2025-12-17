@@ -1,9 +1,11 @@
+
 import { apiClient } from '../apiClient';
 import { Gift, SumAssuredTier, PremiumTier } from '../../types';
+import { API_ENDPOINTS } from '../../config/api.config';
 
-const GIFT_ENDPOINT = '/gifts';
-const SA_TIER_ENDPOINT = '/sumAssuredTiers';
-const PREM_TIER_ENDPOINT = '/premiumTiers';
+const GIFT_ENDPOINT = API_ENDPOINTS.MASTER_DATA.GIFT;
+const SA_TIER_ENDPOINT = API_ENDPOINTS.MASTER_DATA.SUM_ASSURED_TIER;
+const PREM_TIER_ENDPOINT = API_ENDPOINTS.MASTER_DATA.PREMIUM_TIER;
 
 export const giftApi = {
   // Gifts

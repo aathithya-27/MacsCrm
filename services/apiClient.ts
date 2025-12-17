@@ -1,8 +1,10 @@
+
 import axios, { AxiosRequestConfig } from 'axios';
 import { ApiResult } from '../types/api';
 import { setupInterceptors } from './interceptors';
 import { API_CONFIG } from '../config/api.config';
 import { parseError } from '../utils/errorUtils';
+import { toQueryString } from '../utils/queryUtils';
 
 const axiosInstance = axios.create({
   baseURL: API_CONFIG.BASE_URL,
@@ -31,7 +33,10 @@ async function request<T>(config: AxiosRequestConfig): Promise<ApiResult<T>> {
 }
 
 export const apiClient = {
-  get: <T>(url: string, config?: AxiosRequestConfig) => request<T>({ ...config, method: 'GET', url }),
+  get: <T>(url: string, params?: Record<string, any>, config?: AxiosRequestConfig) => {
+    const queryString = params ? toQueryString(params) : '';
+    return request<T>({ ...config, method: 'GET', url: `${url}${queryString}` });
+  },
   post: <T>(url: string, data?: any, config?: AxiosRequestConfig) => request<T>({ ...config, method: 'POST', url, data }),
   put: <T>(url: string, data?: any, config?: AxiosRequestConfig) => request<T>({ ...config, method: 'PUT', url, data }),
   patch: <T>(url: string, data?: any, config?: AxiosRequestConfig) => request<T>({ ...config, method: 'PATCH', url, data }),

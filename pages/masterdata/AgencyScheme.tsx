@@ -9,13 +9,16 @@ import { Button, Input, Select, Modal, DataTable } from '../../components/ui';
 import { Plus, Search } from 'lucide-react';
 import { useForm, Controller } from 'react-hook-form';
 import toast from 'react-hot-toast';
+import { API_ENDPOINTS } from '../../config/api.config';
 
 const AgencySchemePage: React.FC = () => {
+  const { AGENCY, SCHEME, INSURANCE_TYPE, INSURANCE_SUB_TYPE } = API_ENDPOINTS.MASTER_DATA;
+
   const [selectedAgency, setSelectedAgency] = useState<Agency | null>(null);
   
-  const { data: types } = useFetch<InsuranceType[]>('/insuranceTypes');
-  const { data: subTypes, refetch: refetchSubTypes } = useFetch<InsuranceSubType[]>('/insuranceSubTypes');
-  const { data: schemes, refetch: refetchSchemes } = useFetch<Scheme[]>('/schemes');
+  const { data: types } = useFetch<InsuranceType[]>(INSURANCE_TYPE);
+  const { data: subTypes, refetch: refetchSubTypes } = useFetch<InsuranceSubType[]>(INSURANCE_SUB_TYPE);
+  const { data: schemes, refetch: refetchSchemes } = useFetch<Scheme[]>(SCHEME);
 
   React.useEffect(() => {
     const handleSubTypesUpdate = () => refetchSubTypes();
@@ -51,7 +54,7 @@ const AgencySchemePage: React.FC = () => {
         <div className="md:col-span-1">
           <GenericTableCrud<Agency>
             title="Agencies"
-            endpoint="/agencies"
+            endpoint={AGENCY}
             columns={[{ header: 'Agency Name', accessor: 'agency_name' }]}
             fields={[{ name: 'agency_name', label: 'Agency Name', type: 'text', required: true }]}
             defaults={{ comp_id: 1001 }}
@@ -59,6 +62,7 @@ const AgencySchemePage: React.FC = () => {
             onRowClick={(item) => setSelectedAgency(item)}
             selectedId={selectedAgency?.id}
             onStatusChange={handleToggleAgency}
+            compact={true} 
           />
         </div>
 
@@ -87,10 +91,10 @@ const SchemeManager: React.FC<{
   types: InsuranceType[] | null;
   subTypes: InsuranceSubType[] | null;
 }> = ({ selectedAgency, types, subTypes }) => {
-  const { data: rawSchemes, refetch } = useFetch<Scheme[]>('/schemes');
+  const { SCHEME } = API_ENDPOINTS.MASTER_DATA;
+  const { data: rawSchemes, refetch } = useFetch<Scheme[]>(SCHEME);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingScheme, setEditingScheme] = useState<Partial<Scheme> | null>(null);
-  const [selectedTypeId, setSelectedTypeId] = useState<string>('');
   
   const { control, handleSubmit, reset, watch, setValue } = useForm();
   const watchedTypeId = watch('insurance_type_id');

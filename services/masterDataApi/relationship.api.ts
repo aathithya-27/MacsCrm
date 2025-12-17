@@ -1,7 +1,9 @@
+
 import { apiClient } from '../apiClient';
 import { Relationship } from '../../types';
+import { API_ENDPOINTS } from '../../config/api.config';
 
-const ENDPOINT = '/relationships';
+const ENDPOINT = API_ENDPOINTS.MASTER_DATA.RELATIONSHIP;
 
 export const relationshipApi = {
   getAll: () => apiClient.get<Relationship[]>(ENDPOINT),

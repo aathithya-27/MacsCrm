@@ -1,7 +1,9 @@
+
 import { apiClient } from '../apiClient';
 import { Role } from '../../types';
+import { API_ENDPOINTS } from '../../config/api.config';
 
-const ENDPOINT = '/roles';
+const ENDPOINT = API_ENDPOINTS.MASTER_DATA.ROLE;
 
 export const roleApi = {
   getAll: () => apiClient.get<Role[]>(ENDPOINT),

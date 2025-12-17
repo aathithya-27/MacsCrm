@@ -1,8 +1,10 @@
+
 import { apiClient } from '../apiClient';
 import { BankMaster, AccountType } from '../../types';
+import { API_ENDPOINTS } from '../../config/api.config';
 
-const BANK_ENDPOINT = '/banks';
-const ACCT_TYPE_ENDPOINT = '/accountTypes';
+const BANK_ENDPOINT = API_ENDPOINTS.MASTER_DATA.BANK;
+const ACCT_TYPE_ENDPOINT = API_ENDPOINTS.MASTER_DATA.ACCOUNT_TYPE;
 
 export const bankApi = {
   // Bank Master

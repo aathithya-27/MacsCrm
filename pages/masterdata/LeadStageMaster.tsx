@@ -1,14 +1,17 @@
+
 import React from 'react';
 import MasterDataLayout from './MasterDataLayout';
 import { GenericTableCrud } from '../../components/generic/GenericTableCrud';
 import { LeadStage } from '../../types';
+import { API_ENDPOINTS } from '../../config/api.config';
 
 const LeadStageMaster: React.FC = () => {
+  const { LEAD_STAGE } = API_ENDPOINTS.MASTER_DATA;
   return (
     <MasterDataLayout title="Lead Pipeline Stages">
       <GenericTableCrud<LeadStage>
         title="Lead Stage"
-        endpoint="/leadStages"
+        endpoint={LEAD_STAGE}
         columns={[{ header: 'Stage Name', accessor: 'lead_name', className: 'font-bold' }]}
         fields={[
           { name: 'lead_name', label: 'Stage Name', type: 'text', required: true }

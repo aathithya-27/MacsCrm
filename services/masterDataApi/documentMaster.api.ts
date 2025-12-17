@@ -1,7 +1,9 @@
+
 import { apiClient } from '../apiClient';
 import { DocumentMaster } from '../../types';
+import { API_ENDPOINTS } from '../../config/api.config';
 
-const ENDPOINT = '/documentMasters';
+const ENDPOINT = API_ENDPOINTS.MASTER_DATA.DOCUMENT_MASTER;
 
 export const documentMasterApi = {
   getAll: () => apiClient.get<DocumentMaster[]>(ENDPOINT),

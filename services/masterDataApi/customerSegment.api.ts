@@ -1,10 +1,12 @@
+
 import { apiClient } from '../apiClient';
 import { CustomerCategory, CustomerSubCategory, CustomerGroup, CustomerType } from '../../types';
+import { API_ENDPOINTS } from '../../config/api.config';
 
-const CATE_ENDPOINT = '/customerCategories';
-const SUB_CATE_ENDPOINT = '/customerSubCategories';
-const GROUP_ENDPOINT = '/customerGroups';
-const TYPE_ENDPOINT = '/customerTypes';
+const CATE_ENDPOINT = API_ENDPOINTS.MASTER_DATA.CUSTOMER_CATEGORY;
+const SUB_CATE_ENDPOINT = API_ENDPOINTS.MASTER_DATA.CUSTOMER_SUB_CATEGORY;
+const GROUP_ENDPOINT = API_ENDPOINTS.MASTER_DATA.CUSTOMER_GROUP;
+const TYPE_ENDPOINT = API_ENDPOINTS.MASTER_DATA.CUSTOMER_TYPE;
 
 export const customerSegmentApi = {
   // Category

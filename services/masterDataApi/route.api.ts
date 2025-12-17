@@ -1,7 +1,9 @@
+
 import { apiClient } from '../apiClient';
 import { Route } from '../../types';
+import { API_ENDPOINTS } from '../../config/api.config';
 
-const ENDPOINT = '/routes';
+const ENDPOINT = API_ENDPOINTS.MASTER_DATA.ROUTE;
 
 export const routeApi = {
   getAll: () => apiClient.get<Route[]>(ENDPOINT),

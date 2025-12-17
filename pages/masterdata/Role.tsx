@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo } from 'react';
 import MasterDataLayout from './MasterDataLayout';
 import { roleApi } from '../../services/masterDataApi/role.api';
@@ -8,9 +9,12 @@ import { DataTable, Button, Input, Modal, Toggle } from '../../components/ui';
 import { SmartForm } from '../../components/generic/SmartForm';
 import { Plus, Search } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { API_ENDPOINTS } from '../../config/api.config';
 
 const RolePage: React.FC = () => {
-  const { data: roles, loading, refetch, setData } = useFetch<Role[]>('/roles');
+  const { ROLE } = API_ENDPOINTS.MASTER_DATA;
+
+  const { data: roles, loading, refetch, setData } = useFetch<Role[]>(ROLE);
   const [searchQuery, setSearchQuery] = useState('');
 
   const crud = useMasterCrud<Role>({
@@ -65,7 +69,7 @@ const RolePage: React.FC = () => {
     <MasterDataLayout title="Manage Roles">
       <div className="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-gray-200 dark:border-slate-700 flex flex-col h-[calc(100vh-12rem)]">
         
-        {}
+        {/* Header */}
         <div className="p-4 border-b border-gray-200 dark:border-slate-700 flex flex-col sm:flex-row justify-between items-center gap-4">
           <h3 className="font-bold text-slate-800 dark:text-white flex items-center gap-2">Role List</h3>
           <div className="flex gap-3 w-full sm:w-auto">
@@ -82,7 +86,7 @@ const RolePage: React.FC = () => {
           </div>
         </div>
 
-        {}
+        {/* Table */}
         <DataTable 
           data={filteredData}
           columns={[

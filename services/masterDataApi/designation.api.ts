@@ -1,7 +1,9 @@
+
 import { apiClient } from '../apiClient';
 import { Designation } from '../../types';
+import { API_ENDPOINTS } from '../../config/api.config';
 
-const ENDPOINT = '/designations';
+const ENDPOINT = API_ENDPOINTS.MASTER_DATA.DESIGNATION;
 
 export const designationApi = {
   getAll: () => apiClient.get<Designation[]>(ENDPOINT),

@@ -1,8 +1,10 @@
+
 import { apiClient } from '../apiClient';
 import { Agency, Scheme } from '../../types';
+import { API_ENDPOINTS } from '../../config/api.config';
 
-const AGENCY_ENDPOINT = '/agencies';
-const SCHEME_ENDPOINT = '/schemes';
+const AGENCY_ENDPOINT = API_ENDPOINTS.MASTER_DATA.AGENCY;
+const SCHEME_ENDPOINT = API_ENDPOINTS.MASTER_DATA.SCHEME;
 
 export const agencyApi = {
   // Agency

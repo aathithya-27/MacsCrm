@@ -1,7 +1,9 @@
+
 import { apiClient } from '../apiClient';
 import { CompanyMaster } from '../../types';
+import { API_ENDPOINTS } from '../../config/api.config';
 
-const ENDPOINT = '/companyMaster';
+const ENDPOINT = API_ENDPOINTS.MASTER_DATA.COMPANY;
 
 export const companyMasterApi = {
   getAll: () => apiClient.get<CompanyMaster[]>(ENDPOINT),

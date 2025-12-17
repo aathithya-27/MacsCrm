@@ -1,12 +1,14 @@
+
 import { apiClient } from '../apiClient';
 import { InsuranceType, InsuranceSubType, ProcessFlow, PolicyField, PolicyDocument } from '../../types';
+import { API_ENDPOINTS } from '../../config/api.config';
 
 // Endpoints
-const TYPES_ENDPOINT = '/insuranceTypes';
-const SUBTYPES_ENDPOINT = '/insuranceSubTypes';
-const PROCESS_ENDPOINT = '/processFlows';
-const FIELDS_ENDPOINT = '/policyFields';
-const DOCS_ENDPOINT = '/policyDocuments';
+const TYPES_ENDPOINT = API_ENDPOINTS.MASTER_DATA.INSURANCE_TYPE;
+const SUBTYPES_ENDPOINT = API_ENDPOINTS.MASTER_DATA.INSURANCE_SUB_TYPE;
+const PROCESS_ENDPOINT = API_ENDPOINTS.MASTER_DATA.PROCESS_FLOW;
+const FIELDS_ENDPOINT = API_ENDPOINTS.MASTER_DATA.POLICY_FIELD;
+const DOCS_ENDPOINT = API_ENDPOINTS.MASTER_DATA.POLICY_DOCUMENT;
 
 export const policyApi = {
   // Insurance Types

@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo, useEffect } from 'react';
 import MasterDataLayout from './MasterDataLayout';
 import { branchApi } from '../../services/masterDataApi/branch.api';
@@ -6,14 +7,18 @@ import { Plus } from 'lucide-react';
 import { Button, Input, Select, Modal, DataTable, Toggle } from '../../components/ui';
 import { useFetch } from '../../hooks/useFetch';
 import { useMasterCrud } from '../../hooks/useMasterCrud';
+import { API_ENDPOINTS } from '../../config/api.config';
 
 const BranchPage: React.FC = () => {
-  const { data: branches, loading: loadingBranches, refetch: refetchBranches, setData: setBranches } = useFetch<Branch[]>('/branches');
-  const { data: countries } = useFetch<Country[]>('/countries');
-  const { data: states } = useFetch<State[]>('/states');
-  const { data: districts } = useFetch<District[]>('/districts');
-  const { data: cities } = useFetch<City[]>('/cities');
-  const { data: areas } = useFetch<Area[]>('/areas');
+  const { BRANCH } = API_ENDPOINTS.MASTER_DATA;
+  const { COUNTRY, STATE, DISTRICT, CITY, AREA } = API_ENDPOINTS.MASTER_DATA;
+
+  const { data: branches, loading: loadingBranches, refetch: refetchBranches, setData: setBranches } = useFetch<Branch[]>(BRANCH);
+  const { data: countries } = useFetch<Country[]>(COUNTRY);
+  const { data: states } = useFetch<State[]>(STATE);
+  const { data: districts } = useFetch<District[]>(DISTRICT);
+  const { data: cities } = useFetch<City[]>(CITY);
+  const { data: areas } = useFetch<Area[]>(AREA);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [idSuffix, setIdSuffix] = useState('');

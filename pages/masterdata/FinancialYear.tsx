@@ -6,10 +6,13 @@ import { FinancialYear, NumberingRule } from '../../types';
 import { useFetch } from '../../hooks/useFetch';
 import { financialYearApi } from '../../services/masterDataApi/financialYear.api';
 import toast from 'react-hot-toast';
+import { API_ENDPOINTS } from '../../config/api.config';
 
 const FinancialYearPage: React.FC = () => {
+  const { FINANCIAL_YEAR, NUMBERING_RULE } = API_ENDPOINTS.MASTER_DATA;
+
   const [selectedFY, setSelectedFY] = useState<FinancialYear | null>(null);
-  const { data: rules, refetch: refetchRules } = useFetch<NumberingRule[]>('/numberingRules');
+  const { data: rules, refetch: refetchRules } = useFetch<NumberingRule[]>(NUMBERING_RULE);
 
   const handleToggleFY = async (item: FinancialYear) => {
       const newStatus = item.status === 1 ? 0 : 1;
@@ -30,11 +33,11 @@ const FinancialYearPage: React.FC = () => {
     <MasterDataLayout title="Financial Year Management">
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-full pb-8">
         
-        {/* Top: Financial Years (Takes full width on mobile, less on desktop) */}
+        {}
         <div className="lg:col-span-5">
           <GenericTableCrud<FinancialYear>
             title="Financial Years"
-            endpoint="/financialYears"
+            endpoint={FINANCIAL_YEAR}
             columns={[
                 { header: 'FY', accessor: 'fin_year', className: 'font-bold' },
                 { header: 'From', accessor: 'from_date' },
@@ -49,10 +52,12 @@ const FinancialYearPage: React.FC = () => {
             onRowClick={(item) => setSelectedFY(item)}
             selectedId={selectedFY?.id}
             onStatusChange={handleToggleFY}
+            searchKeys={['fin_year']}
+            compact={true}
           />
         </div>
 
-        {/* Bottom/Right: Rules for Selected FY */}
+        {}
         <div className="lg:col-span-7 flex flex-col gap-6">
            {!selectedFY ? (
                <div className="h-64 bg-white dark:bg-slate-800 rounded-lg border border-dashed border-gray-300 dark:border-slate-700 flex items-center justify-center text-slate-400">
@@ -60,10 +65,10 @@ const FinancialYearPage: React.FC = () => {
                </div>
            ) : (
                <>
-                  <div className="h-[300px]" key={`voucher-${selectedFY.id}`}>
+                  <div key={`voucher-${selectedFY.id}`}>
                       <GenericTableCrud<NumberingRule>
                         title={`Voucher Rules (${selectedFY.fin_year})`}
-                        endpoint="/numberingRules"
+                        endpoint={NUMBERING_RULE}
                         columns={[
                             { header: 'Prefix', accessor: 'prefix' },
                             { header: 'Start No', accessor: 'start_no' }
@@ -75,12 +80,13 @@ const FinancialYearPage: React.FC = () => {
                         ]}
                         defaults={{ comp_id: 1001, fin_year_id: selectedFY.id, type: 'VOUCHER', suffix: 'N/A' }}
                         transformRawData={(data) => data.filter(r => r.fin_year_id == selectedFY.id && r.type === 'VOUCHER')}
+                        compact={true}
                       />
                   </div>
-                  <div className="h-[300px]" key={`receipt-${selectedFY.id}`}>
+                  <div key={`receipt-${selectedFY.id}`}>
                       <GenericTableCrud<NumberingRule>
                         title={`Receipt Rules (${selectedFY.fin_year})`}
-                        endpoint="/numberingRules"
+                        endpoint={NUMBERING_RULE}
                         columns={[
                             { header: 'Prefix', accessor: 'prefix' },
                             { header: 'Start No', accessor: 'start_no' }
@@ -92,6 +98,7 @@ const FinancialYearPage: React.FC = () => {
                         ]}
                         defaults={{ comp_id: 1001, fin_year_id: selectedFY.id, type: 'RECEIPT', suffix: 'N/A' }}
                         transformRawData={(data) => data.filter(r => r.fin_year_id == selectedFY.id && r.type === 'RECEIPT')}
+                        compact={true}
                       />
                   </div>
                </>

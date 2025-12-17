@@ -1,7 +1,9 @@
+
 import { apiClient } from '../apiClient';
 import { RolePermission } from '../../types';
+import { API_ENDPOINTS } from '../../config/api.config';
 
-const ENDPOINT = '/rolePermissions';
+const ENDPOINT = API_ENDPOINTS.MASTER_DATA.ROLE_PERMISSION;
 
 export const rolePermissionApi = {
   // Fetch permissions for a specific role

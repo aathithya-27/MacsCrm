@@ -7,10 +7,17 @@ import { CompanyMaster, Country, State, District, City, Area } from '../../types
 import { Save } from 'lucide-react';
 import { Button, Input, Select, Toggle } from '../../components/ui';
 import { useFetch } from '../../hooks/useFetch';
+import { useCompany } from '../../context/CompanyContext';
 import { DEFAULTS } from '../../constants';
 import toast from 'react-hot-toast';
+import { API_ENDPOINTS } from '../../config/api.config';
 
 const CompanyMasterPage: React.FC = () => {
+  const { COMPANY } = API_ENDPOINTS.MASTER_DATA;
+  const { COUNTRY, STATE, DISTRICT, CITY, AREA } = API_ENDPOINTS.MASTER_DATA;
+  
+  const { refreshCompany } = useCompany();
+
   const [saving, setSaving] = useState(false);
   const [formData, setFormData] = useState<CompanyMaster>({
     comp_id: DEFAULTS.COMP_ID, 
@@ -21,12 +28,12 @@ const CompanyMasterPage: React.FC = () => {
     status: DEFAULTS.STATUS_ACTIVE
   });
 
-  const { data: companyData, loading } = useFetch<CompanyMaster>('/companyMaster/1');
-  const { data: countries } = useFetch<Country[]>('/countries');
-  const { data: states } = useFetch<State[]>('/states');
-  const { data: districts } = useFetch<District[]>('/districts');
-  const { data: cities } = useFetch<City[]>('/cities');
-  const { data: areas } = useFetch<Area[]>('/areas');
+  const { data: companyData, loading, setData: setLocalData } = useFetch<CompanyMaster>(`${COMPANY}/1`);
+  const { data: countries } = useFetch<Country[]>(COUNTRY);
+  const { data: states } = useFetch<State[]>(STATE);
+  const { data: districts } = useFetch<District[]>(DISTRICT);
+  const { data: cities } = useFetch<City[]>(CITY);
+  const { data: areas } = useFetch<Area[]>(AREA);
 
   const [locIds, setLocIds] = useState<{country?: number | string, state?: number | string, district?: number | string, city?: number | string}>({});
 
@@ -119,11 +126,13 @@ const CompanyMasterPage: React.FC = () => {
     try {
       if (formData.id) {
         await companyMasterApi.update(formData.id, formData);
+        setLocalData(formData);
         await processCascadeDeactivation();
       } else {
         await companyMasterApi.create(formData);
       }
       toast.success('Company info saved successfully!');
+      await refreshCompany();
     } catch (e) { 
       toast.error('Failed to save company info.'); 
     } finally { 
@@ -143,7 +152,7 @@ const CompanyMasterPage: React.FC = () => {
         </div>
 
         {}
-        <div className="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-gray-200 dark:border-slate-700 p-6">
+        <div className="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-gray-200 dark:border-slate-700 p-4 sm:p-6">
            <h3 className="text-lg font-medium text-slate-800 dark:text-white mb-4 border-b border-gray-100 dark:border-slate-700 pb-2">Company Info</h3>
            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <Input label="Company Code" name="comp_code" value={formData.comp_code} onChange={handleChange} disabled placeholder="Auto-generated" />
@@ -160,7 +169,7 @@ const CompanyMasterPage: React.FC = () => {
         </div>
 
         {}
-        <div className="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-gray-200 dark:border-slate-700 p-6">
+        <div className="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-gray-200 dark:border-slate-700 p-4 sm:p-6">
            <h3 className="text-lg font-medium text-slate-800 dark:text-white mb-4 border-b border-gray-100 dark:border-slate-700 pb-2">Address & Contact</h3>
            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <Input label="Line 1" name="address_1" value={formData.address_1} onChange={handleChange} />
@@ -184,7 +193,7 @@ const CompanyMasterPage: React.FC = () => {
         </div>
 
         {}
-        <div className="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-gray-200 dark:border-slate-700 p-6">
+        <div className="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-gray-200 dark:border-slate-700 p-4 sm:p-6">
            <h3 className="text-lg font-medium text-slate-800 dark:text-white mb-4 border-b border-gray-100 dark:border-slate-700 pb-2">Tax Info</h3>
            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <Input label="GSTIN" name="gst_no" value={formData.gst_no} onChange={handleChange} />

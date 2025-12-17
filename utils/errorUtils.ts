@@ -17,6 +17,7 @@ export const parseError = (error: any): string => {
 };
 
 export const logError = (error: any, context?: string) => {
+  // In production, this would send to Sentry/LogRocket
   const timestamp = new Date().toISOString();
   console.error(`[${timestamp}] [${context || 'App'}] Error:`, error);
 };

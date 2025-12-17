@@ -20,4 +20,4 @@ export interface Option {
   disabled?: boolean;
 }
 
-export type Status = 0 | 1;
+export type Status = 0 | 1; // 0 = Inactive, 1 = Active

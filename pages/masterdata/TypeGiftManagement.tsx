@@ -1,12 +1,16 @@
+
 import React from 'react';
 import MasterDataLayout from './MasterDataLayout';
 import { GenericTableCrud } from '../../components/generic/GenericTableCrud';
 import { Gift, SumAssuredTier, PremiumTier, CustomerType } from '../../types';
 import { useFetch } from '../../hooks/useFetch';
+import { API_ENDPOINTS } from '../../config/api.config';
 
 const TypeGiftManagementPage: React.FC = () => {
-  const { data: gifts } = useFetch<Gift[]>('/gifts');
-  const { data: customerTypes } = useFetch<CustomerType[]>('/customerTypes');
+  const { GIFT, CUSTOMER_TYPE, SUM_ASSURED_TIER, PREMIUM_TIER } = API_ENDPOINTS.MASTER_DATA;
+
+  const { data: gifts } = useFetch<Gift[]>(GIFT);
+  const { data: customerTypes } = useFetch<CustomerType[]>(CUSTOMER_TYPE);
 
   const giftOptions = [
       { label: '-- No Gift --', value: '' },
@@ -23,7 +27,7 @@ const TypeGiftManagementPage: React.FC = () => {
         <div className="xl:col-span-1">
             <GenericTableCrud<Gift>
                 title="Master Gift List"
-                endpoint="/gifts"
+                endpoint={GIFT}
                 columns={[{ header: 'Gift Name', accessor: 'gift_name' }]}
                 fields={[{ name: 'gift_name', label: 'Gift Name', type: 'text', required: true }]}
                 searchKeys={['gift_name']}
@@ -34,7 +38,7 @@ const TypeGiftManagementPage: React.FC = () => {
         <div className="xl:col-span-1">
             <GenericTableCrud<SumAssuredTier>
                 title="Type by Sum Assured"
-                endpoint="/sumAssuredTiers"
+                endpoint={SUM_ASSURED_TIER}
                 columns={[
                     { header: 'Type', accessor: 'tier_name', className: 'font-bold' },
                     { header: 'Min SA (₹)', accessor: (r) => r.minimum_sum_assured?.toLocaleString() }
@@ -52,7 +56,7 @@ const TypeGiftManagementPage: React.FC = () => {
         <div className="xl:col-span-1">
             <GenericTableCrud<PremiumTier>
                 title="Type by Premium"
-                endpoint="/premiumTiers"
+                endpoint={PREMIUM_TIER}
                 columns={[
                     { header: 'Type', accessor: 'tier_name', className: 'font-bold' },
                     { header: 'Min Prem (₹)', accessor: (r) => r.minimum_premium?.toLocaleString() }

@@ -1,7 +1,9 @@
+
 import { apiClient } from '../apiClient';
 import { Branch } from '../../types';
+import { API_ENDPOINTS } from '../../config/api.config';
 
-const ENDPOINT = '/branches';
+const ENDPOINT = API_ENDPOINTS.MASTER_DATA.BRANCH;
 
 export const branchApi = {
   getAll: () => apiClient.get<Branch[]>(ENDPOINT),

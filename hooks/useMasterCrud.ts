@@ -84,6 +84,7 @@ export function useMasterCrud<T extends { id?: number | string; status?: number 
     const oldStatus = item.status;
     const newStatus = oldStatus === 1 ? 0 : 1;
     
+    // Optimistic UI update
     if (updateLocalData) {
         updateLocalData((prev) => prev?.map((i) => i.id === item.id ? { ...i, status: newStatus } : i) || []);
     }
@@ -95,6 +96,7 @@ export function useMasterCrud<T extends { id?: number | string; status?: number 
       console.error(error);
       toast.error('Failed to update status');
       
+      // Rollback on failure
       if (updateLocalData && oldStatus !== undefined) {
           updateLocalData((prev) => prev?.map((i) => i.id === item.id ? { ...i, status: oldStatus } : i) || []);
       }

@@ -1,8 +1,10 @@
+
 import { apiClient } from '../apiClient';
 import { FinancialYear, NumberingRule } from '../../types';
+import { API_ENDPOINTS } from '../../config/api.config';
 
-const FY_ENDPOINT = '/financialYears';
-const RULE_ENDPOINT = '/numberingRules';
+const FY_ENDPOINT = API_ENDPOINTS.MASTER_DATA.FINANCIAL_YEAR;
+const RULE_ENDPOINT = API_ENDPOINTS.MASTER_DATA.NUMBERING_RULE;
 
 export const financialYearApi = {
   // Financial Years

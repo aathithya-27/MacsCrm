@@ -1,7 +1,9 @@
+
 import { apiClient } from '../apiClient';
 import { LeadStage } from '../../types';
+import { API_ENDPOINTS } from '../../config/api.config';
 
-const ENDPOINT = '/leadStages';
+const ENDPOINT = API_ENDPOINTS.MASTER_DATA.LEAD_STAGE;
 
 export const leadStageApi = {
   getAll: () => apiClient.get<LeadStage[]>(ENDPOINT),

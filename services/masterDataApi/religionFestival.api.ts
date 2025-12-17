@@ -1,9 +1,11 @@
+
 import { apiClient } from '../apiClient';
 import { Religion, Festival, FestivalDate } from '../../types';
+import { API_ENDPOINTS } from '../../config/api.config';
 
-const RELIGION_ENDPOINT = '/religions';
-const FESTIVAL_ENDPOINT = '/festivals';
-const DATES_ENDPOINT = '/festivalDates';
+const RELIGION_ENDPOINT = API_ENDPOINTS.MASTER_DATA.RELIGION;
+const FESTIVAL_ENDPOINT = API_ENDPOINTS.MASTER_DATA.FESTIVAL;
+const DATES_ENDPOINT = API_ENDPOINTS.MASTER_DATA.FESTIVAL_DATE;
 
 export const religionFestivalApi = {
   // Religion

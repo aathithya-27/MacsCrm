@@ -1,3 +1,4 @@
+
 import React from 'react';
 import MasterDataLayout from './MasterDataLayout';
 import { GenericTableCrud } from '../../components/generic/GenericTableCrud';
@@ -5,10 +6,13 @@ import { CustomerCategory, CustomerSubCategory, CustomerGroup, CustomerType } fr
 import { useFetch } from '../../hooks/useFetch';
 import { customerSegmentApi } from '../../services/masterDataApi/customerSegment.api';
 import toast from 'react-hot-toast';
+import { API_ENDPOINTS } from '../../config/api.config';
 
 const CustomerSegmentPage: React.FC = () => {
-  const { data: categories, refetch: refetchCategories } = useFetch<CustomerCategory[]>('/customerCategories');
-  const { data: subCategories, refetch: refetchSubCategories } = useFetch<CustomerSubCategory[]>('/customerSubCategories');
+  const { CUSTOMER_CATEGORY, CUSTOMER_SUB_CATEGORY, CUSTOMER_GROUP, CUSTOMER_TYPE } = API_ENDPOINTS.MASTER_DATA;
+
+  const { data: categories, refetch: refetchCategories } = useFetch<CustomerCategory[]>(CUSTOMER_CATEGORY);
+  const { data: subCategories, refetch: refetchSubCategories } = useFetch<CustomerSubCategory[]>(CUSTOMER_SUB_CATEGORY);
 
   const handleToggleCategory = async (item: CustomerCategory) => {
     const newStatus = item.status === 1 ? 0 : 1;
@@ -39,7 +43,7 @@ const CustomerSegmentPage: React.FC = () => {
         {}
         <GenericTableCrud<CustomerCategory>
           title="Customer Category"
-          endpoint="/customerCategories"
+          endpoint={CUSTOMER_CATEGORY}
           columns={[{ header: 'Name', accessor: 'customer_category' }]}
           fields={[{ name: 'customer_category', label: 'Category Name', type: 'text', required: true }]}
           defaults={{ comp_id: 1001 }}
@@ -49,7 +53,7 @@ const CustomerSegmentPage: React.FC = () => {
 
         <GenericTableCrud<CustomerSubCategory>
           title="Sub-Category"
-          endpoint="/customerSubCategories"
+          endpoint={CUSTOMER_SUB_CATEGORY}
           columns={[
               { header: 'Name', accessor: 'cust_sub_cate' },
               { header: 'Parent', accessor: (i) => categories?.find(c => c.id == i.cust_cate_id)?.customer_category || '-' }
@@ -71,7 +75,7 @@ const CustomerSegmentPage: React.FC = () => {
         {}
         <GenericTableCrud<CustomerGroup>
           title="Customer Group"
-          endpoint="/customerGroups"
+          endpoint={CUSTOMER_GROUP}
           columns={[{ header: 'Name', accessor: 'customer_group' }]}
           fields={[{ name: 'customer_group', label: 'Group Name', type: 'text', required: true }]}
           defaults={{ comp_id: 1001 }}
@@ -80,7 +84,7 @@ const CustomerSegmentPage: React.FC = () => {
 
         <GenericTableCrud<CustomerType>
           title="Customer Type"
-          endpoint="/customerTypes"
+          endpoint={CUSTOMER_TYPE}
           columns={[{ header: 'Name', accessor: 'cust_type' }]}
           fields={[{ name: 'cust_type', label: 'Type Name', type: 'text', required: true }]}
           defaults={{ comp_id: 1001 }}

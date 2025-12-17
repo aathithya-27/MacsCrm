@@ -4,38 +4,43 @@ import MasterDataLayout from './MasterDataLayout';
 import { GenericTableCrud } from '../../components/generic/GenericTableCrud';
 import { Religion, Festival, FestivalDate } from '../../types';
 import { useFetch } from '../../hooks/useFetch';
+import { API_ENDPOINTS } from '../../config/api.config';
 
 const ReligionsPage: React.FC = () => {
+  const { RELIGION, FESTIVAL, FESTIVAL_DATE } = API_ENDPOINTS.MASTER_DATA;
+
   const [selectedReligion, setSelectedReligion] = useState<Religion | null>(null);
   const [selectedFestival, setSelectedFestival] = useState<Festival | null>(null);
 
-  const { data: religions } = useFetch<Religion[]>('/religions');
+  const { data: religions } = useFetch<Religion[]>(RELIGION);
   
   const activeReligions = religions?.filter(r => r.status === 1) || [];
 
   return (
     <MasterDataLayout title="Religions & Festivals">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 h-full pb-8">
+      <div className="flex flex-col gap-6 h-full pb-8">
         
         {}
-        <GenericTableCrud<Religion>
-          title="Religions"
-          endpoint="/religions"
-          columns={[{ header: 'Name', accessor: 'religion_name' }]}
-          fields={[{ name: 'religion_name', label: 'Name', type: 'text', required: true }]}
-          defaults={{ comp_id: 1001 }}
-          searchKeys={['religion_name']}
-          onRowClick={(item) => { setSelectedReligion(item); setSelectedFestival(null); }}
-          selectedId={selectedReligion?.id}
-        />
+        <div>
+          <GenericTableCrud<Religion>
+            title="Religions"
+            endpoint={RELIGION}
+            columns={[{ header: 'Name', accessor: 'religion_name' }]}
+            fields={[{ name: 'religion_name', label: 'Name', type: 'text', required: true }]}
+            defaults={{ comp_id: 1001 }}
+            searchKeys={['religion_name']}
+            onRowClick={(item) => { setSelectedReligion(item); setSelectedFestival(null); }}
+            selectedId={selectedReligion?.id}
+          />
+        </div>
 
         {}
-        <div className="flex flex-col h-full">
+        <div>
             {selectedReligion ? (
                 <div className="contents" key={selectedReligion.id}>
                     <GenericTableCrud<Festival>
-                        title="Festivals"
-                        endpoint="/festivals"
+                        title={`Festivals (${selectedReligion.religion_name})`}
+                        endpoint={FESTIVAL}
                         columns={[{ header: 'Name', accessor: 'festival_name' }]}
                         fields={[
                             { name: 'festival_name', label: 'Name', type: 'text', required: true },
@@ -53,19 +58,19 @@ const ReligionsPage: React.FC = () => {
                     />
                 </div>
             ) : (
-                <div className="flex-1 bg-white dark:bg-slate-800 rounded-lg border border-dashed border-gray-300 dark:border-slate-700 flex items-center justify-center text-slate-400 p-4 text-center">
-                    Select a Religion
+                <div className="bg-white dark:bg-slate-800 rounded-lg border border-dashed border-gray-300 dark:border-slate-700 flex items-center justify-center text-slate-400 p-8 text-center">
+                    Select a Religion above to manage Festivals
                 </div>
             )}
         </div>
 
         {}
-        <div className="flex flex-col h-full">
+        <div>
             {selectedFestival ? (
                 <div className="contents" key={selectedFestival.id}>
                     <GenericTableCrud<FestivalDate>
-                        title="Event Dates"
-                        endpoint="/festivalDates"
+                        title={`Event Dates (${selectedFestival.festival_name})`}
+                        endpoint={FESTIVAL_DATE}
                         columns={[
                             { header: 'Date', accessor: 'event_date' },
                             { header: 'Year', accessor: 'year' }
@@ -84,8 +89,8 @@ const ReligionsPage: React.FC = () => {
                     />
                 </div>
             ) : (
-                <div className="flex-1 bg-white dark:bg-slate-800 rounded-lg border border-dashed border-gray-300 dark:border-slate-700 flex items-center justify-center text-slate-400 p-4 text-center">
-                    Select a Festival
+                <div className="bg-white dark:bg-slate-800 rounded-lg border border-dashed border-gray-300 dark:border-slate-700 flex items-center justify-center text-slate-400 p-8 text-center">
+                    Select a Festival above to manage Dates
                 </div>
             )}
         </div>

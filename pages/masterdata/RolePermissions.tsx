@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import MasterDataLayout from './MasterDataLayout';
 import { rolePermissionApi } from '../../services/masterDataApi/rolePermission.api';
@@ -6,13 +7,15 @@ import { Save, Shield, AlertCircle } from 'lucide-react';
 import { Button, Select } from '../../components/ui';
 import { useFetch } from '../../hooks/useFetch';
 import toast from 'react-hot-toast';
+import { API_ENDPOINTS } from '../../config/api.config';
 
 const MODULES = ['Company Master', 'Branch', 'Business Vertical', 'Policy Configuration', 'Agency and Scheme', 'Geography', 'Designation', 'Role', 'Role Permissions', 'Document Master', 'Financial Year', 'Bank Master'];
 const ACCESS_LEVELS = ['None', 'View', 'Edit', 'Full'] as const;
 type AccessLevel = typeof ACCESS_LEVELS[number];
 
 const RolePermissionsPage: React.FC = () => {
-  const { data: roles, loading: loadingRoles } = useFetch<Role[]>('/roles');
+  const { ROLE } = API_ENDPOINTS.MASTER_DATA;
+  const { data: roles, loading: loadingRoles } = useFetch<Role[]>(ROLE);
   const [selectedRoleId, setSelectedRoleId] = useState<number | string | ''>('');
   const [localPermissions, setLocalPermissions] = useState<Record<string, AccessLevel>>({});
   const [permissionIds, setPermissionIds] = useState<Record<string, number | string>>({});
@@ -129,26 +132,28 @@ const RolePermissionsPage: React.FC = () => {
                  <div className="flex justify-center items-center h-64">Loading...</div>
              ) : (
                  <div className="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-gray-200 dark:border-slate-700 overflow-hidden">
-                    <table className="w-full text-left border-collapse">
-                        <thead className="bg-gray-50 dark:bg-slate-700/50 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase border-b border-gray-200 dark:border-slate-700">
-                           <tr>
-                              <th className="px-6 py-4 w-1/3">Module Name</th>
-                              {ACCESS_LEVELS.map(level => <th key={level} className="px-6 py-4 text-center w-1/6">{level}</th>)}
-                           </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-100 dark:divide-slate-700">
-                           {MODULES.map((module) => (
-                              <tr key={module} className="hover:bg-slate-50 dark:hover:bg-slate-700/30">
-                                  <td className="px-6 py-4 text-sm font-medium text-slate-800 dark:text-white">{module}</td>
-                                  {ACCESS_LEVELS.map((level) => (
-                                      <td key={level} className="px-6 py-4 text-center">
-                                          <input type="radio" name={`perm-${module}`} value={level} checked={localPermissions[module] === level} onChange={() => setLocalPermissions(prev => ({...prev, [module]: level}))} className="w-4 h-4 text-blue-600 focus:ring-blue-500" />
-                                      </td>
-                                  ))}
-                              </tr>
-                           ))}
-                        </tbody>
-                    </table>
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-left border-collapse min-w-[600px]">
+                            <thead className="bg-gray-50 dark:bg-slate-700/50 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase border-b border-gray-200 dark:border-slate-700">
+                            <tr>
+                                <th className="px-6 py-4 w-1/3">Module Name</th>
+                                {ACCESS_LEVELS.map(level => <th key={level} className="px-6 py-4 text-center w-1/6">{level}</th>)}
+                            </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-100 dark:divide-slate-700">
+                            {MODULES.map((module) => (
+                                <tr key={module} className="hover:bg-slate-50 dark:hover:bg-slate-700/30">
+                                    <td className="px-6 py-4 text-sm font-medium text-slate-800 dark:text-white whitespace-nowrap">{module}</td>
+                                    {ACCESS_LEVELS.map((level) => (
+                                        <td key={level} className="px-6 py-4 text-center">
+                                            <input type="radio" name={`perm-${module}`} value={level} checked={localPermissions[module] === level} onChange={() => setLocalPermissions(prev => ({...prev, [module]: level}))} className="w-4 h-4 text-blue-600 focus:ring-blue-500" />
+                                        </td>
+                                    ))}
+                                </tr>
+                            ))}
+                            </tbody>
+                        </table>
+                    </div>
                  </div>
              )}
           </div>
